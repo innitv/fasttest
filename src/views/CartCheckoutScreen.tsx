@@ -55,9 +55,20 @@ export function CartCheckoutScreen({
 
   return (
     <div className="relative flex h-full w-full flex-col">
+      {/*
+        `relative` здесь обязателен, а не декоративен. Скролл-контейнер
+        обрезает только тех потомков, для которых он является содержащим
+        блоком: абсолютно позиционированный элемент (например, визуально
+        скрытый `.sr-only` блока проверки телефона) при статичном контейнере
+        привязывается к корню экрана, уходит из-под обрезки и раздувает
+        scrollHeight КОЛОНКИ. Колонка с `overflow: hidden` от этого становится
+        программно прокручиваемой, и первый же `scrollIntoView`/`focus`
+        сдвигает весь экран вверх — диагноз бага «страница сжимается, низ
+        подтягивается, пуш обрезан сверху» на Flowwow.
+      */}
       <div
         data-testid="scroll-container"
-        className="no-scrollbar flex-1 overflow-y-auto"
+        className="no-scrollbar relative flex-1 overflow-y-auto"
         style={{ paddingBottom: STICKY_PANEL_RESERVE }}
       >
         <ScreenHeader style="back_title" title={content.title} />

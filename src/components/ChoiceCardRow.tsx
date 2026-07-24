@@ -16,8 +16,10 @@ interface Props {
  * не равный ширине карточки способа оплаты (расхождение D1: единые 44 %
  * убивают peek у ряда оплаты).
  *
- * Прокрутка: тач/трекпад — нативно через `overflow-x`, мышь — drag и колесо
- * через `useHorizontalScroll`. Peek третьей карточки сохранён.
+ * Прокрутка: тач/трекпад — нативно через `.h-scroll` (`overflow-x: auto` плюс
+ * ЯВНЫЙ `overflow-y: hidden`, иначе ряд перехватывает и вертикальный жест на
+ * iOS — см. комментарий утилиты в `styles.css`); мышь — drag и колесо через
+ * `useHorizontalScroll`. Peek третьей карточки сохранён.
  */
 export function ChoiceCardRow({ options, selected, onSelect, groupLabel }: Props) {
   const rowRef = useRef<HTMLDivElement>(null);
@@ -29,7 +31,7 @@ export function ChoiceCardRow({ options, selected, onSelect, groupLabel }: Props
       role="radiogroup"
       aria-label={groupLabel}
       data-testid="choice-card-row"
-      className="no-scrollbar flex w-full overflow-x-auto overscroll-x-contain"
+      className="no-scrollbar h-scroll flex w-full"
       style={{
         gap: "var(--k-choice-card-gap)",
         paddingInline: "var(--t-page-padding)",

@@ -1,4 +1,7 @@
-import { useEffect, type RefObject } from "react";
+import { useEffect, useState, type RefObject } from "react";
+
+/** Устройство с настоящей мышью/трекпадом: только там нужен drag и колесо. */
+const FINE_POINTER = "(hover: hover) and (pointer: fine)";
 
 /**
  * Горизонтальная прокрутка ряда карточек мышью и колесом.
@@ -16,14 +19,34 @@ import { useEffect, type RefObject } from "react";
  *    прокрутку ряда. Трекпад, дающий собственный `deltaX`, не трогаем.
  *  - Drag мышью: ряд можно тянуть. Клик по карточке подавляется ТОЛЬКО если
  *    действительно был drag, иначе выбор карточки перестал бы работать.
- *  - Палец/перо (`pointerType !== "mouse"`) обрабатываются нативным
- *    тач-скроллом — хук в них не вмешивается, чтобы не удваивать скорость и
- *    не конфликтовать с `touch-action`.
+ *
+ * На тач-устройстве хук НЕ НАВЕШИВАЕТ НИ ОДНОГО обработчика (жалоба с живого
+ * iPhone: жест на карточке глушил прокрутку). Проверки `pointerType` было
+ * мало: непассивные слушатели `wheel`/`pointermove` на прокручиваемом
+ * элементе сами по себе переводят WebKit на медленный путь обработки жеста,
+ * а `setPointerCapture` на нём же способен отнять жест у нативной прокрутки.
+ * Поэтому граница проведена на входе: нет точного указателя — нет хука,
+ * прокрутка полностью нативная. Проверка `pointerType === "mouse"` внутри
+ * оставлена как вторая линия для гибридных устройств (тач + мышь).
  */
 export function useHorizontalScroll(ref: RefObject<HTMLElement | null>): void {
+  // Подписка на смену класса указателя: гибридный ноутбук может переключиться
+  // между тачем и мышью без перезагрузки страницы.
+  const [finePointer, setFinePointer] = useState(
+    () => typeof window !== "undefined" && window.matchMedia(FINE_POINTER).matches,
+  );
+
+  useEffect(() => {
+    const query = window.matchMedia(FINE_POINTER);
+    const sync = () => setFinePointer(query.matches);
+    sync();
+    query.addEventListener("change", sync);
+    return () => query.removeEventListener("change", sync);
+  }, []);
+
   useEffect(() => {
     const el = ref.current;
-    if (!el) return;
+    if (!el || !finePointer) return;
 
     const canScroll = () => el.scrollWidth > el.clientWidth + 1;
 
@@ -129,5 +152,5 @@ export function useHorizontalScroll(ref: RefObject<HTMLElement | null>): void {
       el.removeEventListener("pointercancel", endDrag);
       el.removeEventListener("click", onClickCapture, true);
     };
-  }, [ref]);
+  }, [ref, finePointer]);
 }

@@ -32,7 +32,13 @@ export function PushBanner({ merchant, amount, onOpen, onDismiss }: Props) {
   const swiped = useRef(false);
 
   useEffect(() => {
-    ref.current?.focus();
+    // `preventScroll` обязателен. Баннер стартует ВЫШЕ кромки экрана
+    // (`y: -170%`), и обычный `focus()` заставляет браузер «доставить» его в
+    // видимую область, прокручивая ближайшего прокручиваемого предка. На
+    // живом iPhone это сдвигало весь экран вверх: низ подтягивался, а верх
+    // баннера уезжал за кромку. Фокус нужен (клавиатура, screen reader),
+    // прокрутка — нет.
+    ref.current?.focus({ preventScroll: true });
   }, []);
 
   const dismiss = () => {
@@ -116,6 +122,10 @@ export function PushBanner({ merchant, amount, onOpen, onDismiss }: Props) {
           pointerEvents: "auto",
           left: "var(--bank-push-inset)",
           right: "var(--bank-push-inset)",
+          // Отступ от верхней кромки КОЛОНКИ. Безопасная зона устройства
+          // (вырез, строка статуса) уже вычтена отступом самой колонки в
+          // `PhoneFrame`, поэтому второй раз `env(safe-area-inset-top)` здесь
+          // не прибавляется — иначе баннер отъедет вниз на двойной инсет.
           top: "var(--bank-push-top)",
           minHeight: "var(--bank-push-min-h)",
           padding: "var(--bank-push-pad)",

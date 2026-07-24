@@ -82,7 +82,7 @@ export function PaymentMethodList({
       aria-label={COPY["a11y.payment_group"]}
       data-testid="payment-method-list"
       data-layout="horizontal_cards"
-      className="no-scrollbar flex w-full overflow-x-auto overscroll-x-contain"
+      className="no-scrollbar h-scroll flex w-full"
       style={{
         gap: "var(--k-payment-card-gap)",
         paddingInline: padded ? "var(--t-page-padding)" : undefined,

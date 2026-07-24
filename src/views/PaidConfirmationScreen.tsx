@@ -124,7 +124,7 @@ export function PaidConfirmationScreen({ tenant, payload, onRestart }: Props) {
     >
       <div
         data-testid="scroll-container"
-        className="no-scrollbar flex flex-1 flex-col overflow-y-auto"
+        className="no-scrollbar relative flex flex-1 flex-col overflow-y-auto"
         style={{ paddingBottom: sticky ? STICKY_PANEL_RESERVE : "24px" }}
       >
         <div

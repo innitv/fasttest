@@ -10,6 +10,7 @@
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview --host 127.0.0.1 --port 4319",
     "verify": "node tests/verify.mjs",
+    "check:mobile": "node tests/mobile.check.mjs",
     "check:theme": "node tests/theme-boundary.check.mjs"
   },
   "dependencies": {

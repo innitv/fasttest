@@ -57,7 +57,7 @@ export function OzonRailScreen({
 
       <div
         data-testid="scroll-container"
-        className="no-scrollbar flex-1 overflow-y-auto"
+        className="no-scrollbar relative flex-1 overflow-y-auto"
         style={{
           paddingInline: "var(--t-page-padding)",
           paddingBottom: "var(--k-page-bottom-reserve)",

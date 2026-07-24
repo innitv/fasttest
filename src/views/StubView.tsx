@@ -1,3 +1,7 @@
+import { useRef } from "react";
+
+import { usePageCanvas } from "@demo/lib/page-canvas";
+
 /**
  * Нейтральная заглушка корня и неизвестных путей.
  *
@@ -7,8 +11,15 @@
  * ссылок, без перечисления подрядчиков и без токенов какой-либо темы.
  */
 export function StubView() {
+  // Системные зоны iOS красятся фоном страницы. Заглушка тёмная, поэтому без
+  // синхронизации вокруг неё остались бы светлые полосы — та же жалоба, что
+  // и на экранах демо.
+  const ref = useRef<HTMLDivElement>(null);
+  usePageCanvas(ref, "stub");
+
   return (
     <div
+      ref={ref}
       data-testid="stub"
       className="flex h-full w-full items-center justify-center"
       style={{

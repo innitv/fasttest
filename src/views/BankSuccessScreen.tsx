@@ -85,17 +85,46 @@ export function BankSuccessScreen({ payload, onReturn }: Props) {
       </div>
 
       {/*
-        Зоны 4–7 лежат абсолютно и отсчитываются от верха ЭКРАНА — ровно
-        так, как их снял `06-screens` (аватар 263, чек 304, кнопка 757).
-        Плитка «Чек» не пришпилена к измеренным 585: наш чек выше донорского
-        на высоту демо-пометки, поэтому плитка центрируется в остатке между
-        низом чека и кнопкой. Смысл сохранён — заполнить провал, — а наезда
-        при росте чека не возникает.
+        Зоны 4–7. Раньше блок был пришпилен абсолютными 209 сверху и 111 снизу
+        — числа, снятые на макете высотой 853. На реальном iPhone видимая
+        область Safari ≈ 660–700, и композиция разваливалась: чек не помещался
+        в отведённые 533, плитка «Чек» выдавливалась вниз и наезжала на кнопку
+        возврата (замер: чек кончался на y=566, кнопка начиналась на y=581).
+
+        Теперь вертикаль набирается ГИБКИМИ звеньями, а не константами:
+          • верхний разделитель — базис 135 (то же 74 + 135 = 209 на высоком
+            экране), сжимается до 12 на низком;
+          • аватар и чек — `shrink-0`, они не деформируются никогда;
+          • плитка «Чек» — растёт в остатке и имеет собственный минимум.
+        На экране ≥ ~790 раскладка попиксельно прежняя, ниже — сжимается
+        сверху, а не наезжает снизу. В крайнем случае (очень низкий экран)
+        блок прокручивается, но не пересекается с кнопкой.
       */}
       <div
-        className="absolute inset-x-0 flex flex-col"
-        style={{ top: "209px", bottom: "111px" }}
+        data-testid="success-stack"
+        className="no-scrollbar absolute inset-x-0 flex flex-col overflow-y-auto"
+        style={{
+          top: "var(--bank-header-h)",
+          bottom: "calc(111px + env(safe-area-inset-bottom, 0px))",
+          // Ось X зафиксирована явно: пара `overflow-y: auto` + `overflow-x:
+          // visible` невозможна, ось X вычислилась бы в `auto`, и блок стал бы
+          // ещё одним горизонтальным скролл-контейнером (на iOS такие
+          // перехватывают жест — см. `.h-scroll` в styles.css).
+          overflowX: "hidden",
+          // Контейнер запроса по ВЫСОТЕ: высота блока задана парой top/bottom,
+          // поэтому по ней можно принимать решения. Единственное решение —
+          // прятать декоративную плитку «Чек», когда её негде показать
+          // целиком (правило в styles.css). Срезанная плитка читалась бы как
+          // сломанная вёрстка, а её отсутствие — как её отсутствие.
+          containerType: "size",
+          containerName: "success",
+        }}
       >
+        <div
+          aria-hidden="true"
+          style={{ flex: "0 1 135px", minHeight: "12px" }}
+        />
+
         <div className="relative flex shrink-0 justify-center" style={{ zIndex: 1 }}>
           <AvatarBadge
             size="var(--bank-avatar-success)"
@@ -111,7 +140,12 @@ export function BankSuccessScreen({ payload, onReturn }: Props) {
           className="flex shrink-0 flex-col items-center"
           style={{
             marginTop: "-37px",
-            marginInline: "var(--bank-receipt-side-margin)",
+            // Ширина задаётся явно, поля — `auto`: чек центрируется сам, при
+            // любой ширине колонки и независимо от того, что делает
+            // выравнивание родителя. Симметричные боковые поля донора (27)
+            // сохранены.
+            width: "calc(100% - 2 * var(--bank-receipt-side-margin))",
+            marginInline: "auto",
             paddingTop: "55px",
             paddingBottom: "20px",
             paddingInline: "16px",
@@ -191,7 +225,15 @@ export function BankSuccessScreen({ payload, onReturn }: Props) {
         <div
           data-testid="docs-tile"
           aria-hidden="true"
-          className="flex flex-1 flex-col items-center justify-center"
+          className="flex flex-col items-center justify-center"
+          style={{
+            // Растёт в остатке между чеком и кнопкой (на высоком экране
+            // центрируется ровно как раньше) и не сжимается ниже собственной
+            // высоты: раньше `flex-1` без минимума выдавливал её на кнопку.
+            flex: "1 1 auto",
+            minHeight: "calc(var(--bank-docs-tile) + 30px)",
+            paddingBlock: "8px",
+          }}
         >
           <span
             className="flex items-center justify-center"

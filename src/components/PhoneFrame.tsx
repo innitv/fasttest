@@ -1,4 +1,6 @@
-import type { CSSProperties, ReactNode } from "react";
+import { useRef, type CSSProperties, type ReactNode } from "react";
+
+import { usePageCanvas } from "@demo/lib/page-canvas";
 
 interface Props {
   vars: Record<string, string>;
@@ -41,9 +43,24 @@ export function PhoneFrame({
   stage,
   children,
 }: Props) {
+  const frameRef = useRef<HTMLDivElement>(null);
+  // Системные зоны устройства красятся фоном страницы: держим его равным
+  // фону верхней кромки текущего экрана (см. `lib/page-canvas.ts`).
+  usePageCanvas(frameRef, stage);
+
   return (
-    <div className="flex h-full w-full justify-center">
+    <div
+      className="flex h-full w-full justify-center"
+      style={{
+        // Боковые вырезы устройства (альбомная ориентация, PWA). Отступ на
+        // ОБЁРТКЕ, а не на колонке: ширина колонки — единица `cqw`, и сдвигать
+        // её внутренние пропорции безопасной зоной нельзя.
+        paddingLeft: "env(safe-area-inset-left, 0px)",
+        paddingRight: "env(safe-area-inset-right, 0px)",
+      }}
+    >
       <div
+        ref={frameRef}
         data-testid="phone-frame"
         data-tenant={tenantId}
         data-archetype={archetype}
@@ -56,6 +73,18 @@ export function PhoneFrame({
             containerType: "inline-size",
             containerName: "frame",
             maxWidth: "var(--k-frame-max-w)",
+            /*
+             * `clip`, а не `hidden`. Разница не косметическая: `hidden`
+             * создаёт ПРОКРУЧИВАЕМЫЙ бокс — колонку можно сдвинуть программно
+             * (`scrollIntoView`, `focus`, автоскролл к полю), и тогда весь
+             * экран уезжает вверх вместе с пуш-баннером. `clip` обрезает без
+             * создания скролл-порта: сдвинуть колонку нечем. Класс
+             * `overflow-hidden` оставлен фолбэком для браузеров без `clip`.
+             */
+            overflow: "clip",
+            // Верхний вырез (альбомная ориентация, PWA). В портретном Safari
+            // инсет равен нулю и метрика экрана не меняется.
+            paddingTop: "env(safe-area-inset-top, 0px)",
             background: "var(--t-surface-background)",
             color: "var(--t-text-primary)",
             fontFamily: "var(--t-font-family)",

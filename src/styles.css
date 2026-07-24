@@ -1,0 +1,363 @@
+@import "tailwindcss";
+
+/*
+ * Слой 1 — константы шаблона (`--k-*`).
+ *
+ * Это метрики, измеренные на донорах и НЕ являющиеся осями темы:
+ * они одинаковы у всех подрядчиков. Ни один компонент не имеет права
+ * писать эти числа у себя — только читать переменную.
+ *
+ * Слой 2 — токены тенанта (`--t-*`) — выставляется из tenant.json
+ * в `src/theme/build-theme.ts` и живёт на элементе-контейнере страницы.
+ *
+ * Слой 3 — айдентика оверлея перехода (`--h-*`) — объявлена внутри
+ * `components/HandoffOverlay.tsx` и не пересекается с `--t-*`.
+ *
+ * Демо — адаптивная мобильная веб-страница, а НЕ имитация телефона
+ * (решение пользователя 2026-07-23). Нарисованный статус-бар iOS, home
+ * indicator и рамка телефона удалены: их рисует настоящий системный хром
+ * устройства. Токены `--k-status-bar-h`, `--k-safe-bottom`, `--k-chrome-*`
+ * удалены вместе с компонентом NativeChrome; нижний резерв заменён на
+ * настоящий `env(safe-area-inset-bottom)`, а не нарисованную зону.
+ */
+:root {
+  /*
+   * Шапки.
+   *
+   * `--k-header-h` (архетип A, back_title) — 74px. Прежние 44px = нативная
+   * iOS navigation bar по HIG, но на адаптивной веб-странице без статус-бара
+   * заголовок оказывался в 11px от верхнего края и читался как зажатый
+   * (жалоба с живого демо). Донор `flowwow-checkout-01-top.jpg`: nav-область
+   * от низа статус-бара до сегмент-контрола = 82pt. Наш фрейм ≈1:1 px/pt,
+   * сегмент добавляет свои 8px сверху, поэтому header 74 + 8 = 82 повторяет
+   * позицию начала контента у донора. Заголовок центрируется вертикально —
+   * ~37px воздуха сверху, нативный ритм.
+   * `--k-brand-header-h` (архетип B, centered_logo) не менялся: там свой токен.
+   */
+  --k-header-h: 74px;
+  --k-brand-header-h: 45px;
+  --k-brand-header-border: 1px;
+
+  /* Универсальный минимум зоны нажатия (WCAG 2.2 target size) */
+  --k-tap-min: 44px;
+
+  /* Сегмент-контрол (архетип A) */
+  --k-segment-h: 31px;
+  --k-segment-inner-radius: 10px;
+  --k-badge-h: 18px;
+  --k-badge-overhang: 9px;
+
+  /* Строка реквизитов */
+  --k-chevron: 20px;
+  --k-chevron-gap: 4px;
+
+  /* Ряд способов оплаты (архетип A) */
+  --k-payment-card-h: 85px;
+  --k-payment-card-pad: 12px;
+  --k-payment-card-gap: 10px;
+  --k-payment-slot-h: 20px;
+  --k-radio: 22px;
+  --k-radio-gap: 8px;
+  /*
+   * Сверка трёх измеренных величин: карточка 85, padding 12/12,
+   * line-height метки ≈21. 12 + 2×21 + 20 + 12 = 86 > 85 — измерения
+   * `measured_jpg` расходятся на 1 css. Разрешено в пользу габарита
+   * карточки: line-height метки 20, зона двух строк 40.
+   */
+  --k-payment-label-lh: 20px;
+
+  /* Ряд вариантов доставки (архетип A) */
+  --k-choice-card-gap: 7px;
+  --k-choice-card-pad: 12px;
+
+  /* Панель sticky-CTA (архетип A) */
+  --k-cta-panel-pad-top: 10px;
+  --k-cta-panel-pad-bottom: 15px;
+
+  /* Форма карты (архетип B) */
+  --k-field-h: 48px;
+  --k-field-col-gap: 16px;
+  --k-form-pad: 16px;
+  --k-scheme-plate-h: 20px;
+  --k-scheme-plate-gap: 12px;
+  --k-eye-icon: 20px;
+
+  /* Прочие блоки архетипа B */
+  --k-checkbox: 22px;
+  --k-promo-h: 49px;
+  --k-method-button-gap: 12px;
+  /*
+   * Обводка кнопки способа оплаты при наведении (архетип B). Тёмно-серый
+   * «ближе к чёрному» — константа шаблона, а не ось темы: у всех подрядчиков
+   * hover одинаков и НЕ окрашивается брендом (решение пользователя 2026-07-24:
+   * коралловая бренд-обводка при наведении заменена на нейтральную тёмную).
+   * Явно отличим от светло-серой рамки покоя `surface.border`.
+   */
+  --k-method-hover-border: #3a3a3a;
+  --k-media-slot: 44px;
+  --k-totals-row-h: 36px;
+  /*
+   * Нижний резерв прокручиваемой страницы архетипа B.
+   * Число 96 выведено в спецификации как 24 + 56 + 16 — разведение с
+   * плавающей кнопкой помощи. Кнопка удалена из демо (решение пользователя
+   * 2026-07-23), резерв сохранён по двум причинам: у донора под блоком
+   * итогов тоже пустое поле, и его снятие сдвинуло бы метрику экрана.
+   * Токены --k-fab* удалены вместе с компонентом.
+   */
+  --k-page-bottom-reserve: 96px;
+
+  /*
+   * Максимальная ширина колонки страницы. На телефонах (≈320→480) контент
+   * тянется по ширине вьюпорта; на планшете/десктопе (768/1280) остаётся та
+   * же мобильная вёрстка в центрированной колонке ≤480, а не растянутая на
+   * весь экран (решение пользователя 2026-07-23 об адаптивной странице).
+   */
+  --k-frame-max-w: 480px;
+
+  /* Единственная длительность анимаций шаблона */
+  --k-motion-fast: 80ms;
+  --k-motion-medium: 200ms;
+  --k-motion-overlay: 320ms;
+}
+
+/*
+ * Слой 4 — токены Ozon Банка (`--bank-*`).
+ *
+ * Экраны банка — наша сторона флоу, одинаковая для всех подрядчиков.
+ * Это НЕ тема тенанта и не производная от неё: пересечения с `--t-*`
+ * нет ни на одном экране, проверяется grep в обе стороны.
+ *
+ * Значения — `measured_jpg` по `reference/ozon/*.jpg`.
+ */
+:root {
+  --bank-primary: #005aff;
+  --bank-on-primary: #ffffff;
+  --bank-surface: #ffffff;
+  --bank-surface-muted: #f6f7f9;
+  --bank-text-primary: #0a0a0a;
+  --bank-avatar-fill: #6693f0;
+  --bank-overlay-white-32: rgba(255, 255, 255, 0.32);
+  --bank-overlay-white-48: rgba(255, 255, 255, 0.48);
+  --bank-dot-dim: rgba(255, 255, 255, 0.35);
+  --bank-pressed: #0049cc;
+
+  /* Донорские значения. Два из них не проходят порог — см. блок enforced. */
+  --bank-text-secondary: #6f7881;
+  --bank-success: #0bcc59;
+  /*
+   * Верхняя точка непрерывного градиента O-3 (`needs_validation`: снята с
+   * `ozon-03-success.jpg`, левый край y=0 = #206BF8). Белый текст хедера на
+   * ней = 4.65:1 у самого верха. Остальные стопы градиента заданы в
+   * `BankSuccessScreen` — это наша поверхность. Плоской пришпиленной зоны
+   * больше нет: обрыв, который видел пользователь, устранён (правка O-3).
+   */
+  --bank-gradient-top: #206bf8;
+
+  /* Форма */
+  --bank-radius-sheet-top: 16px;
+  --bank-radius-receipt: 22px;
+  --bank-radius-control: 14px;
+  --bank-radius-account-card: 16px;
+  --bank-radius-avatar: 22px;
+  --bank-radius-avatar-small: 12px;
+  --bank-radius-push: 22px;
+  --bank-radius-app-icon: 9px;
+  --bank-radius-tile: 16px;
+
+  /* Плотность */
+  --bank-button-h: 54px;
+  --bank-page-padding: 16px;
+  --bank-receipt-side-margin: 27px;
+  --bank-chip-h: 29px;
+
+  /*
+   * Высота верхней навигационной полосы экранов банка (O-2 хедер, O-3 хедер).
+   * Та же логика, что у `--k-header-h` подрядчика: нативная iOS nav bar = 44,
+   * но на адаптивной веб-странице без статус-бара 44 читались как зажатые
+   * (жалоба с живого демо, теперь и по банку). 74 центрирует вордмарк/крестик
+   * с ~25px воздуха сверху и повторяет позицию крестика донора: у
+   * `ozon-02-payment.jpg` центр крестика y=125 донор ≈ 83 css, минус снятые
+   * ~47 статус-бара iOS = ~36 css от верха — центр 72px-полосы.
+   */
+  --bank-header-h: 74px;
+
+  /* Измеренная геометрия экранов банка. Hero = header 74 + зазор 20 +
+     иллюстрация 130 + 2 к листу = 226. Прежние 196 держали 44px-полосу,
+     из-за чего хедер O-2 был зажат (правка O-2); illustration↔лист и
+     illustration↔полоса сохранены прежними. Донорский hero = 239 css
+     (лист `ozon-02-payment.jpg` y=361). */
+  --bank-hero-h: 226px;
+  --bank-close-d: 33px;
+  --bank-close-d-small: 30px;
+  --bank-illustration-w: 180px;
+  --bank-illustration-h: 130px;
+  --bank-avatar-payment: 44px;
+  --bank-avatar-success: 78px;
+  --bank-badge-d: 23px;
+  --bank-account-card-h: 74px;
+  --bank-account-icon-d: 29px;
+  --bank-receipt-notch-d: 29px;
+  --bank-receipt-notch-y: 127px;
+  --bank-docs-tile: 56px;
+  --bank-push-inset: 10px;
+  /* Баннер пуша: обычный верхний отступ страницы. Донорские 62 включали
+     статус-бар iOS; статус-бара больше нет, остаётся отступ страницы. */
+  --bank-push-top: 12px;
+  --bank-push-min-h: 74px;
+  --bank-push-pad: 14px;
+  --bank-push-icon: 38px;
+  --bank-dot-d: 10px;
+  --bank-dot-gap: 4px;
+
+  /*
+   * Логотип splash: доля ширины экрана, не пиксели.
+   * 174 / 392 = 44.4 % ширины; кегль 76 / 392 = 19.4 cqw; line-height 63.3.
+   */
+  --bank-wordmark-w: 44.4cqw;
+  --bank-wordmark-size: 19.4cqw;
+  --bank-wordmark-lh: 16.15cqw;
+}
+
+/*
+ * Три коррекции контраста при `a11y_mode = enforced`.
+ * Донорские значения остаются в `:root` и действуют при `donor_faithful`.
+ */
+[data-bank-a11y="enforced"] {
+  /* 4.19:1 на surface_muted -> 5.18:1 */
+  --bank-text-secondary: #616974;
+  /* белая галка 2.14:1 -> 3.37:1 */
+  --bank-success: #12a150;
+  /*
+   * Верх непрерывного градиента O-3 затемнён #206BF8 -> #005AFF. Белый текст
+   * хедера ≥4.9:1 по всей 74px-полосе (5.38 у верха, 4.91 на y=74), при этом
+   * градиент остаётся непрерывным — прежняя плоская пришпиленная зона
+   * (120px #005AFF с резким обрывом) заменена плавным затемнением верхнего
+   * стопа. Числа детерминированы: верхние стопы заданы в px, не в %.
+   */
+  --bank-gradient-top: #005aff;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  /*
+   * Нейтральный фон за центрированной колонкой на планшете/десктопе. На
+   * телефоне колонка заполняет вьюпорт целиком, и фон не виден. Это фон
+   * страницы, а не рамка устройства: намеренно спокойный ахроматичный серый.
+   */
+  background: #e6e7ea;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+@media (prefers-color-scheme: dark) {
+  body {
+    background: #16181c;
+  }
+}
+
+/* Видимый фокус не удаляется нигде, даже там, где донор его не показывает. */
+:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}
+
+/*
+ * Обводка фокуса полей формы карты — цвет `--t-focus-ring` (коррекция Q5).
+ * У темы B донорский brand.primary #FF6170 на фоне даёт 2.75:1 и не проходит
+ * SC 1.4.11; при enforced токен затемнён. Не применяется в состоянии ошибки:
+ * там поле уже несёт 2 px обводку surface.field_error. Поле телефона рисует
+ * обводку фокуса собственной границей и в это правило не входит.
+ */
+[data-testid^="field-"]:focus-visible:not([data-state="error"]) {
+  outline: 2px solid var(--t-focus-ring);
+  outline-offset: 0;
+}
+
+/* Утилиты компактных строк: переключение по ширине колонки страницы,
+   а не по ширине окна — колонка ограничена 480 css. */
+.copy-wide {
+  display: inline;
+}
+.copy-narrow {
+  display: none;
+}
+
+@container frame (max-width: 359px) {
+  .copy-wide {
+    display: none;
+  }
+  .copy-narrow {
+    display: inline;
+  }
+}
+
+/*
+ * Обводка кнопок способов оплаты (вертикальный столбик, архетип B).
+ *
+ * Вынесена в CSS, а не в inline-стиль компонента, ровно ради состояния
+ * :hover — inline box-shadow невозможно переопределить внешним правилом.
+ * Покой: светло-серая рамка `surface.border`. Наведение (только мышь):
+ * тёмно-серая обводка `--k-method-hover-border`, НЕ бренд-цвет. Выбор
+ * (если способ выбран): бренд-обводка — с навигационной моделью B выбор
+ * заменён переходом на отдельный экран, поэтому на практике это hover.
+ */
+[data-testid^="payment-method-button-"] {
+  box-shadow: inset 0 0 0 var(--t-border-width) var(--t-surface-border);
+  transition:
+    background-color var(--k-motion-fast) ease-out,
+    box-shadow var(--k-motion-fast) ease-out,
+    transform var(--k-motion-fast) ease-out;
+}
+[data-testid^="payment-method-button-"][data-selected="true"] {
+  box-shadow: inset 0 0 0 var(--t-selected-border-width) var(--t-brand-primary);
+}
+@media (hover: hover) and (pointer: fine) {
+  [data-testid^="payment-method-button-"]:not([data-selected="true"]):hover {
+    box-shadow: inset 0 0 0 var(--t-selected-border-width)
+      var(--k-method-hover-border);
+  }
+}
+
+/*
+ * Микро-отклик нажатия (iOS-«продавливание»). Только transform — дёшево на
+ * мобильном и не вызывает перекраску/layout-shift. В покое transform не задан,
+ * поэтому стек-контекст и метрики раскладки (peek ряда, зоны нажатия) не
+ * затрагиваются: scale появляется лишь на :active. Под prefers-reduced-motion
+ * длительность обнуляется глобальным правилом ниже — смена мгновенная.
+ */
+[data-testid^="payment-method-button-"]:active,
+[data-testid^="payment-method-card-"]:active,
+[data-testid^="choice-card-"]:active {
+  transform: scale(0.97);
+}
+.tap-press {
+  transition: transform var(--k-motion-fast) ease-out;
+}
+.tap-press:active {
+  transform: scale(0.92);
+}
+
+/* Горизонтальные ряды: прокрутка есть, полосы нет — как у донора. */
+.no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

@@ -1,0 +1,132 @@
+{
+  "tenant_id": "uchi-like",
+  "display_name": "UCHi.RU",
+  "archetype": "subscription_payment",
+
+  "header": { "style": "centered_logo", "back_label": "Назад к тарифам" },
+
+  "brand": {
+    "primary": "#FF6170",
+    "on_primary": "auto",
+    "accent": "#56BEE5",
+    "secondary": { "fill": "#EAE6FF", "text": "#5B4FD6" },
+    "logo": { "kind": "text", "text": "UCHi.RU", "slot_ratio": null }
+  },
+
+  "surface": {
+    "background": "#F8F8F8",
+    "card": "#FFFFFF",
+    "form": "#D1DFE2",
+    "border": "#E0E0E0",
+    "divider": "#DDDDDD",
+    "text_primary": "#1A1A1A",
+    "text_secondary": "#8A8A8E",
+    "danger": "#E8412F",
+    "field_error": "#D4311E"
+  },
+
+  "elevation": {
+    "model": "tonal_fill",
+    "border_width": 1,
+    "selected_border_width": 1.5,
+    "shadow": null
+  },
+
+  "radius": { "card": 14, "control": 8, "field": 8, "chip": 6, "allow_inversion": false },
+
+  "density": {
+    "page_padding": 20,
+    "block_gap": 12,
+    "row_height": 48,
+    "control_height": 46,
+    "method_button_height": 47,
+    "section_gap": 16
+  },
+
+  "component_width": { "choice_card_pct": 42, "payment_card_pct": 32 },
+
+  "typography": {
+    "family": "rounded",
+    "body": 16,
+    "h1": 25,
+    "section_title": 18,
+    "caption": 13,
+    "label_weight": 600,
+    "title_weight": 700
+  },
+
+  "cta": {
+    "placement": "inline",
+    "label": "Оплатить {amount}",
+    "include_amount": true,
+    "requires_selection": false
+  },
+
+  "payment_list": {
+    "layout": "vertical_buttons",
+    "selection": "row_press",
+    "methods": [
+      { "id": "ozon", "label": "Ozon Банк", "caption": null, "logo": "none" },
+      { "id": "sbp", "label": "СБП", "caption": null, "logo": "none" },
+      { "id": "wallet", "label": "Кошелёк", "caption": null, "logo": "none" }
+    ],
+    "default_selected": null
+  },
+
+  "ozon": {
+    "label": "Ozon Банк",
+    "position": 1,
+    "adopts_tenant_theme": true,
+    "handoff": "overlay"
+  },
+
+  "content": {
+    "title": "Оплата картой",
+    "back_link": "Назад к тарифам",
+    "segments": null,
+    "rows": [],
+    "fulfillment": null,
+    "form": { "enabled": true, "scheme_plates": 3 },
+    "autorenew": { "enabled": true, "default_checked": true },
+    "promo": { "enabled": true },
+    "items_title": "Вы оплачиваете на год",
+    "items_title_compact": "Вы оплачиваете",
+    "line_items": [
+      {
+        "title": "Математика",
+        "period": "на год",
+        "price": "1 490 ₽",
+        "old_price": "4 990 ₽",
+        "media": true
+      },
+      {
+        "title": "Английский язык",
+        "period": "на год",
+        "price": "990 ₽",
+        "old_price": "3 490 ₽",
+        "media": true
+      },
+      {
+        "title": "Устный счёт",
+        "period": "на год",
+        "price": "В подарок",
+        "old_price": null,
+        "media": true
+      }
+    ],
+    "totals": { "sum": 848000, "discount": 600000, "currency": "RUB" },
+
+    "return_label": "Вернуться в приложение",
+    "paid_title": "Подписка оплачена",
+    "payment_purpose": "Оплата подписки",
+    "payment_category": "Подписки",
+    "summary_detail": "Подписка на год"
+  },
+
+  "demo": {
+    "balance": "34 190,50 ₽",
+    "timings": { "push_delay_ms": 600, "splash_ms": 1200, "pay_loading_ms": 900, "dots_cycle_ms": 900 }
+  },
+
+  "a11y_mode": "enforced"
+}

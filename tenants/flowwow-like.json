@@ -1,0 +1,172 @@
+{
+  "tenant_id": "flowwow-like",
+  "display_name": "Flowwow",
+  "archetype": "cart_checkout",
+
+  "header": { "style": "back_title", "back_label": null },
+
+  "brand": {
+    "primary": "#370A29",
+    "on_primary": "auto",
+    "accent": "#FF7362",
+    "secondary": null,
+    "logo": { "kind": "text", "text": "Flowwow", "slot_ratio": null }
+  },
+
+  "surface": {
+    "background": "#F6F6F6",
+    "card": "#FFFFFF",
+    "form": null,
+    "border": "#E6E6E6",
+    "divider": "#DDDDDD",
+    "text_primary": "#1A1A1A",
+    "text_secondary": "#8A8A8E",
+    "danger": "#E8412F",
+    "field_error": "#D4311E"
+  },
+
+  "elevation": {
+    "model": "flat_outline",
+    "border_width": 1,
+    "selected_border_width": 1.5,
+    "shadow": null
+  },
+
+  "radius": { "card": 20, "control": 14, "field": 8, "chip": "pill", "allow_inversion": false },
+
+  "density": {
+    "page_padding": 16,
+    "block_gap": 8,
+    "row_height": 51,
+    "control_height": 48,
+    "method_button_height": null,
+    "section_gap": 16
+  },
+
+  "component_width": { "choice_card_pct": 42, "payment_card_pct": 32 },
+
+  "typography": {
+    "family": "system",
+    "body": 16,
+    "h1": 18,
+    "section_title": 20,
+    "caption": 13,
+    "label_weight": 700,
+    "title_weight": 700
+  },
+
+  "cta": {
+    "placement": "sticky",
+    "label": "Перейти к оплате",
+    "include_amount": false,
+    "requires_selection": false
+  },
+
+  "payment_list": {
+    "layout": "horizontal_cards",
+    "selection": "radio_outline",
+    "methods": [
+      { "id": "ozon", "label": "Ozon Банк", "caption": null, "logo": "none" },
+      { "id": "new_card", "label": "Новая карта", "caption": null, "logo": "none" },
+      { "id": "sbp", "label": "СБП", "caption": null, "logo": "slot" },
+      { "id": "installments", "label": "Частями", "caption": null, "logo": "slot" }
+    ],
+    "default_selected": "new_card"
+  },
+
+  "ozon": {
+    "label": "Ozon Банк",
+    "position": 1,
+    "adopts_tenant_theme": true,
+    "handoff": "overlay"
+  },
+
+  "content": {
+    "title": "Оформление заказа",
+    "back_link": null,
+    "segments": {
+      "items": [
+        { "id": "delivery", "label": "Доставка" },
+        { "id": "pickup", "label": "Самовывоз" }
+      ],
+      "active": "delivery",
+      "badge": { "on": "pickup", "text": "0 ₽" }
+    },
+    "rows": [
+      {
+        "label": "Получатель",
+        "label_compact": null,
+        "value": "Ирина Соколова",
+        "is_action": false
+      },
+      {
+        "label": "Адрес",
+        "label_compact": null,
+        "value": "Казань, улица Волкова, 14",
+        "is_action": false
+      },
+      {
+        "label": "Квартира, этаж, подъезд",
+        "label_compact": "Квартира и этаж",
+        "value": "кв. 41 / этаж 5 / подъезд 2",
+        "is_action": false
+      },
+      {
+        "label": "Комментарий курьеру",
+        "label_compact": null,
+        "value": "Добавить",
+        "is_action": true
+      }
+    ],
+    "fulfillment": {
+      "title": "Доставка",
+      "value": "сегодня, 14:30–15:10",
+      "selected": "fast",
+      "options": [
+        {
+          "id": "fast",
+          "title": "Быстрее",
+          "caption": "через 40–60 мин",
+          "price": "Бесплатно",
+          "price_delta": 0
+        },
+        {
+          "id": "other",
+          "title": "Другое время",
+          "caption": "Выберите день и время",
+          "price": null,
+          "price_delta": 0
+        },
+        {
+          "id": "morning",
+          "title": "Завтра утром",
+          "caption": "с 9:00 до 12:00",
+          "price": "99 ₽",
+          "price_delta": 9900
+        }
+      ],
+      "extras_hint": "Например: приложить открытку или не звонить в дверь",
+      "extras_hint_compact": "Например: приложить открытку"
+    },
+    "form": null,
+    "autorenew": null,
+    "promo": null,
+    "items_title": null,
+    "items_title_compact": null,
+    "line_items": [],
+    "totals": { "sum": 258000, "discount": 0, "currency": "RUB" },
+
+    "return_label": "Вернуться в магазин",
+    "paid_title": "Заказ оплачен",
+    "payment_purpose": "Оплата заказа",
+    "payment_category": "Покупки",
+    "summary_detail": "Заказ № 1042"
+  },
+
+  "demo": {
+    "balance": "34 190,50 ₽",
+    "timings": { "push_delay_ms": 600, "splash_ms": 1200, "pay_loading_ms": 900, "dots_cycle_ms": 900 }
+  },
+
+  "a11y_mode": "enforced"
+}

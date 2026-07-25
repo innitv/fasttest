@@ -30,7 +30,10 @@ import {
  *   3. пуш-баннер виден целиком и не сдвигает низ экрана — на ОБОИХ
  *      архетипах;
  *   4. композиция экрана успеха центрирована и не наезжает на кнопку на
- *      реальных ширинах и высотах iPhone.
+ *      реальных ширинах и высотах iPhone;
+ *   5. переключатель эксперимента `?tc=off` действительно убирает
+ *      `<meta name="theme-color">` из документа и держится на всех экранах
+ *      флоу обоих архетипов, а режим по умолчанию тег сохраняет.
  *
  * Запуск (сервер должен быть уже поднят):
  *   yarn preview            # в отдельном окне
@@ -520,6 +523,161 @@ async function canvasZonePixels(page) {
     true,
     `${shots.length + zoneShots.length} файлов в ${path.relative(process.cwd(), OUT)} ` +
       `(из них ${zoneShots.length} — с видимыми системными зонами)`,
+  );
+}
+
+// ═══ 7. Переключатель эксперимента `?tc=off` ══════════════════════════
+/*
+ * Проверяется сам механизм, а не его исход на iOS: исход можно узнать только
+ * на устройстве (см. `FIXES.md`, «Эксперимент theme-color»). Здесь три вещи:
+ *   • без параметра тег `theme-color` живёт и синхронизирован с верхом;
+ *   • с `?tc=off` узел тега ОТСУТСТВУЕТ, а двухзонная канва при этом
+ *     по-прежнему выставляется и рисуется;
+ *   • режим держится на ВСЕХ экранах флоу обоих архетипов — проход идёт
+ *     кликами по сценарию, а не открытием каждой стадии по ссылке.
+ */
+{
+  /** Снимок состояния эксперимента на текущем экране. */
+  const probe = (page) =>
+    page.evaluate(() => {
+      const style = getComputedStyle(document.documentElement);
+      const meta = document.querySelector('meta[name="theme-color"]');
+      return {
+        metaPresent: meta !== null,
+        metaContent: meta ? meta.content : null,
+        canvasTop: style.getPropertyValue("--page-canvas").trim(),
+        canvasBottom: style.getPropertyValue("--page-canvas-bottom").trim(),
+        mode: document.documentElement.dataset.themeColor ?? "on",
+        stage:
+          document.querySelector('[data-testid="phone-frame"]')?.dataset.stage ??
+          (document.querySelector('[data-testid="stub"]') ? "stub" : "config-error"),
+      };
+    });
+
+  /**
+   * Сквозной сценарий кликами, с замером на каждой стадии.
+   *
+   * Режим задаётся ОДИН раз — в адресе входа. Внутри флоу переходов по URL
+   * нет: стадии меняются состоянием React, адрес не трогается никем. Этот
+   * проход — доказательство, что параметр не теряется по дороге, а не
+   * повторное открытие каждой стадии по своей ссылке (так потеря режима как
+   * раз и осталась бы незамеченной).
+   */
+  async function walkFlow(page, archetype) {
+    const seen = [];
+    const step = async (label, settleMs = 500) => {
+      await page.waitForTimeout(settleMs);
+      seen.push({ label, ...(await probe(page)) });
+    };
+
+    await step("contractor");
+
+    const ozon =
+      archetype === "cart_checkout"
+        ? '[data-testid="payment-method-card-ozon"]'
+        : '[data-testid="payment-method-button-ozon"]';
+    await page.locator(ozon).click();
+    await page.waitForSelector('[data-testid="phone-block"][data-expanded="true"]', {
+      timeout: 5000,
+    });
+    // У архетипа B проверка телефона живёт на отдельном экране — он тоже стадия.
+    if (archetype === "subscription_payment") await step("ozon_rail");
+
+    await page.locator('[data-testid="phone-input"]').fill("9151234567");
+    await page.locator('[data-testid="primary-cta"]').click();
+    await page.waitForSelector('[data-testid="push-banner"]', { timeout: 6000 });
+    await step("push");
+
+    await page.locator('[data-testid="push-banner"]').click();
+    await page.waitForSelector('[data-testid="bank-splash"]', { timeout: 5000 });
+    // Splash живёт 1.2 с и уходит сам: замер короткий, чтобы попасть в него.
+    await step("splash", 250);
+
+    await page.waitForSelector('[data-testid="bank-payment"]', { timeout: 8000 });
+    await step("bank_payment");
+
+    await page.locator('[data-testid="bank-pay-cta"]').click();
+    await page.waitForSelector('[data-testid="bank-success"]', { timeout: 8000 });
+    await step("bank_success");
+
+    await page.locator('[data-testid="bank-return-cta"]').click();
+    await page.waitForSelector('[data-testid="paid-confirmation"]', { timeout: 5000 });
+    await step("paid");
+
+    return seen;
+  }
+
+  const offA = await withPhone("/flowwow?tc=off", (page) =>
+    walkFlow(page, "cart_checkout"),
+  );
+  const offB = await withPhone("/uchi?tc=off", (page) =>
+    walkFlow(page, "subscription_payment"),
+  );
+  const onA = await withPhone("/flowwow", (page) => walkFlow(page, "cart_checkout"));
+
+  const canvasSet = (row) => row.canvasTop !== "" && row.canvasBottom !== "";
+  const offOk = [offA, offB].every(
+    (walk) =>
+      walk.length >= 6 &&
+      walk.every((row) => !row.metaPresent && row.mode === "off" && canvasSet(row)),
+  );
+  // Контроль: в режиме по умолчанию тег обязан быть на каждой стадии и нести
+  // цвет верхней кромки — иначе «отсутствует» ничего не доказывает.
+  const onOk =
+    onA.length >= 6 &&
+    onA.every(
+      (row) =>
+        row.metaPresent &&
+        row.mode === "on" &&
+        canvasSet(row) &&
+        row.metaContent === row.canvasTop,
+    );
+
+  // Двухзонная канва без тега: цвета кромок и канвы за пределами бокса
+  // страницы проверяются тем же способом, что и в проверке 1.
+  const zoneRows = [];
+  let zonesOk = true;
+  for (const [route, label, expectedStage] of [
+    ["/flowwow?tc=off&stage=bank_payment", "O-2 без theme-color", "bank_payment"],
+    ["/flowwow?tc=off&stage=paid", "O-4 без theme-color", "paid"],
+  ]) {
+    const r = await withPhone(route, async (page) => {
+      await page.waitForTimeout(600);
+      const state = await probe(page);
+      const contentTop = await edgePixel(page, "top");
+      const contentBottom = await edgePixel(page, "bottom");
+      const zone = await canvasZonePixels(page);
+      return { ...state, contentTop, contentBottom, zone };
+    });
+    const declaredTop = parseRgb(r.canvasTop);
+    const declaredBottom = parseRgb(r.canvasBottom);
+    const ok =
+      r.stage === expectedStage &&
+      !r.metaPresent &&
+      declaredTop !== null &&
+      declaredBottom !== null &&
+      sameColor(declaredTop, r.contentTop) &&
+      sameColor(declaredBottom, r.contentBottom) &&
+      sameColor(r.zone.top, declaredTop, 1) &&
+      sameColor(r.zone.bottom, declaredBottom, 1);
+    if (!ok) zonesOk = false;
+    zoneRows.push(
+      `${label}: верх ${r.canvasTop} (зона ${formatRgb(r.zone.top)}), ` +
+        `низ ${r.canvasBottom} (зона ${formatRgb(r.zone.bottom)}), тег ${
+          r.metaPresent ? "ЕСТЬ" : "удалён"
+        }`,
+    );
+  }
+
+  const walkSummary = (walk) => walk.map((row) => row.label).join("→");
+  record(
+    "7. `?tc=off` удаляет тег theme-color на всём флоу, режим по умолчанию его сохраняет",
+    offOk && onOk && zonesOk,
+    `off A ${walkSummary(offA)} (тег отсутствует на всех: ${offA.every((r) => !r.metaPresent)}); ` +
+      `off B ${walkSummary(offB)} (тег отсутствует на всех: ${offB.every((r) => !r.metaPresent)}); ` +
+      `on A ${walkSummary(onA)} (тег есть и равен верху на всех: ${onA.every(
+        (r) => r.metaPresent && r.metaContent === r.canvasTop,
+      )}) | ${zoneRows.join(" | ")}`,
   );
 }
 

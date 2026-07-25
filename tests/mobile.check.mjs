@@ -1,8 +1,16 @@
-import { mkdirSync, writeFileSync } from "node:fs";
+import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { chromium, devices } from "playwright";
+
+import {
+  averageColor,
+  decodePng,
+  formatRgb,
+  parseRgb,
+  sameColor,
+} from "./png-pixels.mjs";
 
 /**
  * Мобильная приёмка демо: профиль телефона, а не узкое окно десктопа.
@@ -15,8 +23,8 @@ import { chromium, devices } from "playwright";
  * тач-событиями через CDP, а не эмуляцией мыши.
  *
  * Проверяется ровно то, что ломалось на устройстве:
- *   1. фон страницы и `theme-color` совпадают с фоном текущего экрана
- *      (иначе системные зоны iOS красятся серым);
+ *   1. ВЕРХНЯЯ и НИЖНЯЯ системные зоны красятся цветом своей кромки экрана,
+ *      а не одним общим (иначе под белым листом `O-2` идёт синяя полоса);
  *   2. горизонтальный свайп листает ряд, вертикальный с карточки листает
  *      страницу, тап выбирает карточку; drag мышью на десктопе цел;
  *   3. пуш-баннер виден целиком и не сдвигает низ экрана — на ОБОИХ
@@ -44,6 +52,26 @@ mkdirSync(OUT, { recursive: true });
 
 /** Профиль телефона: тач, мобильный вьюпорт, DPR устройства. */
 const PHONE = devices["iPhone 13"];
+
+/**
+ * Маршрут splash `O-1` с удлинённой стадией.
+ *
+ * Экран живёт 1.2 с и уходит сам, поэтому замер цвета кромок попадал ровно в
+ * середину перехода на следующий экран и читал случайную фазу анимации. Тенант
+ * подаётся через `?t=` (тот же приём, что в `verify.mjs`) и отличается от
+ * бандла ОДНИМ полем — длительностью splash. Ни один цвет не меняется.
+ */
+const slowSplashTenant = JSON.parse(
+  readFileSync(path.resolve(projectRoot, "tenants/flowwow-like.json"), "utf8"),
+);
+// 5000 — потолок схемы (`tenant.schema.ts`): больше значение конфиг отклонит,
+// и вместо splash открылся бы экран ошибки конфига.
+slowSplashTenant.demo.timings.splash_ms = 5000;
+const SPLASH_ROUTE = `/?t=${Buffer.from(JSON.stringify(slowSplashTenant), "utf8")
+  .toString("base64")
+  .replace(/\+/g, "-")
+  .replace(/\//g, "_")
+  .replace(/=+$/, "")}&stage=splash`;
 
 const results = [];
 const record = (id, passed, detail) => {
@@ -86,52 +114,119 @@ async function swipe(page, cdp, { x, y, dx, dy, steps = 12 }) {
   await page.waitForTimeout(450);
 }
 
-// ═══ 1. Фон системных зон устройства ══════════════════════════════════
+// ═══ 1. Верхняя и нижняя системные зоны устройства ════════════════════
+
+/** Цвет ОТРИСОВАННОГО пикселя у кромки экрана — независимо от DOM-измерения. */
+async function edgePixel(page, edge) {
+  const { width, height } = page.viewportSize();
+  const shot = await page.screenshot({
+    clip: {
+      x: Math.round(width / 2),
+      y: edge === "top" ? 0 : height - 1,
+      width: 1,
+      height: 1,
+    },
+  });
+  return averageColor(decodePng(shot));
+}
+
+/**
+ * Цвет КАНВЫ за пределами бокса страницы — тех самых зон, которые на
+ * устройстве закрыты панелями браузера. Внутри вьюпорта они не видны, поэтому
+ * зонд создаёт их искусственно: колонка демо прячется, бокс `html` временно
+ * ужимается до 60 % высоты. Всё, что ниже 60 %, — канва за пределами страницы,
+ * то есть ровно нижняя системная зона; верх зонда — верхняя.
+ *
+ * Это не пересчёт формулы из `styles.css`, а проверка результата: браузер сам
+ * решает, чем красить канву, тест лишь смотрит, что получилось.
+ */
+async function canvasZonePixels(page) {
+  await page.evaluate(() => {
+    document.getElementById("root").style.display = "none";
+    document.documentElement.style.height = "60vh";
+  });
+  await page.waitForTimeout(60);
+  const top = await edgePixel(page, "top");
+  const bottom = await edgePixel(page, "bottom");
+  await page.evaluate(() => {
+    document.getElementById("root").style.display = "";
+    document.documentElement.style.height = "";
+  });
+  return { top, bottom };
+}
+
 {
   const rows = [];
   let ok = true;
+  // Третье поле — какой экран ОБЯЗАН быть на странице. Без него отклонённый
+  // конфиг или опечатка в адресе дают «согласованные» цвета экрана ошибки и
+  // проверка проходит, не проверив ничего.
   const stages = [
-    ["/flowwow", "экран подрядчика A"],
-    ["/flowwow?stage=push", "пуш"],
-    ["/flowwow?stage=splash", "splash банка"],
-    ["/flowwow?stage=bank_success", "успех банка"],
-    ["/flowwow?stage=paid", "возврат к подрядчику"],
-    ["/uchi", "экран подрядчика B"],
-    ["/uchi?stage=bank_payment", "оплата в банке"],
+    ["/flowwow", "подрядчик A (Flowwow)", "contractor"],
+    ["/uchi", "подрядчик B (UCHi.RU)", "contractor"],
+    ["/uchi?stage=ozon_rail", "экран оплаты через Ozon Банк (B)", "ozon_rail"],
+    ["/flowwow?stage=push", "пуш", "push"],
+    [SPLASH_ROUTE, "O-1 splash", "splash"],
+    ["/flowwow?stage=bank_payment", "O-2 оплата в банке", "bank_payment"],
+    ["/flowwow?stage=bank_success", "O-3 успех", "bank_success"],
+    ["/flowwow?stage=paid", "O-4 заказ оплачен (A)", "paid"],
+    ["/uchi?stage=paid", "O-4 подписка оплачена (B)", "paid"],
     // Заглушка корня — тоже поверхность, на которую можно попасть с телефона,
     // и она тёмная: без синхронизации вокруг неё были бы светлые полосы.
-    ["/", "нейтральная заглушка"],
+    ["/", "нейтральная заглушка", "stub"],
   ];
-  for (const [route, label] of stages) {
+  for (const [route, label, expectedStage] of stages) {
     const r = await withPhone(route, async (page) => {
       await page.waitForTimeout(600);
-      return page.evaluate(() => {
+      const vars = await page.evaluate(() => {
         const frame = document.querySelector('[data-testid="phone-frame"]');
+        const style = getComputedStyle(document.documentElement);
         return {
-          body: getComputedStyle(document.body).backgroundColor,
-          canvas: getComputedStyle(document.documentElement)
-            .getPropertyValue("--page-canvas")
-            .trim(),
+          canvasTop: style.getPropertyValue("--page-canvas").trim(),
+          canvasBottom: style.getPropertyValue("--page-canvas-bottom").trim(),
           theme: document.querySelector('meta[name="theme-color"]')?.content ?? null,
           // Заглушка и экран ошибки конфига колонку не рендерят.
           frameScrollTop: frame ? frame.scrollTop : 0,
+          stage:
+            frame?.dataset.stage ??
+            (document.querySelector('[data-testid="stub"]') ? "stub" : "config-error"),
         };
       });
+      const contentTop = await edgePixel(page, "top");
+      const contentBottom = await edgePixel(page, "bottom");
+      const zone = await canvasZonePixels(page);
+      return { ...vars, contentTop, contentBottom, zone };
     });
-    // Ключевой инвариант: фон страницы = измеренный фон верхней кромки экрана
-    // и он же в `theme-color`. Ахроматичный «стол» (#e6e7ea) на телефоне
-    // запрещён — это и были серые полосы.
+
+    const declaredTop = parseRgb(r.canvasTop);
+    const declaredBottom = parseRgb(r.canvasBottom);
     const passed =
-      r.canvas !== "" &&
-      r.body === r.canvas &&
-      r.theme === r.canvas &&
-      !/230,\s*231,\s*234/.test(r.body) &&
+      r.stage === expectedStage &&
+      declaredTop !== null &&
+      declaredBottom !== null &&
+      // Объявленный цвет зоны = фактический цвет своей кромки экрана.
+      sameColor(declaredTop, r.contentTop) &&
+      sameColor(declaredBottom, r.contentBottom) &&
+      // Канва за пределами страницы покрашена этими же двумя цветами.
+      sameColor(r.zone.top, declaredTop, 1) &&
+      sameColor(r.zone.bottom, declaredBottom, 1) &&
+      // `theme-color` (строка статуса iOS) остаётся синхронным с ВЕРХОМ.
+      r.theme === r.canvasTop &&
+      // Ахроматичный «стол» (#e6e7ea) на телефоне запрещён ни сверху, ни снизу
+      // — это и были серые полосы.
+      ![declaredTop, declaredBottom].some((color) =>
+        sameColor(color, [230, 231, 234], 1),
+      ) &&
       r.frameScrollTop === 0;
     if (!passed) ok = false;
-    rows.push(`${label}: body=${r.body}, theme-color=${r.theme}`);
+    rows.push(
+      `${label}: верх ${r.canvasTop} (кадр ${formatRgb(r.contentTop)}, зона ${formatRgb(r.zone.top)}), ` +
+        `низ ${r.canvasBottom} (кадр ${formatRgb(r.contentBottom)}, зона ${formatRgb(r.zone.bottom)})` +
+        (r.stage === expectedStage ? "" : ` — ОТКРЫЛСЯ НЕ ТОТ ЭКРАН: ${r.stage}`),
+    );
   }
   record(
-    "1. Фон страницы и theme-color следуют за фоном текущего экрана",
+    "1. Верхняя и нижняя системные зоны совпадают с фактическим цветом своей кромки экрана",
     ok,
     rows.join(" | "),
   );
@@ -374,6 +469,9 @@ async function swipe(page, cdp, { x, y, dx, dy, steps = 12 }) {
     ["uchi-push-390", "/uchi?stage=push", 390],
     ["success-390", "/flowwow?stage=bank_success", 390],
     ["success-320", "/flowwow?stage=bank_success", 320],
+    ["bank-payment-390", "/flowwow?stage=bank_payment", 390],
+    ["paid-390", "/flowwow?stage=paid", 390],
+    ["splash-390", SPLASH_ROUTE, 390],
   ];
   for (const [name, route, width] of shots) {
     await withPhone(
@@ -386,10 +484,42 @@ async function swipe(page, cdp, { x, y, dx, dy, steps = 12 }) {
       { width, height: width === 320 ? 568 : 664 },
     );
   }
+
+  /*
+   * Отдельная серия «системные зоны видно». Обычный скриншот показывает только
+   * содержимое вьюпорта: зоны, которые на устройстве закрыты панелями Safari,
+   * в кадр не попадают в принципе. Поэтому колонка демо ужимается до 86 %, и
+   * вокруг неё проступает канва — сверху своим цветом, снизу своим. Это
+   * иллюстрация к числам проверки 1, а не отдельная проверка.
+   */
+  const zoneShots = [
+    ["zones-splash-390", SPLASH_ROUTE],
+    ["zones-bank-payment-390", "/flowwow?stage=bank_payment"],
+    ["zones-success-390", "/flowwow?stage=bank_success"],
+    ["zones-paid-390", "/flowwow?stage=paid"],
+  ];
+  for (const [name, route] of zoneShots) {
+    await withPhone(
+      route,
+      async (page) => {
+        await page.waitForTimeout(1500);
+        await page.evaluate(() => {
+          const root = document.getElementById("root");
+          root.style.transform = "scale(0.86)";
+          root.style.transformOrigin = "center";
+        });
+        await page.waitForTimeout(120);
+        await page.screenshot({ path: path.join(OUT, `${name}.png`) });
+      },
+      { width: 390, height: 664 },
+    );
+  }
+
   record(
     "6. Скриншоты мобильного профиля сняты",
     true,
-    `${shots.length} файлов в ${path.relative(process.cwd(), OUT)}`,
+    `${shots.length + zoneShots.length} файлов в ${path.relative(process.cwd(), OUT)} ` +
+      `(из них ${zoneShots.length} — с видимыми системными зонами)`,
   );
 }
 

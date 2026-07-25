@@ -1,6 +1,4 @@
-import { useRef, type CSSProperties, type ReactNode } from "react";
-
-import { usePageCanvas } from "@demo/lib/page-canvas";
+import { type CSSProperties, type ReactNode } from "react";
 
 interface Props {
   vars: Record<string, string>;
@@ -43,11 +41,6 @@ export function PhoneFrame({
   stage,
   children,
 }: Props) {
-  const frameRef = useRef<HTMLDivElement>(null);
-  // Системные зоны устройства красятся фоном страницы: держим его равным
-  // фону верхней кромки текущего экрана (см. `lib/page-canvas.ts`).
-  usePageCanvas(frameRef, stage);
-
   return (
     <div
       className="flex h-full w-full justify-center"
@@ -60,7 +53,6 @@ export function PhoneFrame({
       }}
     >
       <div
-        ref={frameRef}
         data-testid="phone-frame"
         data-tenant={tenantId}
         data-archetype={archetype}

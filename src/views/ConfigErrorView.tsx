@@ -1,7 +1,4 @@
-import { useRef } from "react";
-
 import type { Diagnostic } from "@demo/theme/build-theme";
-import { usePageCanvas } from "@demo/lib/page-canvas";
 
 interface Props {
   diagnostics: Diagnostic[];
@@ -21,14 +18,8 @@ export function ConfigErrorView({ diagnostics, source, slug }: Props) {
   const errors = diagnostics.filter((item) => item.severity === "error");
   const rest = diagnostics.filter((item) => item.severity !== "error");
 
-  // Экран тёмный: без синхронизации фона системные зоны устройства остались
-  // бы светлыми (см. `lib/page-canvas.ts`).
-  const ref = useRef<HTMLDivElement>(null);
-  usePageCanvas(ref, "config-error");
-
   return (
     <div
-      ref={ref}
       data-testid="config-error"
       className="no-scrollbar flex h-full w-full justify-center overflow-y-auto"
       style={{

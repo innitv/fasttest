@@ -23,17 +23,17 @@ import {
  * тач-событиями через CDP, а не эмуляцией мыши.
  *
  * Проверяется ровно то, что ломалось на устройстве:
- *   1. ВЕРХНЯЯ и НИЖНЯЯ системные зоны красятся цветом своей кромки экрана,
- *      а не одним общим (иначе под белым листом `O-2` идёт синяя полоса);
+ *   1. системные зоны БЕЛЫЕ и статические на каждом экране: `theme-color`
+ *      равен `#ffffff` и никем не переписывается, канва за боксом страницы
+ *      белая, серому (`#e6e7ea` — те самые полосы) взяться неоткуда;
  *   2. горизонтальный свайп листает ряд, вертикальный с карточки листает
  *      страницу, тап выбирает карточку; drag мышью на десктопе цел;
  *   3. пуш-баннер виден целиком и не сдвигает низ экрана — на ОБОИХ
  *      архетипах;
  *   4. композиция экрана успеха центрирована и не наезжает на кнопку на
  *      реальных ширинах и высотах iPhone;
- *   5. переключатель эксперимента `?tc=off` действительно убирает
- *      `<meta name="theme-color">` из документа и держится на всех экранах
- *      флоу обоих архетипов, а режим по умолчанию тег сохраняет.
+ *   5. цвет зон не меняется при переходах между экранами — проход по флоу
+ *      кликами, а не открытием каждой стадии по ссылке.
  *
  * Запуск (сервер должен быть уже поднят):
  *   yarn preview            # в отдельном окне
@@ -117,7 +117,7 @@ async function swipe(page, cdp, { x, y, dx, dy, steps = 12 }) {
   await page.waitForTimeout(450);
 }
 
-// ═══ 1. Верхняя и нижняя системные зоны устройства ════════════════════
+// ═══ 1. Системные зоны устройства: белые и статические ════════════════
 
 /** Цвет ОТРИСОВАННОГО пикселя у кромки экрана — независимо от DOM-измерения. */
 async function edgePixel(page, edge) {
@@ -140,8 +140,9 @@ async function edgePixel(page, edge) {
  * ужимается до 60 % высоты. Всё, что ниже 60 %, — канва за пределами страницы,
  * то есть ровно нижняя системная зона; верх зонда — верхняя.
  *
- * Это не пересчёт формулы из `styles.css`, а проверка результата: браузер сам
- * решает, чем красить канву, тест лишь смотрит, что получилось.
+ * Читается ОТРИСОВАННЫЙ пиксель, а не CSS-переменная: канву красит браузер по
+ * своим правилам распространения фона, и проверять надо результат, а не
+ * пересказ формулы из `styles.css`.
  */
 async function canvasZonePixels(page) {
   await page.evaluate(() => {
@@ -158,11 +159,27 @@ async function canvasZonePixels(page) {
   return { top, bottom };
 }
 
+/**
+ * Что именно проверяется на каждом экране.
+ *
+ * Решение 2026-07-25: обе системные зоны белые везде. Двухзонность на Safari
+ * недостижима (`FIXES.md`), поэтому единственный рычаг — статический
+ * `<meta name="theme-color">` в `index.html`. Отсюда три требования, и все три
+ * должны выполняться НА КАЖДОМ экране, включая синие экраны банка:
+ *   • тег ровно один и равен `#ffffff` — то есть его никто не переписал;
+ *   • канва за боксом страницы белая сверху и снизу;
+ *   • от снятого механизма не осталось следов: ни переменных `--page-canvas*`,
+ *     ни признака режима `data-theme-color`. Иначе «работает» могло бы
+ *     держаться на живом остатке старого кода.
+ */
+const WHITE = [255, 255, 255];
+const DESK_GREY = [230, 231, 234];
+
 {
   const rows = [];
   let ok = true;
   // Третье поле — какой экран ОБЯЗАН быть на странице. Без него отклонённый
-  // конфиг или опечатка в адресе дают «согласованные» цвета экрана ошибки и
+  // конфиг или опечатка в адресе дают «согласованный» экран ошибки и
   // проверка проходит, не проверив ничего.
   const stages = [
     ["/flowwow", "подрядчик A (Flowwow)", "contractor"],
@@ -181,13 +198,20 @@ async function canvasZonePixels(page) {
   for (const [route, label, expectedStage] of stages) {
     const r = await withPhone(route, async (page) => {
       await page.waitForTimeout(600);
-      const vars = await page.evaluate(() => {
+      const dom = await page.evaluate(() => {
         const frame = document.querySelector('[data-testid="phone-frame"]');
         const style = getComputedStyle(document.documentElement);
+        const tags = [...document.querySelectorAll('meta[name="theme-color"]')];
         return {
-          canvasTop: style.getPropertyValue("--page-canvas").trim(),
-          canvasBottom: style.getPropertyValue("--page-canvas-bottom").trim(),
-          theme: document.querySelector('meta[name="theme-color"]')?.content ?? null,
+          themeCount: tags.length,
+          theme: tags[0]?.content ?? null,
+          htmlBackground: style.backgroundColor,
+          // Следы снятого механизма: пусто — значит их действительно нет.
+          leftovers: [
+            style.getPropertyValue("--page-canvas").trim(),
+            style.getPropertyValue("--page-canvas-bottom").trim(),
+            document.documentElement.dataset.themeColor ?? "",
+          ].filter(Boolean),
           // Заглушка и экран ошибки конфига колонку не рендерят.
           frameScrollTop: frame ? frame.scrollTop : 0,
           stage:
@@ -195,41 +219,33 @@ async function canvasZonePixels(page) {
             (document.querySelector('[data-testid="stub"]') ? "stub" : "config-error"),
         };
       });
-      const contentTop = await edgePixel(page, "top");
-      const contentBottom = await edgePixel(page, "bottom");
       const zone = await canvasZonePixels(page);
-      return { ...vars, contentTop, contentBottom, zone };
+      return { ...dom, zone };
     });
 
-    const declaredTop = parseRgb(r.canvasTop);
-    const declaredBottom = parseRgb(r.canvasBottom);
+    const htmlBg = parseRgb(r.htmlBackground);
     const passed =
       r.stage === expectedStage &&
-      declaredTop !== null &&
-      declaredBottom !== null &&
-      // Объявленный цвет зоны = фактический цвет своей кромки экрана.
-      sameColor(declaredTop, r.contentTop) &&
-      sameColor(declaredBottom, r.contentBottom) &&
-      // Канва за пределами страницы покрашена этими же двумя цветами.
-      sameColor(r.zone.top, declaredTop, 1) &&
-      sameColor(r.zone.bottom, declaredBottom, 1) &&
-      // `theme-color` (строка статуса iOS) остаётся синхронным с ВЕРХОМ.
-      r.theme === r.canvasTop &&
-      // Ахроматичный «стол» (#e6e7ea) на телефоне запрещён ни сверху, ни снизу
-      // — это и были серые полосы.
-      ![declaredTop, declaredBottom].some((color) =>
-        sameColor(color, [230, 231, 234], 1),
-      ) &&
+      r.themeCount === 1 &&
+      r.theme === "#ffffff" &&
+      r.leftovers.length === 0 &&
+      sameColor(htmlBg, WHITE, 0) &&
+      // Отрисованная канва обеих зон белая — и, в частности, не серый «стол».
+      sameColor(r.zone.top, WHITE, 1) &&
+      sameColor(r.zone.bottom, WHITE, 1) &&
+      !sameColor(r.zone.top, DESK_GREY, 1) &&
+      !sameColor(r.zone.bottom, DESK_GREY, 1) &&
       r.frameScrollTop === 0;
     if (!passed) ok = false;
     rows.push(
-      `${label}: верх ${r.canvasTop} (кадр ${formatRgb(r.contentTop)}, зона ${formatRgb(r.zone.top)}), ` +
-        `низ ${r.canvasBottom} (кадр ${formatRgb(r.contentBottom)}, зона ${formatRgb(r.zone.bottom)})` +
+      `${label}: тег ${r.theme} ×${r.themeCount}, зона верх ${formatRgb(r.zone.top)} / низ ${formatRgb(r.zone.bottom)}, ` +
+        `фон html ${r.htmlBackground}` +
+        (r.leftovers.length > 0 ? `, ОСТАТКИ СНЯТОГО МЕХАНИЗМА: ${r.leftovers.join(", ")}` : "") +
         (r.stage === expectedStage ? "" : ` — ОТКРЫЛСЯ НЕ ТОТ ЭКРАН: ${r.stage}`),
     );
   }
   record(
-    "1. Верхняя и нижняя системные зоны совпадают с фактическим цветом своей кромки экрана",
+    "1. Обе системные зоны белые на каждом экране, тег theme-color = #ffffff и не переписан",
     ok,
     rows.join(" | "),
   );
@@ -492,8 +508,10 @@ async function canvasZonePixels(page) {
    * Отдельная серия «системные зоны видно». Обычный скриншот показывает только
    * содержимое вьюпорта: зоны, которые на устройстве закрыты панелями Safari,
    * в кадр не попадают в принципе. Поэтому колонка демо ужимается до 86 %, и
-   * вокруг неё проступает канва — сверху своим цветом, снизу своим. Это
-   * иллюстрация к числам проверки 1, а не отдельная проверка.
+   * вокруг неё проступает канва — теперь белая на всех экранах. Это
+   * иллюстрация к числам проверки 1, а не отдельная проверка; на синих
+   * `zones-splash` и `zones-bank-payment` видно принятую цену решения —
+   * белую полосу над синим экраном.
    */
   const zoneShots = [
     ["zones-splash-390", SPLASH_ROUTE],
@@ -526,28 +544,34 @@ async function canvasZonePixels(page) {
   );
 }
 
-// ═══ 7. Переключатель эксперимента `?tc=off` ══════════════════════════
+// ═══ 7. Цвет зон не меняется при переходах между экранами ═════════════
 /*
- * Проверяется сам механизм, а не его исход на iOS: исход можно узнать только
- * на устройстве (см. `FIXES.md`, «Эксперимент theme-color»). Здесь три вещи:
- *   • без параметра тег `theme-color` живёт и синхронизирован с верхом;
- *   • с `?tc=off` узел тега ОТСУТСТВУЕТ, а двухзонная канва при этом
- *     по-прежнему выставляется и рисуется;
- *   • режим держится на ВСЕХ экранах флоу обоих архетипов — проход идёт
- *     кликами по сценарию, а не открытием каждой стадии по ссылке.
+ * Проверка 1 открывает каждую стадию по своей ссылке — так виден результат, но
+ * не видно момента перехода. А переписывал тег прежний механизм именно на
+ * смене экрана. Поэтому здесь тот же флоу проходится КЛИКАМИ, с замером на
+ * каждой стадии: тег обязан остаться единственным и белым от корзины до
+ * «Заказ оплачен», следов снятого механизма не должно появиться ни на одной
+ * стадии.
+ *
+ * Третий проход — по адресу со снятым диагностическим параметром `?tc=off`
+ * (им проверялась гипотеза двухзонности, см. `FIXES.md`). Он обязан вести
+ * себя ровно как обычный: разбирать `tc` больше некому, и остаться
+ * полурабочим он не может.
  */
 {
-  /** Снимок состояния эксперимента на текущем экране. */
+  /** Снимок состояния системных зон на текущем экране. */
   const probe = (page) =>
     page.evaluate(() => {
       const style = getComputedStyle(document.documentElement);
-      const meta = document.querySelector('meta[name="theme-color"]');
+      const tags = [...document.querySelectorAll('meta[name="theme-color"]')];
       return {
-        metaPresent: meta !== null,
-        metaContent: meta ? meta.content : null,
-        canvasTop: style.getPropertyValue("--page-canvas").trim(),
-        canvasBottom: style.getPropertyValue("--page-canvas-bottom").trim(),
-        mode: document.documentElement.dataset.themeColor ?? "on",
+        metaCount: tags.length,
+        metaContent: tags[0]?.content ?? null,
+        leftovers: [
+          style.getPropertyValue("--page-canvas").trim(),
+          style.getPropertyValue("--page-canvas-bottom").trim(),
+          document.documentElement.dataset.themeColor ?? "",
+        ].filter(Boolean),
         stage:
           document.querySelector('[data-testid="phone-frame"]')?.dataset.stage ??
           (document.querySelector('[data-testid="stub"]') ? "stub" : "config-error"),
@@ -557,11 +581,9 @@ async function canvasZonePixels(page) {
   /**
    * Сквозной сценарий кликами, с замером на каждой стадии.
    *
-   * Режим задаётся ОДИН раз — в адресе входа. Внутри флоу переходов по URL
-   * нет: стадии меняются состоянием React, адрес не трогается никем. Этот
-   * проход — доказательство, что параметр не теряется по дороге, а не
-   * повторное открытие каждой стадии по своей ссылке (так потеря режима как
-   * раз и осталась бы незамеченной).
+   * Внутри флоу переходов по URL нет: стадии меняются состоянием React, адрес
+   * не трогается никем. Значит каждая смена экрана — это перерисовка, на
+   * которой прежний код и переписывал тег; замер идёт после каждой.
    */
   async function walkFlow(page, archetype) {
     const seen = [];
@@ -607,77 +629,44 @@ async function canvasZonePixels(page) {
     return seen;
   }
 
-  const offA = await withPhone("/flowwow?tc=off", (page) =>
-    walkFlow(page, "cart_checkout"),
-  );
-  const offB = await withPhone("/uchi?tc=off", (page) =>
-    walkFlow(page, "subscription_payment"),
-  );
-  const onA = await withPhone("/flowwow", (page) => walkFlow(page, "cart_checkout"));
+  const walks = [
+    ["A (Flowwow)", await withPhone("/flowwow", (page) => walkFlow(page, "cart_checkout"))],
+    ["B (UCHi.RU)", await withPhone("/uchi", (page) => walkFlow(page, "subscription_payment"))],
+    [
+      "A со снятым `?tc=off`",
+      await withPhone("/flowwow?tc=off", (page) => walkFlow(page, "cart_checkout")),
+    ],
+  ];
 
-  const canvasSet = (row) => row.canvasTop !== "" && row.canvasBottom !== "";
-  const offOk = [offA, offB].every(
-    (walk) =>
-      walk.length >= 6 &&
-      walk.every((row) => !row.metaPresent && row.mode === "off" && canvasSet(row)),
-  );
-  // Контроль: в режиме по умолчанию тег обязан быть на каждой стадии и нести
-  // цвет верхней кромки — иначе «отсутствует» ничего не доказывает.
-  const onOk =
-    onA.length >= 6 &&
-    onA.every(
+  const stayedWhite = (walk) =>
+    walk.length >= 6 &&
+    walk.every(
       (row) =>
-        row.metaPresent &&
-        row.mode === "on" &&
-        canvasSet(row) &&
-        row.metaContent === row.canvasTop,
+        row.metaCount === 1 && row.metaContent === "#ffffff" && row.leftovers.length === 0,
     );
 
-  // Двухзонная канва без тега: цвета кромок и канвы за пределами бокса
-  // страницы проверяются тем же способом, что и в проверке 1.
-  const zoneRows = [];
-  let zonesOk = true;
-  for (const [route, label, expectedStage] of [
-    ["/flowwow?tc=off&stage=bank_payment", "O-2 без theme-color", "bank_payment"],
-    ["/flowwow?tc=off&stage=paid", "O-4 без theme-color", "paid"],
-  ]) {
-    const r = await withPhone(route, async (page) => {
-      await page.waitForTimeout(600);
-      const state = await probe(page);
-      const contentTop = await edgePixel(page, "top");
-      const contentBottom = await edgePixel(page, "bottom");
-      const zone = await canvasZonePixels(page);
-      return { ...state, contentTop, contentBottom, zone };
-    });
-    const declaredTop = parseRgb(r.canvasTop);
-    const declaredBottom = parseRgb(r.canvasBottom);
-    const ok =
-      r.stage === expectedStage &&
-      !r.metaPresent &&
-      declaredTop !== null &&
-      declaredBottom !== null &&
-      sameColor(declaredTop, r.contentTop) &&
-      sameColor(declaredBottom, r.contentBottom) &&
-      sameColor(r.zone.top, declaredTop, 1) &&
-      sameColor(r.zone.bottom, declaredBottom, 1);
-    if (!ok) zonesOk = false;
-    zoneRows.push(
-      `${label}: верх ${r.canvasTop} (зона ${formatRgb(r.zone.top)}), ` +
-        `низ ${r.canvasBottom} (зона ${formatRgb(r.zone.bottom)}), тег ${
-          r.metaPresent ? "ЕСТЬ" : "удалён"
-        }`,
-    );
-  }
-
-  const walkSummary = (walk) => walk.map((row) => row.label).join("→");
+  const ok = walks.every(([, walk]) => stayedWhite(walk));
   record(
-    "7. `?tc=off` удаляет тег theme-color на всём флоу, режим по умолчанию его сохраняет",
-    offOk && onOk && zonesOk,
-    `off A ${walkSummary(offA)} (тег отсутствует на всех: ${offA.every((r) => !r.metaPresent)}); ` +
-      `off B ${walkSummary(offB)} (тег отсутствует на всех: ${offB.every((r) => !r.metaPresent)}); ` +
-      `on A ${walkSummary(onA)} (тег есть и равен верху на всех: ${onA.every(
-        (r) => r.metaPresent && r.metaContent === r.canvasTop,
-      )}) | ${zoneRows.join(" | ")}`,
+    "7. theme-color остаётся #ffffff на всех стадиях при проходе кликами; `?tc=off` ничего не меняет",
+    ok,
+    walks
+      .map(([label, walk]) => {
+        const bad = walk.filter(
+          (row) =>
+            row.metaCount !== 1 || row.metaContent !== "#ffffff" || row.leftovers.length > 0,
+        );
+        return (
+          `${label}: ${walk.map((row) => row.label).join("→")} — ` +
+          (bad.length === 0
+            ? `тег #ffffff на всех ${walk.length}`
+            : `СБОЙ на ${bad
+                .map((row) => `${row.label} (${row.metaContent} ×${row.metaCount}${
+                  row.leftovers.length > 0 ? `, остатки: ${row.leftovers.join(", ")}` : ""
+                })`)
+                .join(", ")}`)
+        );
+      })
+      .join(" | "),
   );
 }
 

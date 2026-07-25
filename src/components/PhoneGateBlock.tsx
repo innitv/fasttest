@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 
 import { COPY } from "@demo/content/copy";
 import { formatPhoneMask, normalizePhoneDigits } from "@demo/lib/phone";
+import { focusWithoutScroll, revealInScrollPort } from "@demo/lib/scroll-safety";
 
 /**
  * ═══════════════════════════════════════════════════════════════════════
@@ -38,10 +39,16 @@ interface Props {
   /** Счётчик запроса фокуса: родитель инкрементирует при ошибке. */
   focusSignal: number;
   /**
-   * Доводить ли блок до зоны видимости при раскрытии и при ошибке.
-   * true (дефолт) — инлайн под sticky-панелью архетипа A: иначе поле уедет
-   * под кнопку. false — отдельный экран `ozon_rail` (архетип B): блок и так
-   * стоит у верха своего экрана, авто-прокрутка к центру там только мешает.
+   * Разрешено ли доводить блок до зоны видимости — в двух моментах и только
+   * в них: РАСКРЫТИЕ поля и ПОКАЗ ОШИБКИ. Даже при `true` прокрутка
+   * происходит, лишь если блок реально не помещается целиком (см.
+   * `revealInScrollPort`): «доводка» видимого блока — это и есть тот самый
+   * лишний рывок.
+   *
+   * true (дефолт) — инлайн под sticky-панелью архетипа A: без доводки
+   * раскрывшееся поле уезжает под кнопку. false — отдельный экран
+   * `ozon_rail` (архетип B): блок стоит у верха своего экрана, доводить
+   * нечего.
    */
   autoReveal?: boolean;
 }
@@ -79,19 +86,31 @@ export function PhoneGateBlock({
     typeof window !== "undefined" &&
     window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-  // При раскрытии блок доводится до зоны видимости выше sticky-панели
-  // архетипа A: иначе пользователь видит, что что-то раскрылось, но не видит
-  // что. `center` держит поле и слот сообщения над панелью в обоих архетипах.
-  // На отдельном экране (`autoReveal=false`) блок и так виден — прокрутка не нужна.
+  /**
+   * Помнит, был ли блок раскрыт на ПРОШЛОМ рендере.
+   *
+   * Инициализируется текущим значением, и это ключевая деталь: маунт с уже
+   * раскрытым полем — не раскрытие. Экран подрядчика пересобирается при
+   * deep-link на forced-состояние и при перерисовке как подложки пуша;
+   * безусловный эффект «раскрылось → прокрути» отрабатывал там повторно и
+   * тянул страницу к полю в момент, когда пользователь смотрел на пуш.
+   */
+  const wasExpanded = useRef(expanded);
+
+  // Раскрытие блока: под sticky-панелью архетипа A поле уезжает под кнопку,
+  // и пользователь видит, что что-то раскрылось, но не видит что. Доводка
+  // срабатывает ровно на переходе «свёрнут → раскрыт» и только если блок
+  // действительно не помещается целиком над панелью.
   useEffect(() => {
-    if (!expanded || !autoReveal) return;
+    const justOpened = expanded && !wasExpanded.current;
+    wasExpanded.current = expanded;
+    if (!justOpened || !autoReveal) return;
+
     const reduced = reducedMotion();
+    // Задержка = длительность анимации высоты: до её конца блок ещё низкий,
+    // и «поместился целиком» считалось бы по неверной геометрии.
     const timer = window.setTimeout(
-      () =>
-        blockRef.current?.scrollIntoView({
-          block: "center",
-          behavior: reduced ? "auto" : "smooth",
-        }),
+      () => revealInScrollPort(blockRef.current, { behavior: reduced ? "auto" : "smooth" }),
       reduced ? 0 : 210,
     );
     return () => window.clearTimeout(timer);
@@ -99,16 +118,16 @@ export function PhoneGateBlock({
 
   // Родитель просит фокус (после ошибки): каретка в конец значения, блок
   // доводится до видимости, чтобы сообщение не осталось под панелью.
+  // Сам фокус прокрутки не даёт — доводка ниже решает, нужна ли она вообще.
   useEffect(() => {
     if (focusSignal === 0 || !expanded) return;
     const input = inputRef.current;
     if (!input) return;
-    input.focus();
+    focusWithoutScroll(input);
     const end = input.value.length;
     input.setSelectionRange(end, end);
     if (!autoReveal) return;
-    blockRef.current?.scrollIntoView({
-      block: "center",
+    revealInScrollPort(blockRef.current, {
       behavior: reducedMotion() ? "auto" : "smooth",
     });
   }, [focusSignal, expanded, autoReveal]);

@@ -670,6 +670,143 @@ const DESK_GREY = [230, 231, 234];
   );
 }
 
+// ═══ 8. Появление пуша не двигает прокрутку ═══════════════════════════
+/**
+ * Регресс, ради которого проверка существует.
+ *
+ * Пуш приходил ДВУМЯ рывками: сначала страница уезжала вверх, потом
+ * возвращалась вниз к полю. Первый рывок давало пересоздание экрана
+ * (`push` был отдельной стадией `AnimatePresence`, и подложка монтировалась
+ * заново с `scrollTop = 0`), второй — безусловная доводка блока телефона до
+ * видимости, отрабатывавшая на свежем маунте как на «только что раскрылось».
+ *
+ * Отсюда два независимых утверждения, и оба обязаны держаться:
+ *   - узел скролл-контейнера ТОТ ЖЕ (экран не пересобран);
+ *   - `scrollTop` до нажатия «Оплатить» и после появления пуша совпадают
+ *     до пикселя — включая случай, когда пользователь сам отмотал страницу
+ *     в произвольное место.
+ *
+ * Заодно проверяется, что доводка не потеряна там, где нужна (Q6): после
+ * раскрытия поле видно целиком НАД sticky-панелью, а не под ней.
+ */
+{
+  const rows = [];
+  let ok = true;
+
+  for (const [label, route, archetype] of [
+    ["Flowwow (архетип A)", "/flowwow", "cart_checkout"],
+    ["UCHi.RU (архетип B)", "/uchi", "subscription_payment"],
+  ]) {
+    const data = await withPhone(route, async (page) => {
+      /** Метит узел контейнера, чтобы поймать его подмену. */
+      const probe = () =>
+        page.evaluate(() => {
+          const el = document.querySelector('[data-testid="scroll-container"]');
+          if (!el) return null;
+          if (!el.dataset.probeId) el.dataset.probeId = String(Date.now() % 1e6);
+          return {
+            id: el.dataset.probeId,
+            top: Math.round(el.scrollTop),
+            max: Math.round(el.scrollHeight - el.clientHeight),
+          };
+        });
+
+      const ozon =
+        archetype === "cart_checkout"
+          ? '[data-testid="payment-method-card-ozon"]'
+          : '[data-testid="payment-method-button-ozon"]';
+      await page.locator(ozon).click();
+      await page.waitForSelector('[data-testid="phone-block"][data-expanded="true"]', {
+        timeout: 5000,
+      });
+      // Ждём анимацию высоты (200 мс) + отложенную доводку (210 мс) + плавную прокрутку.
+      await page.waitForTimeout(1200);
+
+      // Q6: поле обязано быть видно целиком над панелью CTA. Нижняя кромка
+      // контейнера перекрыта панелью ровно на его `padding-bottom`.
+      const fieldVisible = await page.evaluate(() => {
+        const field = document.querySelector('[data-testid="phone-field"]');
+        const port = document.querySelector('[data-testid="scroll-container"]');
+        if (!field || !port) return null;
+        const box = field.getBoundingClientRect();
+        const view = port.getBoundingClientRect();
+        const inset = Number.parseFloat(getComputedStyle(port).paddingBottom) || 0;
+        return {
+          ok: box.top >= view.top - 0.5 && box.bottom <= view.bottom - inset + 0.5,
+          gapBottom: Number((view.bottom - inset - box.bottom).toFixed(1)),
+        };
+      });
+
+      await page.locator('[data-testid="phone-input"]').fill("9151234567");
+      await page.waitForTimeout(200);
+
+      const probes = [];
+      /** Один прогон: отмотать в `top` (если можно), нажать «Оплатить», сверить. */
+      const runFrom = async (wanted) => {
+        if (wanted !== null) {
+          await page.evaluate((value) => {
+            const el = document.querySelector('[data-testid="scroll-container"]');
+            el.scrollTop = value;
+          }, wanted);
+          await page.waitForTimeout(200);
+        }
+        const before = await probe();
+        await page.locator('[data-testid="primary-cta"]').click();
+        await page.waitForSelector('[data-testid="push-banner"]', { timeout: 6000 });
+        // Пружина выезда + любая запоздалая доводка успевают отработать.
+        await page.waitForTimeout(1500);
+        const after = await probe();
+        probes.push({ before, after });
+        // Свайп вверх убирает баннер и возвращает на экран подрядчика.
+        await page.evaluate(() => {
+          document.querySelector('[data-testid="push-banner"]')?.focus();
+        });
+        await page.keyboard.press("Escape");
+        await page.waitForTimeout(500);
+      };
+
+      // Прогон 1 — с той позиции, куда страницу привела доводка при раскрытии.
+      await runFrom(null);
+
+      // Прогон 2 — из произвольного места, куда пользователь отмотал сам.
+      // Только архетип A: там дисмисс возвращает на тот же экран с сохранённым
+      // выбором и номером, и контейнер действительно прокручиваемый. У B после
+      // дисмисса экран подписки без выбора — повторить нажатие не с чего.
+      if (archetype === "cart_checkout") {
+        const { max } = await probe();
+        if (max > 40) await runFrom(Math.round(max / 3));
+      }
+
+      return { fieldVisible, probes, archetype };
+    });
+
+    const stable = data.probes.every(
+      (p) => p.before && p.after && p.before.id === p.after.id && p.before.top === p.after.top,
+    );
+    const visible = data.fieldVisible?.ok === true;
+    if (!(stable && visible)) ok = false;
+
+    rows.push(
+      `${label}: ` +
+        data.probes
+          .map(
+            (p) =>
+              `scrollTop ${p.before?.top}→${p.after?.top} (узел ${
+                p.before?.id === p.after?.id ? "тот же" : "ПОДМЕНЁН"
+              }, макс ${p.before?.max})`,
+          )
+          .join("; ") +
+        `; поле видно над панелью=${visible} (запас снизу ${data.fieldVisible?.gapBottom}px)`,
+    );
+  }
+
+  record(
+    "8. Появление пуша не меняет scrollTop и не пересобирает экран; поле остаётся видно над панелью",
+    ok,
+    rows.join(" | "),
+  );
+}
+
 await browser.close();
 
 const failed = results.filter((item) => !item.passed);

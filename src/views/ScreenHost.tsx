@@ -366,35 +366,35 @@ export function ScreenHost({ theme, forcedState, showHandoff, initialStage }: Pr
     />
   );
 
-  // Подложка пуша: для B пользователь только что был на экране `ozon_rail`,
-  // поэтому за пушем остаётся именно он (его кнопка уже «Отправили push»);
-  // для A — экран подрядчика. Смена айдентики наступает на самом пуше.
-  const pushBackdrop =
-    tenant.archetype === "subscription_payment" ? railScreen : contractorScreen;
+  /*
+   * Пуш — НЕ отдельный экран, а слой поверх того, где пользователь стоит.
+   *
+   * Раньше `push` был обычной стадией `AnimatePresence`: смена ключа сносила
+   * экран подрядчика и монтировала его заново как подложку. Новый DOM-узел
+   * скролл-контейнера приходит с `scrollTop = 0` — отсюда первый рывок
+   * «страница уехала вверх» (а следом второй: свежий блок телефона считал
+   * себя только что раскрытым и тянул страницу обратно к полю).
+   *
+   * Поэтому подложка пуша — это ТА ЖЕ САМАЯ стадия, что была до него:
+   * ключ `AnimatePresence` не меняется, компонент не размонтируется,
+   * позиция прокрутки остаётся ровно там, где её оставил пользователь.
+   * Для B за пушем стоит `ozon_rail` (его кнопка уже «Отправили push»),
+   * для A — экран подрядчика. Смена айдентики наступает на самом пуше.
+   */
+  const backdropStage: DemoStage =
+    tenant.archetype === "subscription_payment" ? "ozon_rail" : "contractor";
+  const pushOpen = stage === "push";
+  const visualStage: DemoStage = pushOpen ? backdropStage : stage;
 
   // Содержимое одной стадии. Обёртывается в motion.div снаружи, поэтому сама
-  // возвращает готовый экран (для push — подложку прежнего экрана + баннер,
-  // который анимируется собственным spring-выездом).
+  // возвращает готовый экран. Стадии `push` здесь нет намеренно: баннер живёт
+  // отдельным слоем и анимируется собственным spring-выездом.
   const renderStage = (current: DemoStage) => {
     switch (current) {
       case "contractor":
         return contractorScreen;
       case "ozon_rail":
         return railScreen;
-      case "push":
-        return (
-          <>
-            <div className="h-full w-full" aria-hidden="true">
-              {pushBackdrop}
-            </div>
-            <PushBanner
-              merchant={bankPayload.merchant}
-              amount={bankPayload.amount}
-              onOpen={handlePushOpen}
-              onDismiss={handlePushDismiss}
-            />
-          </>
-        );
       case "splash":
         return <BankSplashScreen dotsCycleMs={timings.dots_cycle_ms} />;
       case "bank_payment":
@@ -444,18 +444,35 @@ export function ScreenHost({ theme, forcedState, showHandoff, initialStage }: Pr
       */}
       <AnimatePresence initial={false} mode="sync" custom={transitionType}>
         <motion.div
-          key={stage}
+          key={visualStage}
           custom={transitionType}
           variants={stageVariants}
           initial="initial"
           animate="animate"
           exit="exit"
+          // Пока висит баннер, экран под ним скрыт от screen reader: озвучивать
+          // положено пуш, а не подложку. Это АТРИБУТ на уже смонтированном
+          // узле — ни перерисовки, ни сброса прокрутки он не вызывает.
+          aria-hidden={pushOpen || undefined}
           className="absolute inset-0"
           style={{ willChange: "transform" }}
         >
-          {renderStage(stage)}
+          {renderStage(visualStage)}
         </motion.div>
       </AnimatePresence>
+
+      {/*
+        Слой пуша — сосед стадийного слоя, а не его содержимое: он переживает
+        смену подложки и не участвует в межэкранном motion.
+      */}
+      {pushOpen && (
+        <PushBanner
+          merchant={bankPayload.merchant}
+          amount={bankPayload.amount}
+          onOpen={handlePushOpen}
+          onDismiss={handlePushDismiss}
+        />
+      )}
 
       {handoff && (
         <HandoffOverlay

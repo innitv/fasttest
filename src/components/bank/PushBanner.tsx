@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 
 import { BANK_COPY, COPY } from "@demo/content/copy";
+import { focusWithoutScroll } from "@demo/lib/scroll-safety";
 import { BankAppIcon } from "./BankWordmark";
 
 interface Props {
@@ -32,13 +33,15 @@ export function PushBanner({ merchant, amount, onOpen, onDismiss }: Props) {
   const swiped = useRef(false);
 
   useEffect(() => {
-    // `preventScroll` обязателен. Баннер стартует ВЫШЕ кромки экрана
-    // (`y: -170%`), и обычный `focus()` заставляет браузер «доставить» его в
-    // видимую область, прокручивая ближайшего прокручиваемого предка. На
-    // живом iPhone это сдвигало весь экран вверх: низ подтягивался, а верх
-    // баннера уезжал за кромку. Фокус нужен (клавиатура, screen reader),
-    // прокрутка — нет.
-    ref.current?.focus({ preventScroll: true });
+    // Фокус нужен (клавиатура: Enter открывает банк, Escape убирает баннер;
+    // screen reader объявляет заголовок и текст при получении фокуса).
+    // Прокрутка — нет: баннер стартует ВЫШЕ кромки экрана (`y: -170%`), и
+    // обычный `focus()` заставляет браузер «доставить» его в видимую область,
+    // прокручивая ближайшего прокручиваемого предка. На живом iPhone это
+    // сдвигало весь экран вверх: низ подтягивался, а верх баннера уезжал за
+    // кромку. `focusWithoutScroll` держит и `preventScroll`, и восстановление
+    // позиций предков — на движки, где опция срабатывает не всегда.
+    focusWithoutScroll(ref.current);
   }, []);
 
   const dismiss = () => {

@@ -3,7 +3,10 @@ import {
   contrastRatio,
   ensureReadableOn,
   hexToOklch,
+  inkPair,
+  isDarkColor,
   pickOnColor,
+  surfaceTonalStop,
   withLightness,
 } from "./color";
 import {
@@ -273,6 +276,22 @@ function deriveColors(tenant: TenantConfig): DerivedColors {
   const { primary, on_primary } = tenant.brand;
   const textPrimary = tenant.surface.text_primary;
 
+  /*
+   * ── Полярность поверхности ────────────────────────────────────────
+   *
+   * Единственный источник знания о том, светлая тема или тёмная. В конфиге
+   * режима нет: подрядчик присылает цвета, а не режим. Все производные
+   * ниже (тональная подложка, отключённое состояние, нажатие, подложка
+   * формы) спрашивают полярность у фона, а не предполагают белый лист.
+   */
+  const surfaceIsDark = isDarkColor(tenant.surface.background);
+  /*
+   * Пара чернил темы. Тёмное чернило ищется по теме: `text_primary`, если он
+   * тёмный, иначе фон или карточка, если тёмные они. Так на тёмной теме
+   * (где `text_primary` белый) остаётся настоящий второй кандидат.
+   */
+  const inks = inkPair(textPrimary, tenant.surface.background, tenant.surface.card);
+
   // ── CTA: заливка и цвет содержимого ────────────────────────────────
   let ctaFill = primary;
   let ctaOn: string;
@@ -291,7 +310,7 @@ function deriveColors(tenant: TenantConfig): DerivedColors {
       });
     }
   } else if (enforced) {
-    const picked = pickOnColor(primary, textPrimary, 4.5);
+    const picked = pickOnColor(primary, inks, 4.5);
     if (picked.failed) {
       diagnostics.push({
         code: "E_CONTRAST_BRAND",
@@ -309,7 +328,7 @@ function deriveColors(tenant: TenantConfig): DerivedColors {
         message: `Заливка CTA сдвинута по светлоте: ${primary} → ${picked.fill} (${picked.steps} шаг(ов))`,
         detail: `Достигнут контраст ${formatContrast(picked.contrast)}. Исходный brand.primary сохранён для акцентов и обводок.`,
       });
-    } else if (picked.on !== "#FFFFFF") {
+    } else if (picked.on !== inks.light) {
       diagnostics.push({
         code: "I_ON_COLOR_DARK",
         severity: "info",
@@ -337,25 +356,102 @@ function deriveColors(tenant: TenantConfig): DerivedColors {
 
   // Символ поверх НЕсдвинутого brand.primary: залитый radio-маркер, галка
   // выбора. Порог нетекстового индикатора — 3:1 (WCAG 2.2 SC 1.4.11).
-  const markerOn = pickOnColor(primary, textPrimary, 3);
+  const markerOn = pickOnColor(primary, inks, 3);
   vars["--t-brand-primary-on"] = enforced ? markerOn.on : "#FFFFFF";
   if (contrastRatio(primary, "#FFFFFF") < 3) {
+    // Заливка маркера — это сам brand.primary, сдвиг заливки сюда не
+    // применяется. Значит, при `markerOn.failed` перекраска не помогла, и
+    // сообщать об исправлении нельзя: диагностика описывает факт, а не намерение.
+    const resolved = enforced && !markerOn.failed;
     diagnostics.push({
-      code: enforced ? "I_MARKER_CONTRAST_FIXED" : "W_MARKER_CONTRAST",
-      severity: enforced ? "info" : "warning",
+      code: resolved
+        ? "I_MARKER_CONTRAST_FIXED"
+        : enforced
+          ? "W_MARKER_CONTRAST_UNRESOLVED"
+          : "W_MARKER_CONTRAST",
+      severity: resolved ? "info" : "warning",
       message: `Белая галка на brand.primary ${primary} даёт ${formatContrast(contrastRatio(primary, "#FFFFFF"))} при пороге 3:1`,
-      detail: enforced
-        ? `Маркер перекрашен в ${markerOn.on}.`
-        : "a11y_mode=donor_faithful: значение донора сохранено.",
+      detail: resolved
+        ? `Маркер перекрашен в ${markerOn.on} (${formatContrast(markerOn.contrast)}).`
+        : enforced
+          ? `Ни одно чернило не даёт 3:1 на этой заливке: лучшее — ${markerOn.on} с ${formatContrast(markerOn.contrast)}. Маркер оставлен, коррекция НЕ применена.`
+          : "a11y_mode=donor_faithful: значение донора сохранено.",
     });
   }
 
   // ── Тональная шкала ────────────────────────────────────────────────
+  /*
+   * Нажатие: на светлой поверхности бренд темнеет, на тёмной — светлеет.
+   * Безусловное затемнение на тёмной теме двигало кнопку В СТОРОНУ фона,
+   * то есть гасило отклик ровно там, где он должен усиливаться.
+   */
   const base = hexToOklch(primary);
-  vars["--t-brand-pressed"] = withLightness(primary, base.l - 0.08);
-  vars["--t-brand-tonal"] = withLightness(primary, 0.94);
+  vars["--t-brand-pressed"] = withLightness(
+    primary,
+    base.l + (surfaceIsDark ? 0.08 : -0.08),
+  );
+
+  /*
+   * Мягкая подложка бренда и выключенное состояние.
+   *
+   * Оба значения у донора ИЗМЕРИМЫ, поэтому конфиг может задать их явно
+   * (`brand.tonal`, `brand.disabled`). Формула — дефолт для доноров, у
+   * которых значение не снято: бренд подтягивается к светлоте поверхности,
+   * а не к фиксированной «почти белой» светлоте. Стоп берётся от того конца
+   * тональной шкалы, где стоит поверхность.
+   */
+  const tonalFill =
+    tenant.brand.tonal ?? withLightness(primary, surfaceTonalStop(1, surfaceIsDark));
+  vars["--t-brand-tonal"] = tonalFill;
   vars["--t-brand-border-selected"] = withLightness(primary, 0.6);
-  vars["--t-brand-disabled"] = withLightness(primary, 0.88);
+  vars["--t-brand-disabled"] =
+    tenant.brand.disabled ?? withLightness(primary, surfaceTonalStop(2, surfaceIsDark));
+
+  /*
+   * Содержимое тональной подложки.
+   *
+   * Пока подложка всегда была светлой, текст выбранной строки мог брать
+   * `--t-text-primary` вслепую. С измеренным значением донора это ломается
+   * в обе стороны: белый текст тёмной темы на светлой подложке `#E9EBF1` и
+   * тёмный текст светлой темы на тёмной подложке `#021231` одинаково
+   * нечитаемы. Поэтому у подложки есть собственная пара токенов.
+   */
+  const tonalText = pickOnColor(tonalFill, inks, 4.5);
+  vars["--t-brand-tonal-on"] = tonalText.on;
+  if (tonalText.failed) {
+    diagnostics.push({
+      code: "W_TONAL_TEXT_CONTRAST",
+      severity: "warning",
+      message: `Текст на тональной подложке ${tonalFill} даёт ${formatContrast(tonalText.contrast)} при пороге 4.5:1`,
+      detail: `Лучшее из двух чернил (${inks.light} / ${inks.dark}) — ${tonalText.on}. Коррекция НЕ применена: заливка задана явно либо выведена из бренда.`,
+    });
+  }
+
+  // Галка на тональной подложке. Донорское поведение — бренд-цвет; если он
+  // не берёт 3:1 (SC 1.4.11), при `enforced` галка получает цвет текста.
+  const tonalMarkerRatio = contrastRatio(primary, tonalFill);
+  const tonalMarkerFallbackRatio = contrastRatio(tonalText.on, tonalFill);
+  // Перекрашиваем только если замена ДЕЙСТВИТЕЛЬНО берёт порог: иначе это
+  // смена цвета без исправления, о которой нельзя отчитаться как об исправлении.
+  const tonalMarkerCorrected =
+    enforced && tonalMarkerRatio < 3 && tonalMarkerFallbackRatio >= 3;
+  vars["--t-brand-tonal-marker"] = tonalMarkerCorrected ? tonalText.on : primary;
+  if (tonalMarkerRatio < 3) {
+    diagnostics.push({
+      code: tonalMarkerCorrected
+        ? "I_TONAL_MARKER_FIXED"
+        : enforced
+          ? "W_TONAL_MARKER_UNRESOLVED"
+          : "W_TONAL_MARKER_CONTRAST",
+      severity: tonalMarkerCorrected ? "info" : "warning",
+      message: `Галка brand.primary ${primary} на тональной подложке ${tonalFill} даёт ${formatContrast(tonalMarkerRatio)} при пороге 3:1`,
+      detail: tonalMarkerCorrected
+        ? `Галка перекрашена в ${tonalText.on} (${formatContrast(tonalMarkerFallbackRatio)}).`
+        : enforced
+          ? `Замена на ${tonalText.on} даёт лишь ${formatContrast(tonalMarkerFallbackRatio)} — коррекция НЕ применена, галка осталась брендовой. Обводка выбранной строки остаётся вторым каналом состояния.`
+          : "a11y_mode=donor_faithful: значение донора сохранено. Обводка выбранной строки остаётся вторым каналом состояния.",
+    });
+  }
 
   // ── Обводка фокуса контролов (поле телефона и форма карты) ─────────
   // Порог нетекстового индикатора 3:1. При `enforced` доводим до 4.5,
@@ -372,11 +468,15 @@ function deriveColors(tenant: TenantConfig): DerivedColors {
         failed: false,
       };
   vars["--t-focus-ring"] = focusRing.color;
+  // Направление коррекции задаёт фон, поэтому и слово в сообщении тоже:
+  // на тёмной поверхности цвет ОСВЕТЛЯЕТСЯ, и писать «затемнена» — врать.
+  const shiftWord = surfaceIsDark ? "осветлена" : "затемнена";
+  const shiftWordM = surfaceIsDark ? "осветлён" : "затемнён";
   if (focusRing.corrected) {
     diagnostics.push({
       code: "I_FOCUS_RING_FIXED",
       severity: "info",
-      message: `Обводка фокуса контролов затемнена: ${primary} → ${focusRing.color}`,
+      message: `Обводка фокуса контролов ${shiftWord}: ${primary} → ${focusRing.color}`,
       detail: `Донорское значение давало ${formatContrast(contrastRatio(primary, tenant.surface.background))} на фоне ${tenant.surface.background}; после коррекции — ${formatContrast(focusRing.contrast)} (порог 1.4.11 — 3:1).`,
     });
   }
@@ -390,7 +490,7 @@ function deriveColors(tenant: TenantConfig): DerivedColors {
     diagnostics.push({
       code: "I_DISCOUNT_CONTRAST_FIXED",
       severity: "info",
-      message: `Цвет скидки и зачёркнутых цен затемнён: ${primary} → ${brandOnBackground.color}`,
+      message: `Цвет скидки и зачёркнутых цен ${shiftWordM}: ${primary} → ${brandOnBackground.color}`,
       detail: `Донорское значение давало ${formatContrast(contrastRatio(primary, tenant.surface.background))} на фоне ${tenant.surface.background}; после коррекции — ${formatContrast(brandOnBackground.contrast)}.`,
     });
   } else if (!enforced && brandOnBackground.contrast < 4.5) {
@@ -433,18 +533,33 @@ function deriveColors(tenant: TenantConfig): DerivedColors {
   for (const role of nonTextRoles) {
     if (!role.color) continue;
     vars[`--t-${role.key}`] = role.color;
-    const picked = pickOnColor(role.color, textPrimary, 3);
-    const glyph = enforced ? picked.on : "#FFFFFF";
+    /*
+     * Заливка роли — сам донорский цвет: сдвиг заливки, который умеет
+     * `pickOnColor`, сюда НЕ применяется (акцент нужен точным). Значит,
+     * исправление засчитывается только если порог взят на исходной заливке,
+     * то есть при `steps === 0 && !failed`. Иначе символ остаётся прежним, и
+     * сообщать об исправлении нельзя.
+     */
+    const picked = pickOnColor(role.color, inks, 3);
+    const resolved = !picked.failed && picked.steps === 0;
+    const glyph = enforced && resolved ? picked.on : "#FFFFFF";
     vars[`--t-${role.key}-on`] = glyph;
     const donorRatio = contrastRatio(role.color, "#FFFFFF");
     if (donorRatio < 3) {
+      const corrected = enforced && resolved;
       diagnostics.push({
-        code: enforced ? "I_GLYPH_CONTRAST_FIXED" : "W_GLYPH_CONTRAST",
-        severity: enforced ? "info" : "warning",
+        code: corrected
+          ? "I_GLYPH_CONTRAST_FIXED"
+          : enforced
+            ? "W_GLYPH_CONTRAST_UNRESOLVED"
+            : "W_GLYPH_CONTRAST",
+        severity: corrected ? "info" : "warning",
         message: `Белый символ на ${role.label} ${role.color} даёт ${formatContrast(donorRatio)} при пороге 3:1`,
-        detail: enforced
+        detail: corrected
           ? `Символ перекрашен в ${glyph} (${formatContrast(contrastRatio(role.color, glyph))}).`
-          : "a11y_mode=donor_faithful: значение донора сохранено.",
+          : enforced
+            ? `Ни одно чернило (${inks.light} / ${inks.dark}) не даёт 3:1 на этой заливке: лучшее — ${formatContrast(picked.contrast)}. Символ оставлен белым, коррекция НЕ применена.`
+            : "a11y_mode=donor_faithful: значение донора сохранено.",
       });
     }
   }
@@ -483,7 +598,10 @@ function deriveColors(tenant: TenantConfig): DerivedColors {
   // Дефолт null: подложки нет. Насильственный вывод из brand.primary —
   // анти-паттерн R5 (у донора B подложка серо-голубая при коралловом бренде).
   if (tenant.surface.form === "auto") {
-    vars["--t-surface-form"] = withLightness(primary, 0.94);
+    // Тот же стоп, что у тональной подложки: на светлой поверхности бренд
+    // осветляется, на тёмной затемняется. Фиксированная «почти белая»
+    // светлота дала бы светлое пятно посреди тёмного экрана.
+    vars["--t-surface-form"] = withLightness(primary, surfaceTonalStop(1, surfaceIsDark));
     diagnostics.push({
       code: "I_FORM_SURFACE_DERIVED",
       severity: "info",

@@ -18,6 +18,12 @@ interface Props {
  * Выбор (`row_press`): заливка brand.tonal, обводка brand.primary,
  * слева появляется галка — второй канал состояния помимо цвета.
  *
+ * Метка и галка выбранной строки берут цвет у САМОЙ подложки
+ * (`--t-brand-tonal-on` / `--t-brand-tonal-marker`), а не у страницы:
+ * подложка может быть задана донором и оказаться темнее или светлее фона
+ * (у VOROH она инвертирует фон в обеих темах). Текст страницы поверх такой
+ * заливки нечитаем.
+ *
  * Обводка (покой / выбор / наведение) задана в `styles.css` по `data-selected`,
  * а не inline: только так :hover переопределяет box-shadow (inline-стиль внешним
  * правилом не перекрыть). Наведение мышью красит обводку тёмно-серым, не брендом.
@@ -57,7 +63,7 @@ export function PaymentMethodButton({ method, selected, onSelect }: Props) {
           className="absolute flex items-center"
           style={{
             left: "var(--t-page-padding)",
-            color: "var(--t-brand-primary)",
+            color: "var(--t-brand-tonal-marker)",
           }}
         >
           <CheckGlyph size={20} />
@@ -70,7 +76,7 @@ export function PaymentMethodButton({ method, selected, onSelect }: Props) {
           style={{
             fontSize: "var(--t-font-body)",
             fontWeight: 600,
-            color: "var(--t-text-primary)",
+            color: selected ? "var(--t-brand-tonal-on)" : "var(--t-text-primary)",
             whiteSpace: "nowrap",
           }}
         >

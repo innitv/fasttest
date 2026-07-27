@@ -87,6 +87,29 @@ export function contrastRatio(a: string, b: string): number {
   return Math.round(ratio * 100) / 100;
 }
 
+/** Полюса содержимого: единственные два «чернила», между которыми выбирают. */
+export const LIGHT_INK = "#FFFFFF";
+export const DARK_INK = "#111111";
+
+/**
+ * Тёмная ли поверхность.
+ *
+ * ═══════════════════════════════════════════════════════════════════════
+ *  РЕЖИМ ТЕМЫ НЕ ОБЪЯВЛЯЕТСЯ — ОН ИЗМЕРЯЕТСЯ
+ *
+ *  В `tenant.json` нет и не будет поля «тема»: подрядчик присылает цвета,
+ *  а не режим. Тёмность выводится из самого цвета поверхности, поэтому
+ *  тёмный донор не требует ни нового поля, ни ветки «если тёмная тема».
+ * ═══════════════════════════════════════════════════════════════════════
+ *
+ * Критерий — какое из двух чернил читается лучше, а не порог светимости:
+ * на средне-сером (#808080) белый даёт 3.95:1, чёрный 5.32:1, то есть
+ * поверхность ещё светлая, хотя её светимость (0.216) уже ниже 0.5.
+ */
+export function isDarkColor(hex: string): boolean {
+  return contrastRatio(hex, LIGHT_INK) > contrastRatio(hex, DARK_INK);
+}
+
 export function rgbToOklch(rgb: Rgb): Oklch {
   const r = srgbToLinear(rgb.r);
   const g = srgbToLinear(rgb.g);
@@ -165,6 +188,22 @@ export function buildTonalScale(primary: string): TonalScale {
   return scale;
 }
 
+/**
+ * Стоп тональной шкалы, отсчитанный от того конца, где стоит поверхность.
+ *
+ * Мягкая подложка бренда — это бренд, подтянутый к светлоте поверхности:
+ * на светлой теме второй стоп сверху (`brand.20` = 0.94), на тёмной —
+ * второй стоп снизу (`brand.90` = 0.30). Одно и то же расстояние от края
+ * шкалы, только край выбирает поверхность, а не автор кода.
+ *
+ * `position` — номер стопа от края (1 = ближайший к поверхности).
+ */
+export function surfaceTonalStop(position: number, surfaceIsDark: boolean): number {
+  const index = surfaceIsDark ? TONAL_STOPS.length - 1 - position : position;
+  const clamped = Math.min(TONAL_STOPS.length - 1, Math.max(0, index));
+  return TONAL_STOPS[clamped];
+}
+
 export interface OnColorResult {
   /** Итоговая заливка: исходная либо сдвинутая по светлоте. */
   fill: string;
@@ -178,30 +217,67 @@ export interface OnColorResult {
   failed: boolean;
 }
 
+/** Пара чернил, из которой выбирается цвет содержимого. */
+export interface InkPair {
+  /** Светлое чернило. Практически всегда белый. */
+  light: string;
+  /** Тёмное чернило: `text_primary`, если он тёмный, иначе тёмная поверхность. */
+  dark: string;
+}
+
+/**
+ * Пара чернил темы.
+ *
+ * Раньше кандидатами были «белый → `text_primary`». На тёмной теме
+ * `text_primary` сам белый, кандидат остаётся ОДИН, и любой светлый акцент
+ * получает невидимый белый символ — при этом правило рапортует об успехе.
+ * Поэтому тёмное чернило берётся из темы, а если тёмного в ней нет —
+ * из полюса `DARK_INK`: выбор всегда идёт между двумя концами, а не между
+ * тем, что случайно оказалось в конфиге.
+ */
+export function inkPair(textPrimary: string, ...darkFallbacks: string[]): InkPair {
+  const dark =
+    [textPrimary, ...darkFallbacks].find((candidate) => isDarkColor(candidate)) ??
+    DARK_INK;
+  const light = isDarkColor(textPrimary) ? LIGHT_INK : textPrimary;
+  return { light, dark };
+}
+
 /**
  * Автоподбор on-color (Readability Guarantees §1).
  *
- * Порядок средств: белый → text_primary → сдвиг светлоты заливки в OKLCH
- * шагами 0.04 (максимум 6). Заливка сдвигается ТОЛЬКО у CTA; исходный
- * `brand.primary` сохраняется для акцентов и обводок.
+ * Порядок средств: светлое чернило → тёмное чернило → сдвиг светлоты
+ * заливки в OKLCH шагами 0.04 (максимум 6). Заливка сдвигается ТОЛЬКО у
+ * CTA; исходный `brand.primary` сохраняется для акцентов и обводок.
+ *
+ * `failed: true` означает, что порог не взят ни одним средством. Вызывающий
+ * обязан сообщить об этом как о непройденной проверке: сообщение «символ
+ * перекрашен» при `failed` — это диагностика, которая врёт.
  */
 export function pickOnColor(
   fill: string,
-  textPrimary: string,
+  inks: InkPair,
   threshold = 4.5,
 ): OnColorResult {
-  const white = "#FFFFFF";
-
   const evaluate = (candidateFill: string) => {
-    const withWhite = contrastRatio(candidateFill, white);
-    if (withWhite >= threshold) {
-      return { on: white, contrast: withWhite };
+    const withLight = contrastRatio(candidateFill, inks.light);
+    if (withLight >= threshold) {
+      return { on: inks.light, contrast: withLight };
     }
-    const withText = contrastRatio(candidateFill, textPrimary);
-    if (withText >= threshold) {
-      return { on: textPrimary, contrast: withText };
+    const withDark = contrastRatio(candidateFill, inks.dark);
+    if (withDark >= threshold) {
+      return { on: inks.dark, contrast: withDark };
     }
     return null;
+  };
+
+  /** Лучшее из двух чернил на заданной заливке — без учёта порога. */
+  const bestInk = (candidateFill: string) => {
+    const light = contrastRatio(candidateFill, inks.light);
+    const dark = contrastRatio(candidateFill, inks.dark);
+    return light >= dark
+      ? { on: inks.light, contrast: light }
+      : { on: inks.dark, contrast: dark };
   };
 
   const direct = evaluate(fill);
@@ -209,16 +285,18 @@ export function pickOnColor(
     return { fill, on: direct.on, contrast: direct.contrast, steps: 0, failed: false };
   }
 
-  // Ни белый, ни тёмный не проходят — двигаем светлоту заливки в ту сторону,
-  // которая быстрее набирает контраст с лучшим из двух кандидатов.
+  // Ни светлое, ни тёмное чернило не проходят — двигаем светлоту заливки в
+  // ту сторону, которая быстрее набирает контраст с лучшим из двух.
   const base = hexToOklch(fill);
-  const towardsDark = contrastRatio(fill, white) >= contrastRatio(fill, textPrimary);
+  const towardsDark =
+    contrastRatio(fill, inks.light) >= contrastRatio(fill, inks.dark);
   const direction = towardsDark ? -1 : 1;
 
+  const initial = bestInk(fill);
   let best: OnColorResult = {
     fill,
-    on: contrastRatio(fill, white) >= contrastRatio(fill, textPrimary) ? white : textPrimary,
-    contrast: Math.max(contrastRatio(fill, white), contrastRatio(fill, textPrimary)),
+    on: initial.on,
+    contrast: initial.contrast,
     steps: 0,
     failed: true,
   };
@@ -235,15 +313,12 @@ export function pickOnColor(
         failed: false,
       };
     }
-    const reached = Math.max(
-      contrastRatio(shifted, white),
-      contrastRatio(shifted, textPrimary),
-    );
-    if (reached > best.contrast) {
+    const reached = bestInk(shifted);
+    if (reached.contrast > best.contrast) {
       best = {
         fill: shifted,
-        on: contrastRatio(shifted, white) >= contrastRatio(shifted, textPrimary) ? white : textPrimary,
-        contrast: reached,
+        on: reached.on,
+        contrast: reached.contrast,
         steps: step,
         failed: true,
       };
@@ -270,8 +345,10 @@ export function ensureReadableOn(
   }
 
   const base = hexToOklch(color);
-  const backgroundIsLight = relativeLuminance(background) > 0.5;
-  const direction = backgroundIsLight ? -1 : 1;
+  // Направление коррекции задаёт фон: на светлом цвет затемняется, на тёмном
+  // осветляется. Тёмность считает `isDarkColor` — один критерий на весь файл,
+  // тот же, что выбирает полюс тональной шкалы и пару чернил.
+  const direction = isDarkColor(background) ? 1 : -1;
 
   let best = { color, contrast: initial, corrected: false, failed: true };
 

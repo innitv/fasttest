@@ -54,11 +54,12 @@ export function PlanSheetScreen({
 
   return (
     <div className="relative flex h-full w-full flex-col">
-      <ScreenHeader
-        style="centered_logo"
-        logoText={tenant.brand.logo.text ?? tenant.display_name}
-      />
-
+      {/*
+        Шапки-полосы у донора нет: логотип стоит картинкой по центру прямо на
+        фоне страницы, а кнопка возврата — тёмной плашкой слева, на его же
+        уровне. Наша полоса с текстовым названием читалась как чужой хедер и
+        забирала верх экрана.
+      */}
       <div
         data-testid="scroll-container"
         className="no-scrollbar relative flex-1 overflow-y-auto"
@@ -67,18 +68,68 @@ export function PlanSheetScreen({
           paddingBottom: "var(--k-page-bottom-reserve)",
         }}
       >
-        <h1
-          data-testid="page-title"
-          style={{
-            margin: "16px 0 0",
-            fontSize: "var(--t-font-h1)",
-            fontWeight: "var(--t-title-weight)" as unknown as number,
-            color: "var(--t-text-primary)",
-            lineHeight: 1.25,
-          }}
-        >
-          {content.title}
-        </h1>
+        <div className="relative flex w-full items-center justify-center" style={{ paddingTop: "18px" }}>
+          {tenant.header.back_label && (
+            <button
+              type="button"
+              data-testid="back-chip"
+              className="absolute left-0 flex items-center justify-center"
+              style={{
+                // Плашка возврата у донора опущена к середине логотипа, а не
+                // выровнена по его верху — измерено на живой странице.
+                top: "29px",
+                marginTop: "18px",
+                height: "36px",
+                paddingInline: "12px",
+                // Плашка донора: полупрозрачная тёмная со светлой рамкой.
+                background: "rgba(20, 22, 27, 0.56)",
+                border: "var(--t-border-width) solid rgba(255, 255, 255, 0.26)",
+                borderRadius: "var(--t-radius-control)",
+                color: "var(--t-text-primary)",
+                fontSize: "var(--t-font-caption)",
+                fontWeight: 800,
+                letterSpacing: "0.06em",
+                textTransform: "uppercase",
+                cursor: "pointer",
+              }}
+            >
+              {tenant.header.back_label}
+            </button>
+          )}
+
+          {content.header_logo ? (
+            <img
+              data-testid="header-logo"
+              src={content.header_logo}
+              alt={tenant.display_name}
+              style={{ width: "172px", height: "94px", objectFit: "contain", display: "block" }}
+            />
+          ) : (
+            <ScreenHeader
+              style="centered_logo"
+              logoText={tenant.brand.logo.text ?? tenant.display_name}
+            />
+          )}
+        </div>
+
+        {content.scroll_hint && (
+          <div className="flex w-full justify-center" style={{ marginTop: "6px" }}>
+            <span
+              data-testid="scroll-hint"
+              style={{
+                padding: "4px 12px",
+                borderRadius: "999px",
+                background: "rgba(18, 21, 27, 0.66)",
+                color: "var(--t-text-primary)",
+                fontSize: "var(--t-font-caption)",
+                letterSpacing: "0.02em",
+                opacity: 0.92,
+              }}
+            >
+              {content.scroll_hint}
+            </span>
+          </div>
+        )}
 
         <div
           className="flex w-full flex-col"
@@ -268,7 +319,7 @@ export function PlanSheetScreen({
               */}
               <div style={{ paddingInline: "10px" }}>
                 <PrimaryButton
-                  label={content.plan_cta_label ?? tenant.cta.label}
+                  label={plan.cta_label ?? content.plan_cta_label ?? tenant.cta.label}
                   loadingLabel={ctaLoadingLabel}
                   state="default"
                   onClick={() => {

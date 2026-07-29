@@ -4,7 +4,7 @@
   "archetype": "plan_sheet",
   "header": {
     "style": "centered_logo",
-    "back_label": null
+    "back_label": "Назад"
   },
   "brand": {
     "primary": "#53BE6C",
@@ -47,7 +47,7 @@
     "allow_inversion": false
   },
   "density": {
-    "page_padding": 16,
+    "page_padding": 14,
     "block_gap": 12,
     "row_height": 44,
     "control_height": 48,
@@ -186,10 +186,13 @@
         "sum": 1980000,
         "image": "/tenants/padlhub/energy.jpg",
         "image_alt": "Абонемент Энергия-5 за 19 800 ₽",
-        "features": []
+        "features": [],
+        "cta_label": "Оформить абонемент"
       }
     ],
-    "plan_cta_label": "Оформить подписку"
+    "plan_cta_label": "Оформить подписку",
+    "header_logo": "/tenants/padlhub/logo.png",
+    "scroll_hint": "↓ Листайте вниз"
   },
   "demo": {
     "balance": "34 190,50 ₽",

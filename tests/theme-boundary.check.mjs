@@ -74,6 +74,32 @@ for (const file of BANK_SOURCES) {
   }
 }
 
+/*
+ * ── Гарнитура банка ───────────────────────────────────────────────────
+ *
+ * Прежняя проверка ловила только ТОКЕНЫ, а шрифт приходил на экраны банка
+ * НАСЛЕДОВАНИЕМ от рамки телефона, где стоит `--t-font-family`. Формально
+ * граница держалась — ни одного `--t-*` в файлах банка не было, — а по
+ * факту один и тот же экран выходил в четырёх гарнитурах: системной у
+ * Flowwow, скруглённой у Uchi, гротеске у ВОРОХ, моноширинной у ПАДЛ ХАБ.
+ * Поэтому корень каждого экрана банка обязан ЗАДАВАТЬ свою гарнитуру, а
+ * не полагаться на каскад.
+ */
+const BANK_ROOTS = [
+  path.resolve(here, "../src/views/BankSplashScreen.tsx"),
+  path.resolve(here, "../src/views/BankPaymentScreen.tsx"),
+  path.resolve(here, "../src/views/BankSuccessScreen.tsx"),
+  path.resolve(here, "../src/components/bank/PushBanner.tsx"),
+];
+for (const file of BANK_ROOTS) {
+  const text = readFileSync(file, "utf8");
+  if (!text.includes("var(--bank-font)")) {
+    failures.push(
+      `${path.basename(file)}: корень экрана банка не задаёт var(--bank-font) — гарнитура утечёт из темы подрядчика по каскаду`,
+    );
+  }
+}
+
 const paidFile = path.resolve(here, "../src/views/PaidConfirmationScreen.tsx");
 const paidText = readFileSync(paidFile, "utf8");
 const bankTokens = paidText.match(/--bank-[a-z0-9-]+/g);

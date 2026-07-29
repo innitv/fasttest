@@ -130,6 +130,15 @@
  * Значения — `measured_jpg` по `reference/ozon/*.jpg`.
  */
 :root {
+  /*
+   * Гарнитура банка. Была дырой в границе темы: цвета и радиусы `--t-*` на
+   * экраны банка не проникали, а ШРИФТ наследовался каскадом от рамки
+   * телефона, и один и тот же экран банка выходил в четырёх гарнитурах —
+   * системной у Flowwow, скруглённой у Uchi, гротеске у ВОРОХ и
+   * моноширинной у ПАДЛ ХАБ. Реальный банк рисует своим шрифтом всегда.
+   */
+  --bank-font: "Inter", "SF Pro Text", -apple-system, BlinkMacSystemFont, "Segoe UI",
+    system-ui, sans-serif;
   --bank-primary: #005aff;
   --bank-on-primary: #ffffff;
   --bank-surface: #ffffff;

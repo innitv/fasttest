@@ -25,7 +25,7 @@ export function BankSplashScreen({ dotsCycleMs }: Props) {
     <div
       data-testid="bank-splash"
       className="relative flex h-full w-full flex-col"
-      style={{ background: "var(--bank-primary)", color: "var(--bank-on-primary)" }}
+      style={{ background: "var(--bank-primary)", color: "var(--bank-on-primary)", fontFamily: "var(--bank-font)" }}
     >
       <span aria-live="assertive" className="sr-only">
         {COPY["a11y.splash_live"]}

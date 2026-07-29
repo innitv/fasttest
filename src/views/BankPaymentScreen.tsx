@@ -41,7 +41,7 @@ export function BankPaymentScreen({
     <div
       data-testid="bank-payment"
       className="relative flex h-full w-full flex-col overflow-hidden"
-      style={{ background: "var(--bank-surface)" }}
+      style={{ background: "var(--bank-surface)", fontFamily: "var(--bank-font)" }}
     >
       <span aria-live="assertive" className="sr-only">
         {BANK_COPY.livePayment(payload.amount, payload.merchant)}

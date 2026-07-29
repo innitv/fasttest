@@ -41,6 +41,7 @@ export function BankSuccessScreen({ payload, onReturn }: Props) {
         background:
           "linear-gradient(180deg, var(--bank-gradient-top) 0, #1163f6 64px, #3d82e8 150px, #7eb5de 42%, #74a9ed 62%, #8cb0fe 100%)",
         color: "var(--bank-on-primary)",
+        fontFamily: "var(--bank-font)",
       }}
     >
       <span aria-live="assertive" className="sr-only">

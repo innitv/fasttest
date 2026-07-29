@@ -53,7 +53,7 @@ export function PushBanner({ merchant, amount, onOpen, onDismiss }: Props) {
     <div
       data-testid="push-layer"
       className="absolute inset-0 z-20"
-      style={{ pointerEvents: "none" }}
+      style={{ pointerEvents: "none", fontFamily: "var(--bank-font)" }}
     >
       <span aria-live="assertive" className="sr-only">
         {BANK_COPY.livePush(amount)}

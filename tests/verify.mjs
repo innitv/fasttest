@@ -853,6 +853,39 @@ for (const width of WIDTHS) {
   );
 }
 
+// ═══ Гарнитура банка не зависит от темы подрядчика ═══════════════════
+/*
+ * Токены банк изолировал, а ШРИФТ приходил наследованием от рамки телефона
+ * и менялся вместе с темой: один и тот же экран банка выходил в четырёх
+ * гарнитурах. Статическая проверка такого не видит — здесь измеряется
+ * фактический computed style на разных темах и стадиях.
+ */
+{
+  const STAGES = [
+    ["bank_payment", '[data-testid="bank-merchant"]'],
+    ["splash", '[data-testid="bank-splash"]'],
+    ["bank_success", '[data-testid="bank-success"]'],
+  ];
+  const seen = new Map();
+  for (const slug of ["flowwow-like", "uchi-like"]) {
+    for (const [stage, selector] of STAGES) {
+      const font = await withPage(392, `${BASE}/?tenant=${slug}&stage=${stage}`, (page) =>
+        page.evaluate((sel) => {
+          const el = document.querySelector(sel);
+          return el ? getComputedStyle(el).fontFamily : "нет узла";
+        }, selector),
+      );
+      seen.set(`${slug}/${stage}`, font);
+    }
+  }
+  const fonts = new Set(seen.values());
+  record(
+    "Гарнитура экранов банка одна на всех темах подрядчиков",
+    fonts.size === 1 && !fonts.has("нет узла"),
+    [...seen.entries()].map(([key, font]) => `${key}: ${font.split(",")[0]}`).join(" | "),
+  );
+}
+
 // ═══ reduced-motion не убирает splash ════════════════════════════════
 {
   const context = await browser.newContext({

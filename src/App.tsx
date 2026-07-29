@@ -26,7 +26,7 @@ const PATH_ROUTES: Record<string, { tenant: string; archetype: TenantConfig["arc
   "/uchi": { tenant: "uchi-like", archetype: "subscription_payment" },
   "/voroh": { tenant: "voroh", archetype: "ticket_checkout" },
   "/voroh-light": { tenant: "voroh-light", archetype: "ticket_checkout" },
-  "/monochrome": { tenant: "monochrome", archetype: "cart_checkout" },
+  "/monochrome": { tenant: "monochrome", archetype: "store_checkout" },
 };
 
 /** Лаунчер — только для локальной отладки, по неугадываемому пути и только в dev. */
@@ -170,8 +170,20 @@ function resolveScreen(search: string): Route {
   }
 }
 
+const ARCHETYPES: readonly TenantConfig["archetype"][] = [
+  "cart_checkout",
+  "subscription_payment",
+  "ticket_checkout",
+  "store_checkout",
+];
+
 function parseArchetype(value: string | null): TenantConfig["archetype"] | null {
-  return value === "cart_checkout" || value === "subscription_payment" ? value : null;
+  // Перебор по списку, а не сравнение с двумя именами: прежняя запись молча
+  // отбрасывала архетипы, добавленные позже, и путь терял управление видом
+  // экрана — спасал только совпадающий archetype внутри конфига темы.
+  return ARCHETYPES.includes(value as TenantConfig["archetype"])
+    ? (value as TenantConfig["archetype"])
+    : null;
 }
 
 function parseA11yMode(value: string | null): TenantConfig["a11y_mode"] | null {

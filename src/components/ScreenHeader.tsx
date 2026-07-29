@@ -90,14 +90,21 @@ export function ScreenHeader(props: Props) {
  * но не метрику блока — высота задана константой шаблона.
  */
 export function BrandSlot({ text }: { text: string }) {
+  /*
+   * Длинное имя ужимается кеглем, а не срезается краем слота.
+   * `MONOCHROME` при фиксированных 18px не влезал в 120px и приезжал в
+   * шапку как «MONOCHROM» — обрезанный бренд хуже мелкого.
+   */
+  const fontSize = text.length > 12 ? 14 : text.length > 9 ? 16 : 18;
+
   return (
     <span
       data-testid="brand-slot"
       className="inline-flex items-center"
       style={{
         height: "var(--k-payment-slot-h)",
-        maxWidth: "120px",
-        fontSize: "18px",
+        maxWidth: "200px",
+        fontSize: `${fontSize}px`,
         fontWeight: 800,
         letterSpacing: "0.02em",
         color: "var(--t-brand-primary)",

@@ -1,10 +1,10 @@
 {
   "tenant_id": "monochrome",
   "display_name": "MONOCHROME",
-  "archetype": "cart_checkout",
+  "archetype": "store_checkout",
   "header": {
-    "style": "back_title",
-    "back_label": "Назад"
+    "style": "centered_logo",
+    "back_label": null
   },
   "brand": {
     "primary": "#000000",
@@ -57,7 +57,7 @@
   "typography": {
     "family": "grotesk",
     "body": 14,
-    "h1": 18,
+    "h1": 20,
     "section_title": 16,
     "caption": 11,
     "label_weight": 500,
@@ -71,7 +71,8 @@
   },
   "payment_list": {
     "layout": "vertical_buttons",
-    "selection": "radio_outline",
+    "selection": "row_press",
+    "section_title": "СПОСОБ ОПЛАТЫ",
     "methods": [
       {
         "id": "ozon",
@@ -86,8 +87,7 @@
         "logo": "none"
       }
     ],
-    "default_selected": "card",
-    "section_title": "СПОСОБ ОПЛАТЫ"
+    "default_selected": "card"
   },
   "ozon": {
     "label": "Ozon Банк",
@@ -96,35 +96,10 @@
     "handoff": "overlay"
   },
   "content": {
-    "title": "ОФОРМЛЕНИЕ ЗАКАЗА",
+    "title": "Оформление заказа",
     "back_link": null,
     "segments": null,
-    "rows": [
-      {
-        "label": "Способ получения",
-        "label_compact": null,
-        "value": "Самовывоз в Москве",
-        "is_action": false
-      },
-      {
-        "label": "Адрес",
-        "label_compact": null,
-        "value": "Столешников переулок, 9 стр 1",
-        "is_action": false
-      },
-      {
-        "label": "Получатель",
-        "label_compact": null,
-        "value": "Мария Орлова",
-        "is_action": false
-      },
-      {
-        "label": "Телефон",
-        "label_compact": null,
-        "value": "+7 (900) 000-00-00",
-        "is_action": false
-      }
-    ],
+    "rows": [],
     "fulfillment": null,
     "form": null,
     "autorenew": null,
@@ -147,7 +122,69 @@
     "payment_category": "Покупки",
     "summary_detail": "Заказ № 4821",
     "event": null,
-    "buyer_form": null
+    "buyer_form": null,
+    "account_email": "m.orlova@example.com",
+    "sections": [
+      {
+        "title": "Способ получения",
+        "done": true,
+        "action_label": "Изменить",
+        "rows": [
+          {
+            "label": "Способ получения",
+            "value": "самовывоз в москве"
+          },
+          {
+            "label": "Адрес",
+            "value": "Москва, Столешников переулок, 9 стр 1\nС 10:00 ДО 22:00"
+          }
+        ]
+      },
+      {
+        "title": "Личная информация",
+        "done": true,
+        "action_label": "Изменить",
+        "rows": [
+          {
+            "label": null,
+            "value": "Мария Орлова"
+          },
+          {
+            "label": null,
+            "value": "m.orlova@example.com"
+          },
+          {
+            "label": null,
+            "value": "+7 (900) 000-00-00"
+          }
+        ]
+      }
+    ],
+    "gift_certificate": "ЕСТЬ ПОДАРОЧНЫЙ СЕРТИФИКАТ?",
+    "legal_note": "НАЖИМАЯ НА КНОПКУ «ОПЛАТИТЬ ЗАКАЗ», Я ПРИНИМАЮ УСЛОВИЯ ПУБЛИЧНОЙ ОФЕРТЫ, ПОДТВЕРЖДАЮ ОЗНАКОМЛЕНИЕ С ПОЛИТИКОЙ КОНФИДЕНЦИАЛЬНОСТИ И ДАЮ СОГЛАСИЕ НА ОБРАБОТКУ ПЕРСОНАЛЬНЫХ ДАННЫХ.",
+    "cart": {
+      "item_title": "СВИТШОТ HALF-ZIP CLASSY PEACH",
+      "item_meta": "Размер S",
+      "edit_label": "Изменить корзину",
+      "quantity_label": "Количество: 1",
+      "rows": [
+        {
+          "label": "Сумма",
+          "value": "24 000 ₽",
+          "emphasis": false
+        },
+        {
+          "label": "Доставка",
+          "value": "Бесплатно",
+          "emphasis": false
+        },
+        {
+          "label": "Итого",
+          "value": "24 000 ₽",
+          "emphasis": true
+        }
+      ]
+    }
   },
   "demo": {
     "balance": "34 190,50 ₽",

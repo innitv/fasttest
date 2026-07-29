@@ -80,7 +80,12 @@ export const tenantSchema = z.object({
       message: "tenant_id: ожидается kebab-case",
     }),
   display_name: z.string().min(1),
-  archetype: z.enum(["cart_checkout", "subscription_payment", "ticket_checkout"]),
+  archetype: z.enum([
+    "cart_checkout",
+    "subscription_payment",
+    "ticket_checkout",
+    "store_checkout",
+  ]),
 
   // Нативной оболочки (статус-бар, home indicator) в контракте больше нет:
   // демо — веб-страница, системный хром рисует устройство.
@@ -310,6 +315,58 @@ export const tenantSchema = z.object({
       .nullable()
       .default(null),
     rows: z.array(detailRowSchema).default([]),
+    /** Адрес аккаунта под H1: у авторизованного донора он подписывает заказ. */
+    account_email: z.string().nullable().default(null),
+    /**
+     * Секции заказа архетипа `store_checkout`: у донора реквизиты не плоский
+     * список, а группы с заголовком капсом, галочкой готовности и своей
+     * ссылкой правки. Галочка — не украшение: она и есть индикатор того, что
+     * шаг заказа пройден.
+     */
+    sections: z
+      .array(
+        z.object({
+          title: z.string().min(1),
+          done: z.boolean().default(true),
+          action_label: z.string().nullable().default(null),
+          rows: z
+            .array(
+              z.object({
+                label: z.string().nullable().default(null),
+                value: z.string().min(1),
+              }),
+            )
+            .default([]),
+        }),
+      )
+      .default([]),
+    /** Строка-вопрос про подарочный сертификат перед списком оплаты. */
+    gift_certificate: z.string().nullable().default(null),
+    /** Юридическая сноска над кнопкой: у донора она капсом и мелким кеглем. */
+    legal_note: z.string().nullable().default(null),
+    /**
+     * Блок корзины ПОД кнопкой оплаты: миниатюра товара, ссылка правки,
+     * количество и итоги тремя строками. Порядок донорский — сначала
+     * действие, потом состав.
+     */
+    cart: z
+      .object({
+        item_title: z.string().min(1),
+        item_meta: z.string().nullable().default(null),
+        edit_label: z.string().nullable().default(null),
+        quantity_label: z.string().nullable().default(null),
+        rows: z
+          .array(
+            z.object({
+              label: z.string().min(1),
+              value: z.string().min(1),
+              emphasis: z.boolean().default(false),
+            }),
+          )
+          .default([]),
+      })
+      .nullable()
+      .default(null),
     /**
      * Подзаголовок покупки под H1: место и время. Архетип `ticket_checkout`
      * без него нечитаем — билет без площадки и даты не билет, а строка цены.

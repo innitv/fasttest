@@ -17,6 +17,7 @@ import { CartCheckoutScreen } from "./CartCheckoutScreen";
 import { OzonRailScreen } from "./OzonRailScreen";
 import { PaidConfirmationScreen } from "./PaidConfirmationScreen";
 import { SubscriptionPaymentScreen } from "./SubscriptionPaymentScreen";
+import { StoreCheckoutScreen } from "./StoreCheckoutScreen";
 import { TicketCheckoutScreen } from "./TicketCheckoutScreen";
 import type { DemoStage } from "./demo-flow";
 import { stageVariants, transitionFor } from "./stage-motion";
@@ -355,6 +356,8 @@ export function ScreenHost({ theme, forcedState, showHandoff, initialStage }: Pr
       <SubscriptionPaymentScreen {...screenProps} />
     ) : tenant.archetype === "ticket_checkout" ? (
       <TicketCheckoutScreen {...screenProps} />
+    ) : tenant.archetype === "store_checkout" ? (
+      <StoreCheckoutScreen {...screenProps} />
     ) : (
       <CartCheckoutScreen {...screenProps} />
     );

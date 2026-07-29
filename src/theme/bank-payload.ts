@@ -63,6 +63,13 @@ const ARCHETYPE_DEFAULTS: Record<
     paymentCategory: "Подписки",
     summaryDetail: "Подписка на год",
   },
+  store_checkout: {
+    returnLabel: "Вернуться в магазин",
+    paidTitle: "Заказ оплачен",
+    paymentPurpose: "Оплата заказа",
+    paymentCategory: "Покупки",
+    summaryDetail: "Заказ № 4821",
+  },
   ticket_checkout: {
     returnLabel: "Вернуться к событию",
     paidTitle: "Билет оплачен",

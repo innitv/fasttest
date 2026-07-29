@@ -80,7 +80,7 @@ export const tenantSchema = z.object({
       message: "tenant_id: ожидается kebab-case",
     }),
   display_name: z.string().min(1),
-  archetype: z.enum(["cart_checkout", "subscription_payment"]),
+  archetype: z.enum(["cart_checkout", "subscription_payment", "ticket_checkout"]),
 
   // Нативной оболочки (статус-бар, home indicator) в контракте больше нет:
   // демо — веб-страница, системный хром рисует устройство.
@@ -289,6 +289,38 @@ export const tenantSchema = z.object({
       .nullable()
       .default(null),
     rows: z.array(detailRowSchema).default([]),
+    /**
+     * Подзаголовок покупки под H1: место и время. Архетип `ticket_checkout`
+     * без него нечитаем — билет без площадки и даты не билет, а строка цены.
+     */
+    event: z
+      .object({ venue: z.string().min(1), date: z.string().min(1) })
+      .nullable()
+      .default(null),
+    /**
+     * Форма покупателя ПУСТЫМИ полями. Отличается от `rows` не оформлением,
+     * а моделью: `rows` показывают уже известные системе данные, форма их
+     * спрашивает. У билетного донора данные не хранятся — покупка анонимная,
+     * поэтому экран открывается с пустыми обязательными полями.
+     */
+    buyer_form: z
+      .object({
+        enabled: z.boolean().default(true),
+        fields: z
+          .array(
+            z.object({
+              name: z.string().min(1),
+              label: z.string().min(1),
+              placeholder: z.string().default(""),
+              required: z.boolean().default(true),
+              input_mode: z.enum(["text", "numeric"]).default("text"),
+            }),
+          )
+          .default([]),
+        required_note: z.string().nullable().default(null),
+      })
+      .nullable()
+      .default(null),
     fulfillment: z
       .object({
         title: z.string(),
@@ -311,7 +343,19 @@ export const tenantSchema = z.object({
       .object({ enabled: z.boolean(), default_checked: z.boolean().default(true) })
       .nullable()
       .default(null),
-    promo: z.object({ enabled: z.boolean() }).nullable().default(null),
+    /**
+     * Промокод. `accordion` — свёрнутая кнопка донора Uchi, `field` — открытое
+     * поле с заголовком (донор ВОРОХ). Дефолт донорский для уже поставляемых
+     * тем: они писались до появления второй подачи.
+     */
+    promo: z
+      .object({
+        enabled: z.boolean(),
+        presentation: z.enum(["accordion", "field"]).default("accordion"),
+        title: z.string().nullable().default(null),
+      })
+      .nullable()
+      .default(null),
     items_title: z.string().nullable().default(null),
     items_title_compact: z.string().nullable().default(null),
     line_items: z.array(lineItemSchema).default([]),

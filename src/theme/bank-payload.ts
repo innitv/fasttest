@@ -63,6 +63,13 @@ const ARCHETYPE_DEFAULTS: Record<
     paymentCategory: "Подписки",
     summaryDetail: "Подписка на год",
   },
+  ticket_checkout: {
+    returnLabel: "Вернуться к событию",
+    paidTitle: "Билет оплачен",
+    paymentPurpose: "Оплата билета",
+    paymentCategory: "Развлечения",
+    summaryDetail: "Билет на событие",
+  },
 };
 
 function pick(value: string | null, fallback: string): string {

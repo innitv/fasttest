@@ -1,7 +1,7 @@
 import flowwowLike from "../../tenants/flowwow-like.json";
 import uchiLike from "../../tenants/uchi-like.json";
 import voroh from "../../tenants/voroh.json";
-import vorohDark from "../../tenants/voroh-dark.json";
+import vorohLight from "../../tenants/voroh-light.json";
 
 import { buildTheme, TenantConfigError, type BuiltTheme, type Diagnostic } from "./build-theme";
 import type { TenantConfig } from "./tenant.schema";
@@ -21,7 +21,7 @@ export const BUNDLED_TENANTS: Record<string, unknown> = {
   "flowwow-like": flowwowLike,
   "uchi-like": uchiLike,
   voroh,
-  "voroh-dark": vorohDark,
+  "voroh-light": vorohLight,
 };
 
 export const DEFAULT_TENANT_SLUG = "flowwow-like";

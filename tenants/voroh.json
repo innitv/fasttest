@@ -1,7 +1,7 @@
 {
   "tenant_id": "voroh",
-  "display_name": "VOROH",
-  "archetype": "cart_checkout",
+  "display_name": "ВОРОХ",
+  "archetype": "ticket_checkout",
   "header": {
     "style": "back_title",
     "back_label": "Отмена"
@@ -9,23 +9,26 @@
   "brand": {
     "primary": "#C92341",
     "on_primary": "auto",
-    "accent": "#021231",
-    "tonal": "#021231",
-    "secondary": null,
+    "accent": "#303D5F",
+    "tonal": "#E9EBF1",
+    "secondary": {
+      "fill": "#848BA8",
+      "text": "#FFFFFF"
+    },
     "logo": {
       "kind": "text",
-      "text": "VOROH",
+      "text": "ВОРОХ",
       "slot_ratio": null
     }
   },
   "surface": {
-    "background": "#C7CDDB",
-    "card": "#E9EBF1",
-    "form": "#E9EBF1",
-    "border": "#C7CDDB",
-    "divider": "#C7CDDB",
-    "text_primary": "#021231",
-    "text_secondary": "#677183",
+    "background": "#021231",
+    "card": "#142244",
+    "form": "#303D5F",
+    "border": "#303D5F",
+    "divider": "#021231",
+    "text_primary": "#FFFFFF",
+    "text_secondary": "#848BA8",
     "danger": "#C92341",
     "field_error": "#C92341"
   },
@@ -101,47 +104,24 @@
     "handoff": "overlay"
   },
   "content": {
-    "title": "2DROTS — Орел",
+    "title": "FONBET Кубок России. «2DROTS» — «Орел»",
     "back_link": null,
     "segments": null,
-    "rows": [
-      {
-        "label": "ФИО",
-        "label_compact": null,
-        "value": "Анна Ковалёва",
-        "is_action": false
-      },
-      {
-        "label": "Телефон",
-        "label_compact": null,
-        "value": "+7 (912) 345-67-89",
-        "is_action": false
-      },
-      {
-        "label": "Email",
-        "label_compact": null,
-        "value": "a.kovaleva@example.com",
-        "is_action": false
-      },
-      {
-        "label": "Промокод",
-        "label_compact": null,
-        "value": "Добавить",
-        "is_action": true
-      }
-    ],
+    "rows": [],
     "fulfillment": null,
     "form": null,
     "autorenew": null,
     "promo": {
-      "enabled": true
+      "enabled": true,
+      "presentation": "field",
+      "title": "Промокод"
     },
     "items_title": "1 билет",
     "items_title_compact": null,
     "line_items": [
       {
-        "title": "Сектор B1, ряд 4, место 23",
-        "period": "Cosmos Arena, 28 июля 2026, 20:00",
+        "title": "B1",
+        "period": "Ряд 5, Место 20",
         "price": "300 ₽",
         "old_price": null,
         "media": false
@@ -156,7 +136,38 @@
     "paid_title": "Билет оплачен",
     "payment_purpose": "Оплата билета",
     "payment_category": "Развлечения",
-    "summary_detail": "Заказ № 4821"
+    "summary_detail": "Заказ № 4821",
+    "event": {
+      "venue": "Cosmos Arena | Москва, Новомосковский административный округ, посёлок Внуково",
+      "date": "28 Июля 2026 20:00"
+    },
+    "buyer_form": {
+      "enabled": true,
+      "fields": [
+        {
+          "name": "full_name",
+          "label": "ФИО",
+          "placeholder": "",
+          "required": true,
+          "input_mode": "text"
+        },
+        {
+          "name": "phone",
+          "label": "Телефон",
+          "placeholder": "+7 (___) ___ - __ - __",
+          "required": true,
+          "input_mode": "numeric"
+        },
+        {
+          "name": "email",
+          "label": "Email",
+          "placeholder": "",
+          "required": true,
+          "input_mode": "text"
+        }
+      ],
+      "required_note": "* — обязательный вопрос"
+    }
   },
   "demo": {
     "balance": "34 190,50 ₽",

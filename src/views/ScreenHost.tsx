@@ -17,6 +17,7 @@ import { CartCheckoutScreen } from "./CartCheckoutScreen";
 import { OzonRailScreen } from "./OzonRailScreen";
 import { PaidConfirmationScreen } from "./PaidConfirmationScreen";
 import { SubscriptionPaymentScreen } from "./SubscriptionPaymentScreen";
+import { TicketCheckoutScreen } from "./TicketCheckoutScreen";
 import type { DemoStage } from "./demo-flow";
 import { stageVariants, transitionFor } from "./stage-motion";
 import type { ForcedState, PhoneGateSlot } from "./screen-props";
@@ -346,11 +347,16 @@ export function ScreenHost({ theme, forcedState, showHandoff, initialStage }: Pr
     phoneGate: phoneGateSlot,
   };
 
+  // Билетный архетип наследует ПОВЕДЕНИЕ архетипа A (инлайн-выбор способа,
+  // проверка телефона под рядом методов) и расходится с ним только раскладкой
+  // экрана — поэтому ветвление по поведению выше трогать не пришлось.
   const contractorScreen =
-    tenant.archetype === "cart_checkout" ? (
-      <CartCheckoutScreen {...screenProps} />
-    ) : (
+    tenant.archetype === "subscription_payment" ? (
       <SubscriptionPaymentScreen {...screenProps} />
+    ) : tenant.archetype === "ticket_checkout" ? (
+      <TicketCheckoutScreen {...screenProps} />
+    ) : (
+      <CartCheckoutScreen {...screenProps} />
     );
 
   // Отдельный экран «Оплата через Ozon Банк» — только архетип B.

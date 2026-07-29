@@ -24,8 +24,8 @@ import { FORCED_STATES, type ForcedState } from "@demo/views/screen-props";
 const PATH_ROUTES: Record<string, { tenant: string; archetype: TenantConfig["archetype"] }> = {
   "/flowwow": { tenant: "flowwow-like", archetype: "cart_checkout" },
   "/uchi": { tenant: "uchi-like", archetype: "subscription_payment" },
-  "/voroh": { tenant: "voroh", archetype: "cart_checkout" },
-  "/voroh-dark": { tenant: "voroh-dark", archetype: "cart_checkout" },
+  "/voroh": { tenant: "voroh", archetype: "ticket_checkout" },
+  "/voroh-light": { tenant: "voroh-light", archetype: "ticket_checkout" },
 };
 
 /** Лаунчер — только для локальной отладки, по неугадываемому пути и только в dev. */

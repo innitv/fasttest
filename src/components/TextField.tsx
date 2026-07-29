@@ -14,6 +14,17 @@ interface Props {
   maxLength?: number;
   trailing?: ReactNode;
   type?: "text" | "password";
+  /**
+   * Поверхность, на которой лежит поле.
+   *
+   * `card` — поле светлее фона формы (архетип B: подложка `surface.form`,
+   * поля на ней карточкой). `form` — обратная вложенность билетного донора:
+   * форма лежит карточкой, а поля внутри неё — на `surface.form`. Без этой
+   * оси поле, положенное в карточку, красится её же цветом и исчезает.
+   */
+  surface?: "card" | "form";
+  /** Красная звёздочка обязательного поля — донорская подача билетного чекаута. */
+  requiredMark?: boolean;
 }
 
 /**
@@ -36,6 +47,8 @@ export function TextField({
   maxLength,
   trailing,
   type = "text",
+  surface = "card",
+  requiredMark = false,
 }: Props) {
   const hasError = Boolean(errorMessage);
   const errorId = `${name}-error`;
@@ -52,6 +65,9 @@ export function TextField({
         }}
       >
         {label}
+        {requiredMark && (
+          <span style={{ color: "var(--t-brand-text-on-bg)" }}> *</span>
+        )}
       </label>
 
       <div className="relative w-full">
@@ -73,7 +89,10 @@ export function TextField({
           style={{
             height: "var(--k-field-h)",
             borderRadius: "var(--t-radius-field)",
-            background: "var(--t-surface-card)",
+            background:
+              surface === "form"
+                ? "var(--t-surface-form, var(--t-surface-card))"
+                : "var(--t-surface-card)",
             color: "var(--t-text-primary)",
             fontSize: "var(--t-font-body)",
             paddingInline: "12px",

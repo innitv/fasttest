@@ -53,6 +53,21 @@ export function CartCheckoutScreen({
     forcedState === "cta_disabled" ||
     (tenant.cta.requires_selection && selectedMethod === null);
 
+  // Донор может держать кнопку в потоке под итогом (MONOCHROME), а не липкой
+  // панелью внизу. Резерв прокрутки нужен только под липкую: под кнопкой в
+  // потоке он оставляет пустую полосу.
+  const inlineCta = tenant.cta.placement === "inline";
+
+  const ctaButton = (
+    <PrimaryButton
+      label={ctaLabel}
+      loadingLabel={ctaLoadingLabel}
+      sentLabel={ctaSentLabel}
+      state={disabled ? "disabled" : ctaState}
+      onClick={onCta}
+    />
+  );
+
   return (
     <div className="relative flex h-full w-full flex-col">
       {/*
@@ -69,7 +84,11 @@ export function CartCheckoutScreen({
       <div
         data-testid="scroll-container"
         className="no-scrollbar relative flex-1 overflow-y-auto"
-        style={{ paddingBottom: STICKY_PANEL_RESERVE }}
+        style={{
+          paddingBottom: inlineCta
+            ? "var(--k-page-bottom-reserve)"
+            : STICKY_PANEL_RESERVE,
+        }}
       >
         <ScreenHeader style="back_title" title={content.title} />
 
@@ -105,6 +124,7 @@ export function CartCheckoutScreen({
                   labelCompact={row.label_compact}
                   value={row.value}
                   isAction={row.is_action}
+                  layout={tenant.detail_rows.layout}
                   testId={`detail-row-${index + 1}`}
                 />
               ))}
@@ -171,7 +191,7 @@ export function CartCheckoutScreen({
                 color: "var(--t-text-primary)",
               }}
             >
-              {COPY["payment.section_title"]}
+              {tenant.payment_list.section_title ?? COPY["payment.section_title"]}
             </h2>
             <PaymentMethodList
               layout={tenant.payment_list.layout}
@@ -198,19 +218,15 @@ export function CartCheckoutScreen({
           >
             <SingleRowTotals totals={content.totals} delta={delta} />
           </SurfaceCard>
+
+          {inlineCta && (
+            <div style={{ paddingInline: "var(--t-page-padding)" }}>{ctaButton}</div>
+          )}
         </div>
       </div>
 
-      {/* ── Зона 8: sticky-CTA ──────────────────────────────────── */}
-      <StickyCtaPanel>
-        <PrimaryButton
-          label={ctaLabel}
-          loadingLabel={ctaLoadingLabel}
-          sentLabel={ctaSentLabel}
-          state={disabled ? "disabled" : ctaState}
-          onClick={onCta}
-        />
-      </StickyCtaPanel>
+      {/* ── Зона 8: CTA — липкая панель или кнопка в потоке ─────── */}
+      {!inlineCta && <StickyCtaPanel>{ctaButton}</StickyCtaPanel>}
     </div>
   );
 }

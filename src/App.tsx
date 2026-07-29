@@ -26,6 +26,7 @@ const PATH_ROUTES: Record<string, { tenant: string; archetype: TenantConfig["arc
   "/uchi": { tenant: "uchi-like", archetype: "subscription_payment" },
   "/voroh": { tenant: "voroh", archetype: "ticket_checkout" },
   "/voroh-light": { tenant: "voroh-light", archetype: "ticket_checkout" },
+  "/monochrome": { tenant: "monochrome", archetype: "cart_checkout" },
 };
 
 /** Лаунчер — только для локальной отладки, по неугадываемому пути и только в dev. */

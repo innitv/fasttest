@@ -8,6 +8,12 @@ interface Props {
   isAction?: boolean;
   testId?: string;
   onClick?: () => void;
+  /**
+   * `row` — label и значение по краям одной строки. `stacked` — подпись
+   * серым НАД значением: так устроен донор MONOCHROME, и на его палитре
+   * горизонтальная строка сразу читается как чужой шаблон.
+   */
+  layout?: "row" | "stacked";
 }
 
 /**
@@ -24,7 +30,63 @@ export function DetailRow({
   isAction = false,
   testId,
   onClick,
+  layout = "row",
 }: Props) {
+  if (layout === "stacked") {
+    return (
+      <button
+        type="button"
+        data-testid={testId}
+        data-layout="stacked"
+        onClick={onClick}
+        className="flex w-full items-center text-left"
+        style={{
+          minHeight: "var(--t-row-height)",
+          gap: "8px",
+          background: "none",
+          border: "none",
+          padding: 0,
+          cursor: "pointer",
+          color: "var(--t-text-primary)",
+        }}
+      >
+        <span className="flex min-w-0 flex-1 flex-col" style={{ gap: "2px" }}>
+          <span
+            style={{
+              fontSize: "var(--t-font-caption)",
+              fontWeight: 400,
+              color: "var(--t-text-secondary)",
+            }}
+          >
+            <ResponsiveText full={label} compact={labelCompact} />
+          </span>
+          <span
+            data-testid={testId ? `${testId}-value` : undefined}
+            className="min-w-0 truncate"
+            style={{
+              fontSize: "var(--t-font-body)",
+              fontWeight: 400,
+              color: "var(--t-text-primary)",
+            }}
+          >
+            {value}
+          </span>
+        </span>
+
+        <span
+          style={{
+            color: "var(--t-text-secondary)",
+            flexShrink: 0,
+            display: "flex",
+            marginLeft: "var(--k-chevron-gap)",
+          }}
+        >
+          <Chevron />
+        </span>
+      </button>
+    );
+  }
+
   return (
     <button
       type="button"

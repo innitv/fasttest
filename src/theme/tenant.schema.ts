@@ -171,11 +171,20 @@ export const tenantSchema = z.object({
     }),
 
   // ── Форма ───────────────────────────────────────────────────────────
+  /*
+   * Нижняя граница радиусов снята до нуля решением владельца 2026-07-29.
+   *
+   * Прежний порог 8 защищал от «случайного нуля» — темы, где скругление
+   * забыли задать. Но у минималистичных доноров (MONOCHROME: 1px) жёсткий
+   * угол это не забывчивость, а ядро айдентики, и кламп до 8 стирал ровно
+   * то, по чему подрядчик узнаёт свой сайт. Верхние границы остались: они
+   * ловят другую ошибку — «детскую» пересглаженность.
+   */
   radius: z.object({
-    card: clamped("radius.card", 8, 24, "< 8 читается как таблица, > 24 как детская игра"),
-    control: radiusValue("radius.control", 6, 28),
-    field: clamped("radius.field", 4, 16, "кламп формы"),
-    chip: radiusValue("radius.chip", 4, 999),
+    card: clamped("radius.card", 0, 24, "> 24 читается как детская игра"),
+    control: radiusValue("radius.control", 0, 28),
+    field: clamped("radius.field", 0, 16, "кламп формы"),
+    chip: radiusValue("radius.chip", 0, 999),
     allow_inversion: z.boolean().default(false),
   }),
 
@@ -238,9 +247,21 @@ export const tenantSchema = z.object({
     requires_selection: z.boolean().default(false),
   }),
 
+  /**
+   * Раскладка строк реквизитов. `row` — label и значение в одну строку по
+   * краям (доноры Flowwow, Ozon). `stacked` — подпись серым НАД значением
+   * (донор MONOCHROME). Ось структурная: при одинаковой палитре она сильнее
+   * всего решает, читается экран как чужой шаблон или как свой сайт.
+   */
+  detail_rows: z
+    .object({ layout: z.enum(["row", "stacked"]).default("row") })
+    .prefault({}),
+
   // ── Список способов оплаты (точка вставки) ──────────────────────────
   payment_list: z.object({
     layout: z.enum(["horizontal_cards", "vertical_buttons"]),
+    /** Заголовок секции: у донора он может называться иначе, чем «Оплата». */
+    section_title: z.string().nullable().default(null),
     selection: z.enum(["radio_outline", "row_press"]),
     methods: z.array(paymentMethodSchema),
     default_selected: z.string().nullable().default(null),

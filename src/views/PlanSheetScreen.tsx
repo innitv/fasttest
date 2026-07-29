@@ -5,7 +5,6 @@ import { PaymentMethodList } from "@demo/components/PaymentMethodList";
 import { PhoneGateBlock } from "@demo/components/PhoneGateBlock";
 import { PrimaryButton } from "@demo/components/PrimaryButton";
 import { ScreenHeader } from "@demo/components/ScreenHeader";
-import { CheckGlyph } from "@demo/components/primitives";
 import { COPY, formatMoney, resolveCtaLabel } from "@demo/content/copy";
 import { OZON_METHOD_ID } from "@demo/theme/tenant.schema";
 import type { ScreenProps } from "./screen-props";
@@ -90,21 +89,65 @@ export function PlanSheetScreen({
               key={plan.id}
               data-testid={`plan-card-${plan.id}`}
               className="flex w-full flex-col"
-              style={{
-                /*
-                 * Тёмная подложка берётся из `brand.tonal`, а текст на ней —
-                 * из посчитанной движком пары `--t-brand-tonal-on`. Прямой
-                 * `text_primary` здесь нечитаем: страница донора светлая, а
-                 * карточки тёмные, и один цвет текста не обслуживает оба.
-                 */
-                background: "var(--t-brand-tonal)",
-                color: "var(--t-brand-tonal-on)",
-                borderRadius: "var(--t-radius-card)",
-                boxShadow: "var(--t-shadow)",
-                padding: "var(--t-page-padding)",
-                gap: "12px",
-              }}
+              style={{ gap: "10px" }}
             >
+              {/*
+                Карточка тарифа у донора — АФИША: фотография во всю плашку с
+                пропорцией 4:5, а состав лежит поверх неё полупрозрачной
+                накладкой. Плоский блок с текстом читался как чужой прайс-лист,
+                поэтому здесь сохранены и пропорция, и наложение.
+
+                Само фото — нейтральная подложка: чужие снимки демо не тащит.
+                Место, пропорция и способ наложения от этого не меняются.
+              */}
+              <div
+                data-testid={`plan-poster-${plan.id}`}
+                className="relative flex w-full flex-col justify-end"
+                style={{
+                  aspectRatio: "332 / 415",
+                  background:
+                    "linear-gradient(160deg, var(--t-brand-tonal), var(--t-surface-background))",
+                  color: "var(--t-brand-tonal-on)",
+                  borderRadius: "var(--t-radius-card)",
+                  boxShadow: "var(--t-shadow)",
+                  overflow: "hidden",
+                  padding: "10px",
+                }}
+              >
+                {/*
+                  Свободная часть афиши — явный слот под фотографию тарифа.
+                  Подписан намеренно: пустое тёмное поле читается как дефект
+                  вёрстки, а помеченный слот — как место, куда подрядчик
+                  подставит свой снимок.
+                */}
+                <span
+                  data-testid={`plan-photo-slot-${plan.id}`}
+                  className="absolute inset-x-0 top-0 flex items-center justify-center"
+                  style={{
+                    bottom: "40%",
+                    fontSize: "var(--t-font-caption)",
+                    letterSpacing: "0.16em",
+                    textTransform: "uppercase",
+                    opacity: 0.32,
+                  }}
+                >
+                  {COPY["plan.photo_slot"]}
+                </span>
+              <div
+                className="flex w-full flex-col"
+                style={{
+                  /*
+                   * Накладка поверх афиши — тот же приём, что у кнопки «Назад»
+                   * донора: полупрозрачная тёмная плашка со светлой рамкой.
+                   * Она и делает текст читаемым на любой фотографии.
+                   */
+                  background: "rgba(20, 22, 27, 0.56)",
+                  border: "var(--t-border-width) solid rgba(255, 255, 255, 0.26)",
+                  borderRadius: "var(--t-radius-control)",
+                  padding: "12px",
+                  gap: "12px",
+                }}
+              >
               <div className="flex w-full items-start justify-between" style={{ gap: "12px" }}>
                 <div className="flex min-w-0 flex-col" style={{ gap: "4px" }}>
                   <h2
@@ -150,25 +193,72 @@ export function PlanSheetScreen({
                 >
                   {plan.features.map((feature) => (
                     <li
-                      key={feature}
-                      className="flex items-center"
-                      style={{ gap: "8px", fontSize: "var(--t-font-caption)", opacity: 0.86 }}
+                      key={feature.label}
+                      className="flex w-full items-center justify-between"
+                      style={{ gap: "12px", fontSize: "var(--t-font-caption)" }}
                     >
-                      <span style={{ display: "flex", color: "var(--t-brand-primary)" }}>
-                        <CheckGlyph size={10} />
+                      <span style={{ opacity: feature.included ? 0.92 : 0.5 }}>
+                        {feature.label}
                       </span>
-                      {feature}
+                      {/*
+                        Тумблер, а не галочка: у донора состав одинаков во всех
+                        тарифах, и разницу несёт именно положение переключателя.
+                        Выключенное состояние показано и цветом, и положением
+                        кружка — цвет здесь не единственный канал.
+                      */}
+                      <span
+                        aria-hidden
+                        data-testid={`plan-toggle-${plan.id}-${feature.included ? "on" : "off"}`}
+                        className="flex items-center"
+                        style={{
+                          width: "34px",
+                          height: "20px",
+                          flexShrink: 0,
+                          padding: "2px",
+                          borderRadius: "999px",
+                          justifyContent: feature.included ? "flex-end" : "flex-start",
+                          background: feature.included
+                            ? "var(--t-brand-primary)"
+                            : "var(--t-surface-danger)",
+                        }}
+                      >
+                        <span
+                          style={{
+                            width: "16px",
+                            height: "16px",
+                            borderRadius: "999px",
+                            // Кружок берёт цвет ЧИТАЕМОГО текста на заливке
+                            // тумблера, а не поверхность карточки: на тёмной
+                            // теме поверхность сливается с фоном переключателя.
+                            background: "var(--t-brand-primary-on)",
+                          }}
+                        />
+                      </span>
+                      <span className="sr-only">
+                        {feature.included ? COPY["plan.included"] : COPY["plan.excluded"]}
+                      </span>
                     </li>
                   ))}
                 </ul>
               )}
+              </div>
+              </div>
 
-              <div style={{ marginTop: "4px" }}>
+              {/*
+                Кнопка стоит ПОД афишей, а не внутри неё — так у донора.
+                Внутри карточки она читалась бы как часть картинки, а у него
+                это отдельный элемент страницы, и между тарифами он повторяется
+                как ритм: афиша — кнопка, афиша — кнопка.
+              */}
+              <div style={{ paddingInline: "10px" }}>
                 <PrimaryButton
                   label={content.plan_cta_label ?? tenant.cta.label}
                   loadingLabel={ctaLoadingLabel}
                   state="default"
-                  onClick={() => { setOpenPlanId(plan.id); onSelectAmount?.(plan.sum); }}
+                  onClick={() => {
+                    setOpenPlanId(plan.id);
+                    onSelectAmount?.(plan.sum);
+                  }}
                   testId={`plan-cta-${plan.id}`}
                 />
               </div>

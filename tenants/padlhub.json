@@ -19,15 +19,15 @@
     }
   },
   "surface": {
-    "background": "#F5F5F7",
-    "card": "#FFFFFF",
-    "form": "#F0F1F4",
-    "border": "#E1E3E8",
-    "divider": "#E1E3E8",
-    "text_primary": "#1A1A1A",
-    "text_secondary": "#6B6F76",
-    "danger": "#D93F3F",
-    "field_error": "#D93F3F"
+    "background": "#26282C",
+    "card": "#1A1D22",
+    "form": "#22252B",
+    "border": "#3A3D44",
+    "divider": "#3A3D44",
+    "text_primary": "#F4F6F8",
+    "text_secondary": "#A0A5AD",
+    "danger": "#E5484D",
+    "field_error": "#E5484D"
   },
   "elevation": {
     "model": "shadow",
@@ -149,10 +149,26 @@
         "caption": "30 дней игр + тренировок",
         "sum": 2380000,
         "features": [
-          "Создание игры",
-          "Участие в играх",
-          "Игра с тренером",
-          "Групповые тренировки"
+          {
+            "label": "Создание игры",
+            "included": true
+          },
+          {
+            "label": "Участие в играх",
+            "included": true
+          },
+          {
+            "label": "Игра с тренером",
+            "included": true
+          },
+          {
+            "label": "Групповые тренировки",
+            "included": true
+          },
+          {
+            "label": "Участие в турнирах ПадлХАБ",
+            "included": false
+          }
         ]
       },
       {
@@ -161,9 +177,26 @@
         "caption": "30 дней игр + турниров",
         "sum": 1980000,
         "features": [
-          "Создание игры",
-          "Участие в играх",
-          "Участие в турнирах ПадлХАБ"
+          {
+            "label": "Создание игры",
+            "included": true
+          },
+          {
+            "label": "Участие в играх",
+            "included": true
+          },
+          {
+            "label": "Игра с тренером",
+            "included": false
+          },
+          {
+            "label": "Групповые тренировки",
+            "included": false
+          },
+          {
+            "label": "Участие в турнирах ПадлХАБ",
+            "included": true
+          }
         ]
       },
       {
@@ -172,8 +205,26 @@
         "caption": "30 дней игр",
         "sum": 980000,
         "features": [
-          "Создание игры",
-          "Участие в играх"
+          {
+            "label": "Создание игры",
+            "included": true
+          },
+          {
+            "label": "Участие в играх",
+            "included": true
+          },
+          {
+            "label": "Игра с тренером",
+            "included": false
+          },
+          {
+            "label": "Групповые тренировки",
+            "included": false
+          },
+          {
+            "label": "Участие в турнирах ПадлХАБ",
+            "included": false
+          }
         ]
       }
     ],

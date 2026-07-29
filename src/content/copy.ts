@@ -52,6 +52,9 @@ export const COPY = {
   "payment.methods_title": "Способ оплаты",
   "promo.field.title": "Промокод",
   "section.done": "Шаг заполнен",
+  "plan.included": "входит в абонемент",
+  "plan.excluded": "не входит в абонемент",
+  "plan.photo_slot": "фото тарифа",
   "promo.field.hint": "Введите промокод, если есть",
   // Ключ `help_fab.label` из copy-deck намеренно отсутствует: плавающая
   // кнопка помощи удалена из демо решением пользователя 2026-07-23.

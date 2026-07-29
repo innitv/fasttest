@@ -148,84 +148,45 @@
         "title": "Лето.Падел.Академия",
         "caption": "30 дней игр + тренировок",
         "sum": 2380000,
-        "features": [
-          {
-            "label": "Создание игры",
-            "included": true
-          },
-          {
-            "label": "Участие в играх",
-            "included": true
-          },
-          {
-            "label": "Игра с тренером",
-            "included": true
-          },
-          {
-            "label": "Групповые тренировки",
-            "included": true
-          },
-          {
-            "label": "Участие в турнирах ПадлХАБ",
-            "included": false
-          }
-        ]
+        "image": "/tenants/padlhub/academy.jpg",
+        "image_alt": "Абонемент Лето.Падел.Академия за 23 800 ₽",
+        "features": []
+      },
+      {
+        "id": "ra",
+        "title": "Лето.Падел.РА",
+        "caption": "30 дней игр + турниров и тренировок",
+        "sum": 2380000,
+        "image": "/tenants/padlhub/ra.jpg",
+        "image_alt": "Абонемент Лето.Падел.РА за 23 800 ₽",
+        "features": []
       },
       {
         "id": "sport",
         "title": "Лето.Падел.Спорт",
         "caption": "30 дней игр + турниров",
         "sum": 1980000,
-        "features": [
-          {
-            "label": "Создание игры",
-            "included": true
-          },
-          {
-            "label": "Участие в играх",
-            "included": true
-          },
-          {
-            "label": "Игра с тренером",
-            "included": false
-          },
-          {
-            "label": "Групповые тренировки",
-            "included": false
-          },
-          {
-            "label": "Участие в турнирах ПадлХАБ",
-            "included": true
-          }
-        ]
+        "image": "/tenants/padlhub/sport.jpg",
+        "image_alt": "Абонемент Лето.Падел.Спорт за 19 800 ₽",
+        "features": []
       },
       {
         "id": "friendship",
         "title": "Лето.Падел.Дружба",
         "caption": "30 дней игр",
         "sum": 980000,
-        "features": [
-          {
-            "label": "Создание игры",
-            "included": true
-          },
-          {
-            "label": "Участие в играх",
-            "included": true
-          },
-          {
-            "label": "Игра с тренером",
-            "included": false
-          },
-          {
-            "label": "Групповые тренировки",
-            "included": false
-          },
-          {
-            "label": "Участие в турнирах ПадлХАБ",
-            "included": false
-          }
-        ]
+        "image": "/tenants/padlhub/friendship.jpg",
+        "image_alt": "Абонемент Лето.Падел.Дружба за 9 800 ₽",
+        "features": []
+      },
+      {
+        "id": "energy",
+        "title": "Энергия-5",
+        "caption": "5 игр",
+        "sum": 1980000,
+        "image": "/tenants/padlhub/energy.jpg",
+        "image_alt": "Абонемент Энергия-5 за 19 800 ₽",
+        "features": []
       }
     ],
     "plan_cta_label": "Оформить подписку"

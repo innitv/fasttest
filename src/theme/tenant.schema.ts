@@ -229,13 +229,21 @@ export const tenantSchema = z.object({
 
   // ── Типографика ─────────────────────────────────────────────────────
   typography: z.object({
+    /*
+     * Нижние границы кеглей и веса заголовка опущены до донорских решением
+     * владельца 2026-07-29 — вслед за порогом радиусов и по той же причине:
+     * у минималистичных доноров мелкий кегль и лёгкий заголовок это не
+     * небрежность, а способ высказывания, и кламп стирал именно его. Порог
+     * зоны нажатия (44) при этом НЕ трогается: он про попадание пальцем, а
+     * не про плотность текста.
+     */
     family: z.enum(["system", "rounded", "grotesk"]).default("system"),
-    body: clamped("typography.body", 14, 18, "кегль тела"),
+    body: clamped("typography.body", 13, 18, "кегль тела"),
     h1: clamped("typography.h1", 16, 32, "кегль H1"),
-    section_title: clamped("typography.section_title", 16, 24, "кегль заголовка секции"),
+    section_title: clamped("typography.section_title", 15, 24, "кегль заголовка секции"),
     caption: clamped("typography.caption", 11, 14, "кегль подписи"),
-    label_weight: clamped("typography.label_weight", 500, 700, "вес label"),
-    title_weight: clamped("typography.title_weight", 600, 800, "вес заголовка"),
+    label_weight: clamped("typography.label_weight", 400, 700, "вес label"),
+    title_weight: clamped("typography.title_weight", 500, 800, "вес заголовка"),
   }),
 
   // ── Главная кнопка ──────────────────────────────────────────────────
@@ -250,6 +258,13 @@ export const tenantSchema = z.object({
      * выбора одной из формулировок. Дефолт — донорский (кнопка активна).
      */
     requires_selection: z.boolean().default(false),
+    /**
+     * Типографика главной кнопки. Раньше была зашита 17/700 и не зависела от
+     * донора: у минималиста кнопка набрана тем же кеглем, что заголовок
+     * секции, и обычным весом — жирный крупный текст выдавал чужой шаблон.
+     */
+    font_size: clamped("cta.font_size", 13, 20, "кегль главной кнопки").default(17),
+    font_weight: clamped("cta.font_weight", 400, 800, "вес главной кнопки").default(700),
   }),
 
   /**

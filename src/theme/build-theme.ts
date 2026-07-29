@@ -692,6 +692,8 @@ export function buildTheme(raw: unknown): BuiltTheme {
   vars["--t-font-caption"] = `${tenant.typography.caption}px`;
   vars["--t-label-weight"] = String(tenant.typography.label_weight);
   vars["--t-title-weight"] = String(tenant.typography.title_weight);
+  vars["--t-cta-font-size"] = `${tenant.cta.font_size}px`;
+  vars["--t-cta-font-weight"] = String(tenant.cta.font_weight);
 
   return {
     tenant,

@@ -56,18 +56,20 @@
   },
   "typography": {
     "family": "grotesk",
-    "body": 14,
+    "body": 13,
     "h1": 20,
-    "section_title": 16,
-    "caption": 11,
-    "label_weight": 500,
-    "title_weight": 600
+    "section_title": 15,
+    "caption": 13,
+    "label_weight": 400,
+    "title_weight": 500
   },
   "cta": {
     "placement": "inline",
     "label": "ОПЛАТИТЬ ЗАКАЗ",
     "include_amount": true,
-    "requires_selection": false
+    "requires_selection": false,
+    "font_size": 15,
+    "font_weight": 400
   },
   "payment_list": {
     "layout": "radio_rows",

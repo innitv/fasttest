@@ -68,8 +68,10 @@ export function PrimaryButton({
         borderRadius: "var(--t-radius-control)",
         background,
         color: disabled ? "var(--t-text-secondary)" : "var(--t-brand-on)",
-        fontSize: "17px",
-        fontWeight: 700,
+        // Кегль и вес — оси темы, а не константа: у минималистичных доноров
+        // кнопка набрана тем же кеглем, что заголовок секции, обычным весом.
+        fontSize: "var(--t-cta-font-size)",
+        fontWeight: "var(--t-cta-font-weight)" as unknown as number,
         border: "none",
         whiteSpace: "nowrap",
         overflow: "hidden",

@@ -1,0 +1,171 @@
+{
+  "tenant_id": "voroh",
+  "display_name": "VOROH",
+  "archetype": "cart_checkout",
+  "header": {
+    "style": "back_title",
+    "back_label": "Отмена"
+  },
+  "brand": {
+    "primary": "#C92341",
+    "on_primary": "auto",
+    "accent": "#021231",
+    "tonal": "#021231",
+    "secondary": null,
+    "logo": {
+      "kind": "text",
+      "text": "VOROH",
+      "slot_ratio": null
+    }
+  },
+  "surface": {
+    "background": "#C7CDDB",
+    "card": "#E9EBF1",
+    "form": "#E9EBF1",
+    "border": "#C7CDDB",
+    "divider": "#C7CDDB",
+    "text_primary": "#021231",
+    "text_secondary": "#677183",
+    "danger": "#C92341",
+    "field_error": "#C92341"
+  },
+  "elevation": {
+    "model": "tonal_fill",
+    "border_width": 1,
+    "selected_border_width": 1.5,
+    "shadow": null
+  },
+  "radius": {
+    "card": 15,
+    "control": 15,
+    "field": 15,
+    "chip": 15,
+    "allow_inversion": false
+  },
+  "density": {
+    "page_padding": 22,
+    "block_gap": 15,
+    "row_height": 44,
+    "control_height": 44,
+    "method_button_height": 60,
+    "section_gap": 8
+  },
+  "component_width": {
+    "choice_card_pct": 42,
+    "payment_card_pct": 32
+  },
+  "typography": {
+    "family": "grotesk",
+    "body": 14,
+    "h1": 16,
+    "section_title": 16,
+    "caption": 11,
+    "label_weight": 500,
+    "title_weight": 700
+  },
+  "cta": {
+    "placement": "sticky",
+    "label": "Оплатить",
+    "include_amount": true,
+    "requires_selection": false
+  },
+  "payment_list": {
+    "layout": "vertical_buttons",
+    "selection": "row_press",
+    "methods": [
+      {
+        "id": "ozon",
+        "label": "Ozon Банк",
+        "caption": null,
+        "logo": "none"
+      },
+      {
+        "id": "sbp",
+        "label": "Система быстрых платежей",
+        "caption": null,
+        "logo": "none"
+      },
+      {
+        "id": "card",
+        "label": "Банковская карта РФ",
+        "caption": null,
+        "logo": "none"
+      }
+    ],
+    "default_selected": "card"
+  },
+  "ozon": {
+    "label": "Ozon Банк",
+    "position": 1,
+    "adopts_tenant_theme": true,
+    "handoff": "overlay"
+  },
+  "content": {
+    "title": "2DROTS — Орел",
+    "back_link": null,
+    "segments": null,
+    "rows": [
+      {
+        "label": "ФИО",
+        "label_compact": null,
+        "value": "Анна Ковалёва",
+        "is_action": false
+      },
+      {
+        "label": "Телефон",
+        "label_compact": null,
+        "value": "+7 (912) 345-67-89",
+        "is_action": false
+      },
+      {
+        "label": "Email",
+        "label_compact": null,
+        "value": "a.kovaleva@example.com",
+        "is_action": false
+      },
+      {
+        "label": "Промокод",
+        "label_compact": null,
+        "value": "Добавить",
+        "is_action": true
+      }
+    ],
+    "fulfillment": null,
+    "form": null,
+    "autorenew": null,
+    "promo": {
+      "enabled": true
+    },
+    "items_title": "1 билет",
+    "items_title_compact": null,
+    "line_items": [
+      {
+        "title": "Сектор B1, ряд 4, место 23",
+        "period": "Cosmos Arena, 28 июля 2026, 20:00",
+        "price": "300 ₽",
+        "old_price": null,
+        "media": false
+      }
+    ],
+    "totals": {
+      "sum": 30000,
+      "discount": 0,
+      "currency": "RUB"
+    },
+    "return_label": "Вернуться к событию",
+    "paid_title": "Билет оплачен",
+    "payment_purpose": "Оплата билета",
+    "payment_category": "Развлечения",
+    "summary_detail": "Заказ № 4821"
+  },
+  "demo": {
+    "balance": "34 190,50 ₽",
+    "timings": {
+      "push_delay_ms": 600,
+      "splash_ms": 1200,
+      "pay_loading_ms": 900,
+      "dots_cycle_ms": 900
+    }
+  },
+  "a11y_mode": "enforced"
+}

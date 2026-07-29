@@ -63,12 +63,23 @@ export function PaymentMethodList({
         }}
       >
         {methods.map((method) => (
-          <div key={method.id} className="flex w-full flex-col">
+          <div
+            key={method.id}
+            data-testid={`payment-method-card-${method.id}`}
+            className="flex w-full flex-col"
+            style={{
+              border: "var(--t-border-width) solid var(--t-surface-border)",
+              borderRadius: "var(--t-radius-card)",
+              overflow: "hidden",
+            }}
+          >
             <PaymentMethodRadioRow
               method={method}
               selected={selected === method.id}
               onSelect={onSelect}
             />
+            {/* Раскрытое поле живёт ВНУТРИ карточки метода: выбор и то, что он
+                требует заполнить, читаются как один элемент. */}
             {renderAfter?.(method.id)}
           </div>
         ))}

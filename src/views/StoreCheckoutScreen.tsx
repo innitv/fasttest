@@ -4,6 +4,7 @@ import { PrimaryButton, STICKY_PANEL_RESERVE, StickyCtaPanel } from "@demo/compo
 import { ScreenHeader } from "@demo/components/ScreenHeader";
 import { CheckGlyph, NeutralPlate } from "@demo/components/primitives";
 import { COPY, resolveCtaLabel } from "@demo/content/copy";
+import { OZON_METHOD_ID } from "@demo/theme/tenant.schema";
 import type { ScreenProps } from "./screen-props";
 
 /**
@@ -20,6 +21,8 @@ import type { ScreenProps } from "./screen-props";
  * шапка с логотипом → H1 → адрес аккаунта → секции шагов → сертификат →
  * способ оплаты → юридическая сноска → кнопка → корзина → итоги.
  */
+import { useState } from "react";
+
 export function StoreCheckoutScreen({
   tenant,
   selectedMethod,
@@ -32,6 +35,8 @@ export function StoreCheckoutScreen({
   phoneGate,
 }: ScreenProps) {
   const { content } = tenant;
+
+  const [giftChecked, setGiftChecked] = useState(false);
 
   const ctaLabel = resolveCtaLabel(
     tenant.cta.label,
@@ -214,18 +219,49 @@ export function StoreCheckoutScreen({
             {tenant.payment_list.section_title ?? COPY["payment.section_title"]}
           </h2>
 
+          {/*
+            Сертификат — не подпись, а чекбокс: у донора слева от текста стоит
+            скруглённый квадрат 14×14 (радиус 5). Без него строка читается как
+            заголовок, а не как то, что можно отметить.
+          */}
           {content.gift_certificate && (
-            <p
+            <label
               data-testid="gift-certificate"
-              style={{
-                margin: "16px 0 0",
-                fontSize: "var(--t-font-caption)",
-                textTransform: "uppercase",
-                color: "var(--t-text-primary)",
-              }}
+              className="flex items-center"
+              style={{ marginTop: "16px", gap: "8px", cursor: "pointer" }}
             >
-              {content.gift_certificate}
-            </p>
+              <input
+                type="checkbox"
+                checked={giftChecked}
+                onChange={(event) => setGiftChecked(event.target.checked)}
+                className="sr-only"
+              />
+              <span
+                aria-hidden
+                className="flex items-center justify-center"
+                style={{
+                  width: "14px",
+                  height: "14px",
+                  flexShrink: 0,
+                  borderRadius: "5px",
+                  border: "var(--t-border-width) solid var(--t-surface-border)",
+                  background: giftChecked
+                    ? "var(--t-brand-primary)"
+                    : "var(--t-surface-card)",
+                }}
+              >
+                {giftChecked && <CheckGlyph size={9} color="var(--t-brand-on)" />}
+              </span>
+              <span
+                style={{
+                  fontSize: "var(--t-font-caption)",
+                  textTransform: "uppercase",
+                  color: "var(--t-text-primary)",
+                }}
+              >
+                {content.gift_certificate}
+              </span>
+            </label>
           )}
 
           {/* Общей рамки вокруг группы у донора нет: рамку несёт каждый способ. */}
@@ -236,8 +272,14 @@ export function StoreCheckoutScreen({
               selected={selectedMethod}
               onSelect={onSelectMethod}
               padded={false}
+              renderAfter={(methodId) =>
+                phoneGate && methodId === OZON_METHOD_ID ? (
+                  <div style={{ paddingInline: "20px", paddingBottom: "4px" }}>
+                    <PhoneGateBlock {...phoneGate} />
+                  </div>
+                ) : null
+              }
             />
-            {phoneGate && <PhoneGateBlock {...phoneGate} />}
           </div>
 
           {content.legal_note && (
@@ -264,49 +306,35 @@ export function StoreCheckoutScreen({
             data-testid="cart-block"
             style={{ ...pad, marginTop: "28px" }}
           >
+            {/*
+              Рамка корзины МЯГЧЕ, чем у секций-шагов (у донора .06 против .13):
+              состав заказа уже подтверждён и не спорит за внимание с шагами,
+              которые пользователь заполняет.
+            */}
             <div
               style={{
-                padding: "16px",
-                border: "var(--t-border-width) solid var(--t-surface-border)",
+                padding: "10px",
+                border: "var(--t-border-width) solid var(--t-surface-divider)",
                 borderRadius: "var(--t-radius-card)",
               }}
             >
-            <div className="flex w-full" style={{ gap: "12px" }}>
               {/*
-                Миниатюра товара — нейтральная плашка, а не картинка донора:
-                демо не тащит чужие ассеты. Пропорция и место сохранены, чтобы
-                строка читалась как товар, а не как пустая рамка.
+                В карточке донора нет ни названия товара, ни размера — только
+                изображение: название живёт его подписью. Прежний текст рядом с
+                миниатюрой был моей достройкой и делал блок чужим.
+                Плашка вместо фото — демо не тащит чужие ассеты, но пропорция
+                65×97 и прямые углы донора сохранены.
               */}
-              <NeutralPlate width="64px" height="84px" />
-              <div className="flex min-w-0 flex-1 flex-col" style={{ gap: "4px" }}>
-                <p
-                  data-testid="cart-item-title"
-                  style={{
-                    margin: 0,
-                    fontSize: "var(--t-font-caption)",
-                    lineHeight: 1.35,
-                    color: "var(--t-text-primary)",
-                  }}
-                >
-                  {content.cart.item_title}
-                </p>
-                {content.cart.item_meta && (
-                  <p
-                    style={{
-                      margin: 0,
-                      fontSize: "var(--t-font-caption)",
-                      color: "var(--t-text-secondary)",
-                    }}
-                  >
-                    {content.cart.item_meta}
-                  </p>
-                )}
-              </div>
-            </div>
+              <NeutralPlate
+                width="65px"
+                height="97px"
+                label={content.cart.item_title}
+                style={{ borderRadius: 0 }}
+              />
 
             <div
               className="flex w-full items-center justify-between"
-              style={{ marginTop: "16px", gap: "12px" }}
+              style={{ marginTop: "10px", gap: "12px" }}
             >
               {content.cart.edit_label && (
                 <button
@@ -336,26 +364,34 @@ export function StoreCheckoutScreen({
                 </span>
               )}
             </div>
+            </div>
 
+            {/*
+              Итоги лежат ВНЕ карточки товара: у донора рамка обрамляет только
+              состав заказа, а суммы идут ниже строками с тонкой линией. Внутри
+              карточки они читались как часть товара.
+            */}
             <div
               data-testid="totals-block"
               data-variant="cart_rows"
               className="flex w-full flex-col"
-              style={{ marginTop: "16px", gap: "10px" }}
+              style={{ marginTop: "25px" }}
             >
-              {content.cart.rows.map((row, rowIndex) => (
+              {content.cart.rows.map((row, rowIndex) => {
+                const last = rowIndex === (content.cart?.rows.length ?? 0) - 1;
+                return (
                 <div
                   key={row.label}
                   className="flex w-full items-center justify-between"
                   style={{
                     gap: "12px",
-                    paddingBottom: "10px",
-                    // Итоговая строка идёт без линии: у донора разделены только
-                    // слагаемые, «Итого» закрывает список.
-                    borderBottom:
-                      rowIndex < (content.cart?.rows.length ?? 0) - 1
-                        ? "var(--t-border-width) solid var(--t-surface-divider)"
-                        : "none",
+                    // Слагаемые отделены линией снизу, итоговая строка её не
+                    // имеет и отбита сверху — так закрывается список у донора.
+                    paddingBottom: last ? 0 : "10px",
+                    marginTop: last ? "10px" : 0,
+                    borderBottom: last
+                      ? "none"
+                      : "var(--t-border-width) solid var(--t-surface-divider)",
                   }}
                 >
                   <span
@@ -384,8 +420,8 @@ export function StoreCheckoutScreen({
                     {row.value}
                   </span>
                 </div>
-              ))}
-            </div>
+                );
+              })}
             </div>
           </section>
         )}

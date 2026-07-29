@@ -31,14 +31,14 @@ export function PaymentMethodRadioRow({ method, selected, onSelect }: Props) {
       onClick={() => onSelect(method.id)}
       className="flex w-full items-center text-left"
       style={{
-        // Каждый способ — СВОЯ карточка с рамкой, а не строка в общем списке:
-        // так устроен донор, и общая обёртка вокруг группы там отсутствует.
+        // Рамку несёт ОБЁРТКА метода, а не сама строка: при выборе «Ozon Банк»
+        // внутрь той же карточки въезжает поле телефона, и карточка обязана
+        // охватывать оба элемента — иначе поле висит отдельной историей.
         minHeight: "58px",
         gap: "20px",
         paddingInline: "20px",
         background: "none",
-        border: "var(--t-border-width) solid var(--t-surface-border)",
-        borderRadius: "var(--t-radius-card)",
+        border: "none",
         cursor: "pointer",
       }}
     >

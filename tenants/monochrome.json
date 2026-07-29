@@ -23,7 +23,7 @@
     "card": "#FFFFFF",
     "form": "#F5F5F5",
     "border": "#DEDEDE",
-    "divider": "#808080",
+    "divider": "#F0F0F0",
     "text_primary": "#1B1E1B",
     "text_secondary": "#808080",
     "danger": "#C0392B",
@@ -166,7 +166,7 @@
     "legal_note": "НАЖИМАЯ НА КНОПКУ «ОПЛАТИТЬ ЗАКАЗ», Я ПРИНИМАЮ УСЛОВИЯ ПУБЛИЧНОЙ ОФЕРТЫ, ПОДТВЕРЖДАЮ ОЗНАКОМЛЕНИЕ С ПОЛИТИКОЙ КОНФИДЕНЦИАЛЬНОСТИ И ДАЮ СОГЛАСИЕ НА ОБРАБОТКУ ПЕРСОНАЛЬНЫХ ДАННЫХ.",
     "cart": {
       "item_title": "СВИТШОТ HALF-ZIP CLASSY PEACH SORBET",
-      "item_meta": "Размер S",
+      "item_meta": null,
       "edit_label": "Изменить корзину",
       "quantity_label": "Количество: 1",
       "rows": [

@@ -5,6 +5,7 @@ import { useHorizontalScroll } from "@demo/lib/useHorizontalScroll";
 import type { TenantConfig } from "@demo/theme/tenant.schema";
 import { PaymentMethodButton } from "./PaymentMethodButton";
 import { PaymentMethodCard } from "./PaymentMethodCard";
+import { PaymentMethodRadioRow } from "./PaymentMethodRadioRow";
 
 interface Props {
   layout: TenantConfig["payment_list"]["layout"];
@@ -47,6 +48,33 @@ export function PaymentMethodList({
   // прикрепляется — хук видит `null` и не делает ничего.
   const rowRef = useRef<HTMLDivElement>(null);
   useHorizontalScroll(rowRef);
+
+  if (layout === "radio_rows") {
+    return (
+      <div
+        role="radiogroup"
+        aria-label={COPY["a11y.payment_group"]}
+        data-testid="payment-method-list"
+        data-layout="radio_rows"
+        className="flex w-full flex-col"
+        style={{
+          gap: "4px",
+          paddingInline: padded ? "var(--t-page-padding)" : undefined,
+        }}
+      >
+        {methods.map((method) => (
+          <div key={method.id} className="flex w-full flex-col">
+            <PaymentMethodRadioRow
+              method={method}
+              selected={selected === method.id}
+              onSelect={onSelect}
+            />
+            {renderAfter?.(method.id)}
+          </div>
+        ))}
+      </div>
+    );
+  }
 
   if (layout === "vertical_buttons") {
     return (

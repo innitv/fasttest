@@ -264,7 +264,13 @@ export const tenantSchema = z.object({
 
   // ── Список способов оплаты (точка вставки) ──────────────────────────
   payment_list: z.object({
-    layout: z.enum(["horizontal_cards", "vertical_buttons"]),
+    /**
+     * `radio_rows` — строка с кружком выбора слева и подписью текстом, без
+     * рамки и заливки (донор MONOCHROME). Плашка-кнопка на его странице
+     * читается как чужой элемент: у донора выбор оплаты весит ровно столько
+     * же, сколько строка адреса.
+     */
+    layout: z.enum(["horizontal_cards", "vertical_buttons", "radio_rows"]),
     /** Заголовок секции: у донора он может называться иначе, чем «Оплата». */
     section_title: z.string().nullable().default(null),
     selection: z.enum(["radio_outline", "row_press"]),

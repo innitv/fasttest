@@ -131,9 +131,20 @@ export function StoreCheckoutScreen({
               )}
             </div>
 
+            {/*
+              Содержимое шага лежит в карточке с рамкой, а заголовок остаётся
+              СНАРУЖИ неё — донорская вложенность. Плоский текст на белом читался
+              как черновик: рамка здесь и есть граница шага.
+            */}
             <div
               className="flex w-full flex-col"
-              style={{ marginTop: "16px", paddingLeft: "16px", gap: "10px" }}
+              style={{
+                marginTop: "12px",
+                padding: "16px",
+                gap: "10px",
+                border: "var(--t-border-width) solid var(--t-surface-border)",
+                borderRadius: "var(--t-radius-card)",
+              }}
             >
               {section.rows.map((row, rowIndex) => (
                 <div key={`${section.title}-${rowIndex}`} className="flex w-full flex-col">
@@ -217,7 +228,14 @@ export function StoreCheckoutScreen({
             </p>
           )}
 
-          <div style={{ marginTop: "16px" }}>
+          <div
+            style={{
+              marginTop: "12px",
+              padding: "12px 16px",
+              border: "var(--t-border-width) solid var(--t-surface-border)",
+              borderRadius: "var(--t-radius-card)",
+            }}
+          >
             <PaymentMethodList
               layout={tenant.payment_list.layout}
               methods={tenant.payment_list.methods}
@@ -250,14 +268,15 @@ export function StoreCheckoutScreen({
         {content.cart && (
           <section
             data-testid="cart-block"
-            style={{
-              ...pad,
-              marginTop: "28px",
-              paddingTop: "20px",
-              paddingBottom: "20px",
-              borderTop: "var(--t-border-width) solid var(--t-surface-divider)",
-            }}
+            style={{ ...pad, marginTop: "28px" }}
           >
+            <div
+              style={{
+                padding: "16px",
+                border: "var(--t-border-width) solid var(--t-surface-border)",
+                borderRadius: "var(--t-radius-card)",
+              }}
+            >
             <div className="flex w-full" style={{ gap: "12px" }}>
               {/*
                 Миниатюра товара — нейтральная плашка, а не картинка донора:
@@ -330,11 +349,20 @@ export function StoreCheckoutScreen({
               className="flex w-full flex-col"
               style={{ marginTop: "16px", gap: "10px" }}
             >
-              {content.cart.rows.map((row) => (
+              {content.cart.rows.map((row, rowIndex) => (
                 <div
                   key={row.label}
                   className="flex w-full items-center justify-between"
-                  style={{ gap: "12px" }}
+                  style={{
+                    gap: "12px",
+                    paddingBottom: "10px",
+                    // Итоговая строка идёт без линии: у донора разделены только
+                    // слагаемые, «Итого» закрывает список.
+                    borderBottom:
+                      rowIndex < (content.cart?.rows.length ?? 0) - 1
+                        ? "var(--t-border-width) solid var(--t-surface-divider)"
+                        : "none",
+                  }}
                 >
                   <span
                     style={{
@@ -363,6 +391,7 @@ export function StoreCheckoutScreen({
                   </span>
                 </div>
               ))}
+            </div>
             </div>
           </section>
         )}

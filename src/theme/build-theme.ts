@@ -251,7 +251,7 @@ function validateSemantics(tenant: TenantConfig): Diagnostic[] {
 
   // ── Архетип против раскладки ───────────────────────────────────────
   const expectedLayout =
-    tenant.archetype === "cart_checkout" ? "horizontal_cards" : "vertical_buttons";
+    tenant.archetype === "cart_checkout" ? "horizontal_cards" : tenant.archetype === "store_checkout" ? "radio_rows" : "vertical_buttons";
   if (tenant.payment_list.layout !== expectedLayout) {
     diagnostics.push({
       code: "W_LAYOUT_ARCHETYPE",

@@ -228,14 +228,8 @@ export function StoreCheckoutScreen({
             </p>
           )}
 
-          <div
-            style={{
-              marginTop: "12px",
-              padding: "12px 16px",
-              border: "var(--t-border-width) solid var(--t-surface-border)",
-              borderRadius: "var(--t-radius-card)",
-            }}
-          >
+          {/* Общей рамки вокруг группы у донора нет: рамку несёт каждый способ. */}
+          <div style={{ marginTop: "12px" }}>
             <PaymentMethodList
               layout={tenant.payment_list.layout}
               methods={tenant.payment_list.methods}

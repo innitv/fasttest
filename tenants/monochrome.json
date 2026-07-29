@@ -77,14 +77,14 @@
     "section_title": "СПОСОБ ОПЛАТЫ",
     "methods": [
       {
-        "id": "ozon",
-        "label": "Ozon Банк",
+        "id": "card",
+        "label": "Банковская карта",
         "caption": null,
         "logo": "none"
       },
       {
-        "id": "card",
-        "label": "Банковская карта",
+        "id": "ozon",
+        "label": "Ozon Банк",
         "caption": null,
         "logo": "none"
       }
@@ -93,7 +93,7 @@
   },
   "ozon": {
     "label": "Ozon Банк",
-    "position": 1,
+    "position": 2,
     "adopts_tenant_theme": true,
     "handoff": "overlay"
   },

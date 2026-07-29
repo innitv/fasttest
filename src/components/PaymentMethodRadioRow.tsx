@@ -31,11 +31,14 @@ export function PaymentMethodRadioRow({ method, selected, onSelect }: Props) {
       onClick={() => onSelect(method.id)}
       className="flex w-full items-center text-left"
       style={{
-        minHeight: "var(--k-tap-min)",
-        gap: "12px",
+        // Каждый способ — СВОЯ карточка с рамкой, а не строка в общем списке:
+        // так устроен донор, и общая обёртка вокруг группы там отсутствует.
+        minHeight: "58px",
+        gap: "20px",
+        paddingInline: "20px",
         background: "none",
-        border: "none",
-        padding: 0,
+        border: "var(--t-border-width) solid var(--t-surface-border)",
+        borderRadius: "var(--t-radius-card)",
         cursor: "pointer",
       }}
     >
@@ -43,27 +46,17 @@ export function PaymentMethodRadioRow({ method, selected, onSelect }: Props) {
         aria-hidden
         className="flex items-center justify-center"
         style={{
-          width: "18px",
-          height: "18px",
+          width: "15px",
+          height: "15px",
           flexShrink: 0,
           borderRadius: "999px",
-          border: `var(--t-border-width) solid ${
-            selected ? "var(--t-brand-primary)" : "var(--t-surface-border)"
-          }`,
+          // Выбранный кружок у донора залит целиком, а не точкой внутри кольца.
+          background: selected ? "var(--t-brand-primary)" : "transparent",
+          border: selected
+            ? "none"
+            : `var(--t-border-width) solid var(--t-surface-border)`,
         }}
-      >
-        {/* Точка внутри кольца — второй канал состояния помимо цвета обводки. */}
-        {selected && (
-          <span
-            style={{
-              width: "10px",
-              height: "10px",
-              borderRadius: "999px",
-              background: "var(--t-brand-primary)",
-            }}
-          />
-        )}
-      </span>
+      />
 
       <span
         style={{

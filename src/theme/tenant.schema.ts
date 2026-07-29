@@ -85,6 +85,7 @@ export const tenantSchema = z.object({
     "subscription_payment",
     "ticket_checkout",
     "store_checkout",
+    "plan_sheet",
   ]),
 
   // Нативной оболочки (статус-бар, home indicator) в контракте больше нет:
@@ -237,7 +238,7 @@ export const tenantSchema = z.object({
      * зоны нажатия (44) при этом НЕ трогается: он про попадание пальцем, а
      * не про плотность текста.
      */
-    family: z.enum(["system", "rounded", "grotesk"]).default("system"),
+    family: z.enum(["system", "rounded", "grotesk", "mono"]).default("system"),
     body: clamped("typography.body", 13, 18, "кегль тела"),
     h1: clamped("typography.h1", 16, 32, "кегль H1"),
     section_title: clamped("typography.section_title", 15, 24, "кегль заголовка секции"),
@@ -265,6 +266,33 @@ export const tenantSchema = z.object({
      */
     font_size: clamped("cta.font_size", 13, 20, "кегль главной кнопки").default(17),
     font_weight: clamped("cta.font_weight", 400, 800, "вес главной кнопки").default(700),
+    /**
+     * Градиентная заливка кнопки. У доноров, где градиент — единственный
+     * акцент на всей странице, плоский цвет стирает главную примету бренда.
+     * Контраст текста проверяется по более тёмному концу: он определяет
+     * худший случай читаемости.
+     */
+    gradient: z
+      .object({
+        from: hex("cta.gradient.from"),
+        to: hex("cta.gradient.to"),
+        angle: clamped("cta.gradient.angle", 0, 360, "угол градиента").default(135),
+      })
+      .nullable()
+      .default(null),
+    /**
+     * Цветная тень под кнопкой — тоже часть акцента, а не украшение: у
+     * донора она подсвечена в тон заливки и держит кнопку над фоном.
+     */
+    shadow: z
+      .object({
+        y: clamped("cta.shadow.y", 0, 24, "смещение тени"),
+        blur: clamped("cta.shadow.blur", 0, 48, "размытие тени"),
+        color: hex("cta.shadow.color"),
+        alpha: z.number().min(0).max(1),
+      })
+      .nullable()
+      .default(null),
   }),
 
   /**
@@ -361,6 +389,37 @@ export const tenantSchema = z.object({
         }),
       )
       .default([]),
+    /**
+     * Тарифы архетипа `plan_sheet`: у донора это карточки-афиши, а оплата
+     * начинается кнопкой под каждой. Состав вынесен в данные, потому что
+     * запечённый в картинку текст (как у самого донора) нечитаем на мелком
+     * экране и не переводится — это и есть его главная беда с дизайном.
+     */
+    plans: z
+      .array(
+        z.object({
+          id: z.string().min(1),
+          title: z.string().min(1),
+          caption: z.string().nullable().default(null),
+          /**
+           * Цена в копейках, а не строкой: выбранный тариф становится суммой
+           * платежа на всех экранах маршрута, включая экраны банка. Строка
+           * не даёт сквозной суммы — банк показал бы цену из `totals`, а
+           * шторка цену тарифа, и демо противоречило бы само себе.
+           */
+          sum: z.number().int().min(1),
+          features: z.array(z.string()).default([]),
+        }),
+      )
+      .default([]),
+    /** Заголовок шторки оплаты, открывающейся по кнопке тарифа. */
+    sheet_title: z.string().nullable().default(null),
+    /**
+     * Метка кнопки на карточке тарифа. Отличается от `cta.label`: на карточке
+     * это вход в оплату («Оформить подписку»), в шторке — сама оплата
+     * («Оплатить 9 800 ₽»). Одна метка на оба места врёт в одном из них.
+     */
+    plan_cta_label: z.string().nullable().default(null),
     /** Строка-вопрос про подарочный сертификат перед списком оплаты. */
     gift_certificate: z.string().nullable().default(null),
     /** Юридическая сноска над кнопкой: у донора она капсом и мелким кеглем. */

@@ -6,7 +6,7 @@ import { PhoneFrame } from "@demo/components/PhoneFrame";
 import type { PhoneGateError } from "@demo/components/PhoneGateBlock";
 import type { ButtonState } from "@demo/components/PrimaryButton";
 import { PushBanner } from "@demo/components/bank/PushBanner";
-import { COPY } from "@demo/content/copy";
+import { COPY, formatMoney } from "@demo/content/copy";
 import { track } from "@demo/lib/analytics";
 import type { BuiltTheme } from "@demo/theme/build-theme";
 import { OZON_METHOD_ID } from "@demo/theme/tenant.schema";
@@ -17,6 +17,7 @@ import { CartCheckoutScreen } from "./CartCheckoutScreen";
 import { OzonRailScreen } from "./OzonRailScreen";
 import { PaidConfirmationScreen } from "./PaidConfirmationScreen";
 import { SubscriptionPaymentScreen } from "./SubscriptionPaymentScreen";
+import { PlanSheetScreen } from "./PlanSheetScreen";
 import { StoreCheckoutScreen } from "./StoreCheckoutScreen";
 import { TicketCheckoutScreen } from "./TicketCheckoutScreen";
 import type { DemoStage } from "./demo-flow";
@@ -77,6 +78,7 @@ export function ScreenHost({ theme, forcedState, showHandoff, initialStage }: Pr
       : "contractor");
   const [stage, setStage] = useState<DemoStage>(startStage);
   const [bankLoading, setBankLoading] = useState(false);
+  const [amountOverride, setAmountOverride] = useState<number | null>(null);
   const [handoff, setHandoff] = useState(showHandoff);
 
   // ── Состояние проверки телефона ────────────────────────────────────
@@ -336,9 +338,25 @@ export function ScreenHost({ theme, forcedState, showHandoff, initialStage }: Pr
   const ctaLoadingLabel = COPY["cta.checking"];
   const ctaSentLabel = COPY["cta.sent"];
 
+  /*
+   * Сумма платежа по умолчанию берётся из темы, но экран с несколькими
+   * тарифами вправе её уточнить: цена выбранного тарифа обязана быть той же
+   * на шторке, на экранах банка и в подтверждении. Инвариант сквозной суммы
+   * при этом сохраняется — источник по-прежнему один, просто выбранный.
+   */
+  const payload =
+    amountOverride === null || amountOverride === bankPayload.amountKopecks
+      ? bankPayload
+      : {
+          ...bankPayload,
+          amountKopecks: amountOverride,
+          amount: formatMoney(amountOverride),
+        };
+
   const screenProps = {
     tenant,
     selectedMethod: selected,
+    onSelectAmount: setAmountOverride,
     onSelectMethod: handleSelect,
     ctaState: phoneChecking ? ("loading" as ButtonState) : ctaState,
     ctaLoadingLabel,
@@ -358,6 +376,8 @@ export function ScreenHost({ theme, forcedState, showHandoff, initialStage }: Pr
       <TicketCheckoutScreen {...screenProps} />
     ) : tenant.archetype === "store_checkout" ? (
       <StoreCheckoutScreen {...screenProps} />
+    ) : tenant.archetype === "plan_sheet" ? (
+      <PlanSheetScreen {...screenProps} />
     ) : (
       <CartCheckoutScreen {...screenProps} />
     );
@@ -409,19 +429,19 @@ export function ScreenHost({ theme, forcedState, showHandoff, initialStage }: Pr
       case "bank_payment":
         return (
           <BankPaymentScreen
-            payload={bankPayload}
+            payload={payload}
             loading={bankLoading}
             onPay={handlePay}
             onClose={handleCancel}
           />
         );
       case "bank_success":
-        return <BankSuccessScreen payload={bankPayload} onReturn={handleReturn} />;
+        return <BankSuccessScreen payload={payload} onReturn={handleReturn} />;
       case "paid":
         return (
           <PaidConfirmationScreen
             tenant={tenant}
-            payload={bankPayload}
+            payload={payload}
             onRestart={handleRestart}
           />
         );
@@ -476,8 +496,8 @@ export function ScreenHost({ theme, forcedState, showHandoff, initialStage }: Pr
       */}
       {pushOpen && (
         <PushBanner
-          merchant={bankPayload.merchant}
-          amount={bankPayload.amount}
+          merchant={payload.merchant}
+          amount={payload.amount}
           onOpen={handlePushOpen}
           onDismiss={handlePushDismiss}
         />

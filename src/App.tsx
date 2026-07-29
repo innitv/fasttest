@@ -27,6 +27,7 @@ const PATH_ROUTES: Record<string, { tenant: string; archetype: TenantConfig["arc
   "/voroh": { tenant: "voroh", archetype: "ticket_checkout" },
   "/voroh-light": { tenant: "voroh-light", archetype: "ticket_checkout" },
   "/monochrome": { tenant: "monochrome", archetype: "store_checkout" },
+  "/padlhub": { tenant: "padlhub", archetype: "plan_sheet" },
 };
 
 /** Лаунчер — только для локальной отладки, по неугадываемому пути и только в dev. */
@@ -175,6 +176,7 @@ const ARCHETYPES: readonly TenantConfig["archetype"][] = [
   "subscription_payment",
   "ticket_checkout",
   "store_checkout",
+  "plan_sheet",
 ];
 
 function parseArchetype(value: string | null): TenantConfig["archetype"] | null {

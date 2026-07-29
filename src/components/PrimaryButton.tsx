@@ -68,6 +68,9 @@ export function PrimaryButton({
         borderRadius: "var(--t-radius-control)",
         background,
         color: disabled ? "var(--t-text-secondary)" : "var(--t-brand-on)",
+        // Тень кнопки — ось темы: у доноров с одним ярким акцентом она
+        // подсвечена в тон заливки и держит кнопку над фоном.
+        boxShadow: disabled || sent ? "none" : "var(--t-cta-shadow)",
         // Кегль и вес — оси темы, а не константа: у минималистичных доноров
         // кнопка набрана тем же кеглем, что заголовок секции, обычным весом.
         fontSize: "var(--t-cta-font-size)",

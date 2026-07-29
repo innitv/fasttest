@@ -1,0 +1,195 @@
+{
+  "tenant_id": "padlhub",
+  "display_name": "ПАДЛ ХАБ",
+  "archetype": "plan_sheet",
+  "header": {
+    "style": "centered_logo",
+    "back_label": null
+  },
+  "brand": {
+    "primary": "#53BE6C",
+    "on_primary": "#1C2B16",
+    "accent": "#8AE24E",
+    "tonal": "#14161B",
+    "secondary": null,
+    "logo": {
+      "kind": "text",
+      "text": "ПАДЛ ХАБ",
+      "slot_ratio": null
+    }
+  },
+  "surface": {
+    "background": "#F5F5F7",
+    "card": "#FFFFFF",
+    "form": "#F0F1F4",
+    "border": "#E1E3E8",
+    "divider": "#E1E3E8",
+    "text_primary": "#1A1A1A",
+    "text_secondary": "#6B6F76",
+    "danger": "#D93F3F",
+    "field_error": "#D93F3F"
+  },
+  "elevation": {
+    "model": "shadow",
+    "border_width": 1,
+    "selected_border_width": 1.5,
+    "shadow": {
+      "y": 20,
+      "blur": 32,
+      "alpha": 0.26
+    }
+  },
+  "radius": {
+    "card": 16,
+    "control": 12,
+    "field": 12,
+    "chip": 12,
+    "allow_inversion": false
+  },
+  "density": {
+    "page_padding": 16,
+    "block_gap": 12,
+    "row_height": 44,
+    "control_height": 48,
+    "method_button_height": 48,
+    "section_gap": 16
+  },
+  "component_width": {
+    "choice_card_pct": 42,
+    "payment_card_pct": 32
+  },
+  "typography": {
+    "family": "mono",
+    "body": 14,
+    "h1": 20,
+    "section_title": 16,
+    "caption": 11,
+    "label_weight": 500,
+    "title_weight": 600
+  },
+  "cta": {
+    "placement": "inline",
+    "label": "Оплатить",
+    "include_amount": true,
+    "requires_selection": false,
+    "font_size": 15,
+    "font_weight": 500,
+    "gradient": {
+      "from": "#8AE24E",
+      "to": "#53BE6C",
+      "angle": 135
+    },
+    "shadow": {
+      "y": 12,
+      "blur": 20,
+      "color": "#193A12",
+      "alpha": 0.28
+    }
+  },
+  "payment_list": {
+    "layout": "radio_rows",
+    "selection": "row_press",
+    "section_title": "Способ оплаты",
+    "methods": [
+      {
+        "id": "card",
+        "label": "Банковская карта",
+        "caption": null,
+        "logo": "none"
+      },
+      {
+        "id": "ozon",
+        "label": "Ozon Банк",
+        "caption": null,
+        "logo": "none"
+      }
+    ],
+    "default_selected": "card"
+  },
+  "ozon": {
+    "label": "Ozon Банк",
+    "position": 2,
+    "adopts_tenant_theme": true,
+    "handoff": "overlay"
+  },
+  "content": {
+    "title": "Лето. Падел. Абонементы",
+    "back_link": null,
+    "segments": null,
+    "rows": [],
+    "fulfillment": null,
+    "form": null,
+    "autorenew": null,
+    "promo": null,
+    "items_title": null,
+    "items_title_compact": null,
+    "line_items": [],
+    "totals": {
+      "sum": 980000,
+      "discount": 0,
+      "currency": "RUB"
+    },
+    "return_label": "Вернуться в ПАДЛ ХАБ",
+    "paid_title": "Абонемент оплачен",
+    "payment_purpose": "Оплата абонемента",
+    "payment_category": "Спорт",
+    "summary_detail": "Лето.Падел.Дружба",
+    "event": null,
+    "buyer_form": null,
+    "account_email": null,
+    "sections": [],
+    "gift_certificate": null,
+    "legal_note": null,
+    "cart": null,
+    "sheet_title": "Оплата абонемента",
+    "plans": [
+      {
+        "id": "academy",
+        "title": "Лето.Падел.Академия",
+        "caption": "30 дней игр + тренировок",
+        "sum": 2380000,
+        "features": [
+          "Создание игры",
+          "Участие в играх",
+          "Игра с тренером",
+          "Групповые тренировки"
+        ]
+      },
+      {
+        "id": "sport",
+        "title": "Лето.Падел.Спорт",
+        "caption": "30 дней игр + турниров",
+        "sum": 1980000,
+        "features": [
+          "Создание игры",
+          "Участие в играх",
+          "Участие в турнирах ПадлХАБ"
+        ]
+      },
+      {
+        "id": "friendship",
+        "title": "Лето.Падел.Дружба",
+        "caption": "30 дней игр",
+        "sum": 980000,
+        "features": [
+          "Создание игры",
+          "Участие в играх"
+        ]
+      }
+    ],
+    "plan_cta_label": "Оформить подписку"
+  },
+  "demo": {
+    "balance": "34 190,50 ₽",
+    "timings": {
+      "push_delay_ms": 600,
+      "splash_ms": 1200,
+      "pay_loading_ms": 900,
+      "dots_cycle_ms": 900
+    }
+  },
+  "a11y_mode": "enforced",
+  "detail_rows": {
+    "layout": "row"
+  }
+}

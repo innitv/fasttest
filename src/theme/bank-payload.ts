@@ -63,6 +63,13 @@ const ARCHETYPE_DEFAULTS: Record<
     paymentCategory: "Подписки",
     summaryDetail: "Подписка на год",
   },
+  plan_sheet: {
+    returnLabel: "Вернуться в приложение",
+    paidTitle: "Абонемент оплачен",
+    paymentPurpose: "Оплата абонемента",
+    paymentCategory: "Спорт",
+    summaryDetail: "Абонемент",
+  },
   store_checkout: {
     returnLabel: "Вернуться в магазин",
     paidTitle: "Заказ оплачен",

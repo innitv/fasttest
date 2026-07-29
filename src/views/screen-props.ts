@@ -55,4 +55,11 @@ export interface ScreenProps {
   forcedState: ForcedState;
   /** Блок проверки телефона; `null`, если `phone_gate` выключен. */
   phoneGate: PhoneGateSlot | null;
+  /**
+   * Сообщает наверх сумму выбранной позиции — архетип `plan_sheet`, где на
+   * одном экране несколько тарифов с разной ценой. Без этого экраны банка
+   * показали бы сумму из `totals`, а шторка — цену выбранного тарифа, и
+   * демо противоречило бы себе на соседних экранах.
+   */
+  onSelectAmount?: (sumKopecks: number) => void;
 }

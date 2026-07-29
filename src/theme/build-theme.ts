@@ -3,6 +3,7 @@ import {
   contrastRatio,
   ensureReadableOn,
   hexToOklch,
+  hexToRgb,
   inkPair,
   isDarkColor,
   pickOnColor,
@@ -65,6 +66,10 @@ const FONT_STACKS: Record<TenantConfig["typography"]["family"], string> = {
     '"SF Pro Rounded", ui-rounded, "Nunito", "Rubik", "Segoe UI Variable", system-ui, sans-serif',
   grotesk:
     '"Inter", "Helvetica Neue", "Segoe UI", system-ui, sans-serif',
+  // Моноширинный — не «шрифт для кода», а способ высказывания: у доноров из
+  // спорта и техно он несёт весь характер интерфейса, и подмена на гротеск
+  // стирает узнавание сильнее, чем сдвиг палитры.
+  mono: '"Source Code Pro", "SF Mono", "JetBrains Mono", ui-monospace, "Cascadia Mono", monospace',
 };
 
 function radiusToCss(value: number | "pill"): string {
@@ -351,8 +356,27 @@ function deriveColors(tenant: TenantConfig): DerivedColors {
   }
 
   vars["--t-brand-primary"] = primary;
-  vars["--t-brand-fill"] = ctaFill;
+  /*
+   * Градиент подменяет ПЛОСКУЮ заливку кнопки, но не сам `brand.primary`:
+   * от primary считаются маркеры выбора, обводки и текст на фоне, и они
+   * обязаны остаться одним цветом. Контраст текста проверен выше по
+   * плоскому значению — это худший конец градиента, если донор задал
+   * тёмный `to`.
+   */
+  vars["--t-brand-fill"] = tenant.cta.gradient
+    ? `linear-gradient(${tenant.cta.gradient.angle}deg, ${tenant.cta.gradient.from}, ${tenant.cta.gradient.to})`
+    : ctaFill;
   vars["--t-brand-on"] = ctaOn;
+  if (tenant.cta.shadow) {
+    // `hexToRgb` отдаёт каналы нормализованными (0..1) для расчётов контраста —
+    // в CSS их нужно вернуть в 0..255, иначе rgba() округляет тень в чёрный.
+    const { r, g, b } = hexToRgb(tenant.cta.shadow.color);
+    const ch = (value: number) => Math.round(value * 255);
+    vars["--t-cta-shadow"] =
+      `0 ${tenant.cta.shadow.y}px ${tenant.cta.shadow.blur}px rgba(${ch(r)}, ${ch(g)}, ${ch(b)}, ${tenant.cta.shadow.alpha})`;
+  } else {
+    vars["--t-cta-shadow"] = "none";
+  }
 
   // Символ поверх НЕсдвинутого brand.primary: залитый radio-маркер, галка
   // выбора. Порог нетекстового индикатора — 3:1 (WCAG 2.2 SC 1.4.11).

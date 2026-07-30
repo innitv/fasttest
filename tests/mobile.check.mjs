@@ -807,6 +807,70 @@ const DESK_GREY = [230, 231, 234];
   );
 }
 
+// ═══ 9. Поля не заставляют iOS зумить страницу ══════════════════════
+/*
+ * Safari на iOS принудительно масштабирует страницу при фокусе на поле с
+ * кеглем меньше 16px, и делает это криво: экран уезжает, зум приходится
+ * разводить пальцами обратно. Виновата платформа, но лечится только на
+ * нашей стороне. Проверяются ВСЕ темы: у мелких (тело 13-14px у
+ * MONOCHROME, ВОРОХ, ПАДЛ ХАБ) под правило попадали и поле формы, и ввод
+ * номера телефона.
+ */
+{
+  const ROUTES = [
+    ["/flowwow", "ozon"],
+    ["/voroh", "ozon"],
+    ["/monochrome", "ozon"],
+    ["/padlhub", null],
+  ];
+  const rows = [];
+  let ok = true;
+
+  for (const [route, expandOzon] of ROUTES) {
+    const context = await browser.newContext({ ...PHONE });
+    const page = await context.newPage();
+    await page.goto(`${BASE}${route}`, { waitUntil: "networkidle" });
+    if (expandOzon) {
+      for (const selector of [
+        `[data-testid="payment-method-row-${expandOzon}"]`,
+        `[data-testid="payment-method-button-${expandOzon}"]`,
+        `[data-testid="payment-method-card-${expandOzon}"]`,
+      ]) {
+        const node = page.locator(selector);
+        if (await node.count()) {
+          await node.first().click();
+          break;
+        }
+      }
+      await page.waitForTimeout(250);
+    }
+    const small = await page.evaluate(() =>
+      [...document.querySelectorAll("input, textarea, select")]
+        .filter((el) => {
+          const r = el.getBoundingClientRect();
+          return r.width > 8 && r.height > 8;
+        })
+        .map((el) => ({
+          id: el.dataset.testid ?? el.getAttribute("name") ?? el.type,
+          size: Math.round(parseFloat(getComputedStyle(el).fontSize) * 100) / 100,
+        }))
+        .filter((item) => item.size < 16),
+    );
+    await context.close();
+
+    if (small.length > 0) ok = false;
+    rows.push(
+      `${route}: ${
+        small.length === 0
+          ? "все поля ≥ 16px"
+          : small.map((s) => `${s.id}=${s.size}px`).join(", ")
+      }`,
+    );
+  }
+
+  record("9. Кегль полей ввода ≥ 16px — iOS не зумит страницу при фокусе", ok, rows.join(" | "));
+}
+
 await browser.close();
 
 const failed = results.filter((item) => !item.passed);

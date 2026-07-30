@@ -270,7 +270,9 @@ function PhoneField({
       <span
         aria-hidden="true"
         style={{
-          fontSize: "var(--t-font-body)",
+          // Тот же кегль, что у поля: префикс и введённые цифры читаются как
+          // одна строка, поэтому минимум 16px распространяется и на него.
+          fontSize: "max(var(--k-field-font), var(--t-font-body))",
           fontWeight: 400,
           color: "var(--t-text-primary)",
         }}
@@ -310,7 +312,9 @@ function PhoneField({
           outline: "none",
           background: "transparent",
           color: "var(--t-text-primary)",
-          fontSize: "var(--t-font-body)",
+          // Не ниже 16px: иначе Safari на iOS зумит страницу при фокусе, и
+          // блок проверки номера уезжает из вида ровно в момент ввода.
+          fontSize: "max(var(--k-field-font), var(--t-font-body))",
           fontWeight: 400,
           padding: 0,
         }}

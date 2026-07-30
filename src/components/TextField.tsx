@@ -94,7 +94,9 @@ export function TextField({
                 ? "var(--t-surface-form, var(--t-surface-card))"
                 : "var(--t-surface-card)",
             color: "var(--t-text-primary)",
-            fontSize: "var(--t-font-body)",
+            // Не ниже 16px: меньший кегль заставляет Safari на iOS зумить
+            // страницу при фокусе. Тема с крупным телом сохраняет своё.
+            fontSize: "max(var(--k-field-font), var(--t-font-body))",
             paddingInline: "12px",
             paddingRight: trailing ? "calc(var(--k-eye-icon) + 24px)" : "12px",
             border: "none",

@@ -28,6 +28,7 @@ const PATH_ROUTES: Record<string, { tenant: string; archetype: TenantConfig["arc
   "/voroh-light": { tenant: "voroh-light", archetype: "ticket_checkout" },
   "/monochrome": { tenant: "monochrome", archetype: "store_checkout" },
   "/padlhub": { tenant: "padlhub", archetype: "plan_sheet" },
+  "/yes-atlas": { tenant: "yes-atlas", archetype: "plan_sheet" },
 };
 
 /** Лаунчер — только для локальной отладки, по неугадываемому пути и только в dev. */

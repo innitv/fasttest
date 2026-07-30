@@ -161,11 +161,35 @@ export const tenantSchema = z.object({
   // ── Модель возвышения ───────────────────────────────────────────────
   elevation: z
     .object({
-      model: z.enum(["flat_outline", "tonal_fill", "shadow"]).default("flat_outline"),
+      /**
+       * `soft` — мягкий рельеф (неоморфизм): карточка не лежит на фоне, а
+       * выдавлена из него. Одной тенью это не собирается: нужны парные
+       * тёмная и светлая с противоположных сторон плюс внутренние блики.
+       * Донору с таким рельефом обычная тень даёт «карточку на подложке» —
+       * узнаваемость теряется целиком.
+       */
+      model: z
+        .enum(["flat_outline", "tonal_fill", "shadow", "soft"])
+        .default("flat_outline"),
       border_width: z.number().min(1).max(2).default(1),
       selected_border_width: z.number().min(1).max(3).default(1.5),
       shadow: z
         .object({ y: z.number(), blur: z.number(), alpha: z.number().min(0).max(1) })
+        .nullable()
+        .default(null),
+      /**
+       * Параметры мягкого рельефа для `model: "soft"`. Смещение одно на обе
+       * стороны — тёмная уходит вправо-вниз, светлая влево-вверх; так рельеф
+       * читается как один источник света, а не как две независимые тени.
+       */
+      soft: z
+        .object({
+          distance: clamped("elevation.soft.distance", 2, 16, "смещение рельефа"),
+          blur: clamped("elevation.soft.blur", 4, 40, "размытие рельефа"),
+          dark: hex("elevation.soft.dark"),
+          light: hex("elevation.soft.light"),
+          alpha: z.number().min(0).max(1).default(0.9),
+        })
         .nullable()
         .default(null),
     })
@@ -174,6 +198,7 @@ export const tenantSchema = z.object({
       border_width: 1,
       selected_border_width: 1.5,
       shadow: null,
+      soft: null,
     }),
 
   // ── Форма ───────────────────────────────────────────────────────────
@@ -243,6 +268,12 @@ export const tenantSchema = z.object({
     h1: clamped("typography.h1", 16, 32, "кегль H1"),
     section_title: clamped("typography.section_title", 15, 24, "кегль заголовка секции"),
     caption: clamped("typography.caption", 11, 14, "кегль подписи"),
+    /**
+     * Кегль цены на карточке тарифа. Отдельная ось, а не H1: у доноров с
+     * прайс-листом цена крупнее заголовка карточки — она и есть главное,
+     * что сравнивают между тарифами.
+     */
+    price: clamped("typography.price", 18, 44, "кегль цены").default(24),
     label_weight: clamped("typography.label_weight", 400, 700, "вес label"),
     title_weight: clamped("typography.title_weight", 500, 800, "вес заголовка"),
   }),
@@ -418,6 +449,12 @@ export const tenantSchema = z.object({
           /** Подпись афиши для скринридера: картинка несёт весь смысл карточки. */
           image_alt: z.string().nullable().default(null),
           /**
+           * Косая плашка на углу карточки («Выгода: 20%»). У доноров с
+           * длинными тарифами она несёт единственный аргумент за дорогой
+           * план и потому лежит ПОВЕРХ карточки, вылезая за её край.
+           */
+          badge: z.string().nullable().default(null),
+          /**
            * Своя метка кнопки. У донора последний тариф зовут «Оформить
            * абонемент», а не «подписку»: разовый пакет игр — не подписка, и
            * общая метка на все карточки врала бы на нём.
@@ -447,6 +484,13 @@ export const tenantSchema = z.object({
     header_logo: z.string().nullable().default(null),
     /** Подсказка прокрутки под шапкой: у донора она есть и держит ритм экрана. */
     scroll_hint: z.string().nullable().default(null),
+    /**
+     * Вид карточки тарифа. `poster` — цельная афиша-картинка, кнопка под ней
+     * (донор ПАДЛ ХАБ). `panel` — карточка с текстом и кнопкой ВНУТРИ, срок и
+     * цена разделены линиями (донор yes-atlas). Это структурная ось: при
+     * одинаковой палитре она решает, читается ли экран как свой.
+     */
+    plan_card: z.enum(["poster", "panel"]).default("poster"),
     /** Заголовок шторки оплаты, открывающейся по кнопке тарифа. */
     sheet_title: z.string().nullable().default(null),
     /**

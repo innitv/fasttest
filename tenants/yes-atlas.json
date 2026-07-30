@@ -1,0 +1,193 @@
+{
+  "tenant_id": "yes-atlas",
+  "display_name": "Цифровые атласы",
+  "archetype": "plan_sheet",
+  "header": {
+    "style": "centered_logo",
+    "back_label": null
+  },
+  "brand": {
+    "primary": "#000000",
+    "on_primary": "#FFFFFF",
+    "accent": "#000000",
+    "tonal": "#000000",
+    "secondary": null,
+    "logo": {
+      "kind": "text",
+      "text": "Цифровые атласы",
+      "slot_ratio": null
+    }
+  },
+  "surface": {
+    "background": "#EDEDEE",
+    "card": "#FFFFFF",
+    "form": "#F5F5F6",
+    "border": "#C7C8CC",
+    "divider": "#C7C8CC",
+    "text_primary": "#000000",
+    "text_secondary": "#B6B6B6",
+    "danger": "#D92D20",
+    "field_error": "#D92D20"
+  },
+  "elevation": {
+    "model": "soft",
+    "border_width": 1,
+    "selected_border_width": 1.5,
+    "shadow": null,
+    "soft": {
+      "distance": 8,
+      "blur": 20,
+      "dark": "#CACACA",
+      "light": "#FFFFFF",
+      "alpha": 0.9
+    }
+  },
+  "radius": {
+    "card": 20,
+    "control": 20,
+    "field": 12,
+    "chip": 999,
+    "allow_inversion": false
+  },
+  "density": {
+    "page_padding": 24,
+    "block_gap": 12,
+    "row_height": 44,
+    "control_height": 44,
+    "method_button_height": 44,
+    "section_gap": 20
+  },
+  "component_width": {
+    "choice_card_pct": 42,
+    "payment_card_pct": 32
+  },
+  "typography": {
+    "family": "grotesk",
+    "body": 18,
+    "h1": 24,
+    "section_title": 20,
+    "caption": 14,
+    "label_weight": 500,
+    "title_weight": 600,
+    "price": 32
+  },
+  "cta": {
+    "placement": "inline",
+    "label": "Оплатить",
+    "include_amount": true,
+    "requires_selection": false,
+    "font_size": 16,
+    "font_weight": 500,
+    "gradient": null,
+    "shadow": null
+  },
+  "payment_list": {
+    "layout": "radio_rows",
+    "selection": "row_press",
+    "section_title": "Способ оплаты",
+    "methods": [
+      {
+        "id": "ozon",
+        "label": "Ozon Банк",
+        "caption": null,
+        "logo": "none"
+      },
+      {
+        "id": "other",
+        "label": "Другие способы оплаты",
+        "caption": null,
+        "logo": "none"
+      }
+    ],
+    "default_selected": "ozon"
+  },
+  "ozon": {
+    "label": "Ozon Банк",
+    "position": 1,
+    "adopts_tenant_theme": true,
+    "handoff": "overlay"
+  },
+  "content": {
+    "title": "Тарифы",
+    "back_link": null,
+    "segments": null,
+    "rows": [],
+    "fulfillment": null,
+    "form": null,
+    "autorenew": null,
+    "promo": null,
+    "items_title": null,
+    "items_title_compact": null,
+    "line_items": [],
+    "totals": {
+      "sum": 34900,
+      "discount": 0,
+      "currency": "RUB"
+    },
+    "return_label": "Вернуться к атласам",
+    "paid_title": "Тариф оплачен",
+    "payment_purpose": "Оплата тарифа",
+    "payment_category": "Образование",
+    "summary_detail": "Доступ к атласам",
+    "event": null,
+    "buyer_form": null,
+    "account_email": null,
+    "sections": [],
+    "gift_certificate": null,
+    "legal_note": "Цены указаны с учётом НДС. Нажимая «Оплатить», вы соглашаетесь с условиями Публичной оферты.",
+    "cart": null,
+    "sheet_title": "Оплата тарифа",
+    "plans": [
+      {
+        "id": "m1",
+        "title": "30 дней",
+        "caption": "Месяц",
+        "sum": 34900,
+        "image": null,
+        "image_alt": null,
+        "badge": null,
+        "cta_label": null,
+        "features": []
+      },
+      {
+        "id": "m6",
+        "title": "183 дня",
+        "caption": "6 месяцев",
+        "sum": 185000,
+        "image": null,
+        "image_alt": null,
+        "badge": "Выгода: 12%",
+        "cta_label": null,
+        "features": []
+      },
+      {
+        "id": "y1",
+        "title": "365 дней",
+        "caption": "1 год",
+        "sum": 319000,
+        "image": null,
+        "image_alt": null,
+        "badge": "Выгода: 20%",
+        "cta_label": null,
+        "features": []
+      }
+    ],
+    "plan_cta_label": "Оплатить",
+    "header_logo": null,
+    "scroll_hint": null,
+    "plan_card": "panel"
+  },
+  "demo": {
+    "balance": "34 190,50 ₽",
+    "timings": {
+      "push_delay_ms": 600,
+      "splash_ms": 1200,
+      "pay_loading_ms": 900,
+      "dots_cycle_ms": 900
+    }
+  },
+  "a11y_mode": "enforced",
+  "detail_rows": {
+    "layout": "row"
+  }
+}

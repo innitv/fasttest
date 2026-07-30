@@ -683,10 +683,34 @@ export function buildTheme(raw: unknown): BuiltTheme {
   // ── Возвышение ─────────────────────────────────────────────────────
   vars["--t-border-width"] = `${tenant.elevation.border_width}px`;
   vars["--t-selected-border-width"] = `${tenant.elevation.selected_border_width}px`;
-  vars["--t-shadow"] =
-    tenant.elevation.model === "shadow" && tenant.elevation.shadow
-      ? `0 ${tenant.elevation.shadow.y}px ${tenant.elevation.shadow.blur}px rgba(0,0,0,${tenant.elevation.shadow.alpha})`
-      : "none";
+  if (tenant.elevation.model === "soft" && tenant.elevation.soft) {
+    /*
+     * Мягкий рельеф собирается из четырёх внешних теней и двух внутренних
+     * бликов: тёмная вправо-вниз, светлая влево-вверх, две боковые вполсилы
+     * (они и дают ощущение объёма, а не приподнятости), плюс внутренние
+     * кромки. Одной тенью это не заменяется — получится карточка на
+     * подложке, а у донора карточка выдавлена ИЗ подложки.
+     */
+    const { distance: d, blur: b, dark, light, alpha } = tenant.elevation.soft;
+    const rgba = (hex: string, a: number) => {
+      const { r, g, b: bl } = hexToRgb(hex);
+      const ch = (v: number) => Math.round(v * 255);
+      return `rgba(${ch(r)}, ${ch(g)}, ${ch(bl)}, ${a})`;
+    };
+    vars["--t-shadow"] = [
+      `${d}px ${d}px ${b}px ${rgba(dark, alpha)}`,
+      `${-d}px ${-d}px ${Math.round(b * 0.8)}px ${rgba(light, alpha)}`,
+      `${d}px ${-d}px ${Math.round(b * 0.8)}px ${rgba(dark, alpha * 0.22)}`,
+      `${-d}px ${d}px ${Math.round(b * 0.8)}px ${rgba(dark, alpha * 0.22)}`,
+      `inset -1px -1px 2px ${rgba(dark, alpha * 0.55)}`,
+      `inset 1px 1px 2px ${rgba(light, alpha * 0.33)}`,
+    ].join(", ");
+  } else {
+    vars["--t-shadow"] =
+      tenant.elevation.model === "shadow" && tenant.elevation.shadow
+        ? `0 ${tenant.elevation.shadow.y}px ${tenant.elevation.shadow.blur}px rgba(0,0,0,${tenant.elevation.shadow.alpha})`
+        : "none";
+  }
 
   // ── Форма ──────────────────────────────────────────────────────────
   vars["--t-radius-card"] = radiusToCss(tenant.radius.card);
@@ -714,6 +738,7 @@ export function buildTheme(raw: unknown): BuiltTheme {
   vars["--t-font-h1"] = `${tenant.typography.h1}px`;
   vars["--t-font-section-title"] = `${tenant.typography.section_title}px`;
   vars["--t-font-caption"] = `${tenant.typography.caption}px`;
+  vars["--t-font-price"] = `${tenant.typography.price}px`;
   vars["--t-label-weight"] = String(tenant.typography.label_weight);
   vars["--t-title-weight"] = String(tenant.typography.title_weight);
   vars["--t-cta-font-size"] = `${tenant.cta.font_size}px`;

@@ -3,6 +3,7 @@ import uchiLike from "../../tenants/uchi-like.json";
 import monochrome from "../../tenants/monochrome.json";
 import padlhub from "../../tenants/padlhub.json";
 import voroh from "../../tenants/voroh.json";
+import yesAtlas from "../../tenants/yes-atlas.json";
 import vorohLight from "../../tenants/voroh-light.json";
 
 import { buildTheme, TenantConfigError, type BuiltTheme, type Diagnostic } from "./build-theme";
@@ -24,6 +25,7 @@ export const BUNDLED_TENANTS: Record<string, unknown> = {
   "uchi-like": uchiLike,
   padlhub,
   voroh,
+  "yes-atlas": yesAtlas,
   "voroh-light": vorohLight,
   monochrome,
 };

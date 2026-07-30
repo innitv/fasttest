@@ -104,6 +104,23 @@ export function PlanSheetScreen({
               alt={tenant.display_name}
               style={{ width: "172px", height: "94px", objectFit: "contain", display: "block" }}
             />
+          ) : content.plan_card === "panel" ? (
+            /*
+              У донора-прайслиста в шапке нет ни логотипа, ни полосы: только
+              заголовок страницы по центру. Полоса с названием сервиса читалась
+              бы как чужой хедер — она принадлежит другому донору.
+            */
+            <h1
+              data-testid="page-title"
+              style={{
+                margin: 0,
+                fontSize: "var(--t-font-h1)",
+                fontWeight: "var(--t-title-weight)" as unknown as number,
+                color: "var(--t-text-primary)",
+              }}
+            >
+              {content.title}
+            </h1>
           ) : (
             <ScreenHeader
               style="centered_logo"
@@ -151,7 +168,116 @@ export function PlanSheetScreen({
                 Разметочная сборка ниже осталась запасным путём — для тарифа
                 без афиши.
               */}
-              {plan.image ? (
+              {content.plan_card === "panel" ? (
+                /*
+                  Карточка-панель: срок крупно, подпись под ним, цена между
+                  двумя линиями, кнопка ВНУТРИ карточки. У донора этой формы
+                  кнопка не выносится под карточку — она часть предложения, и
+                  вынос ломает то, как читается тариф.
+                */
+                <div
+                  data-testid={`plan-panel-${plan.id}`}
+                  className="relative flex w-full flex-col items-center"
+                  style={{
+                    /*
+                      Карточка УЖЕ колонки и центрирована: у донора она 280 px
+                      при вьюпорте 377, и этот запас по краям не декоративный —
+                      в него вылезает косая плашка выгоды. На полную ширину
+                      плашка уходит за край экрана и обрезается.
+                    */
+                    maxWidth: "280px",
+                    marginInline: "auto",
+                    background: "var(--t-surface-card)",
+                    borderRadius: "var(--t-radius-card)",
+                    boxShadow: "var(--t-shadow)",
+                    padding: "24px 25px",
+                    gap: "16px",
+                    overflow: "visible",
+                  }}
+                >
+                  {plan.badge && (
+                    <span
+                      data-testid={`plan-badge-${plan.id}`}
+                      className="absolute flex items-center justify-center"
+                      style={{
+                        // Плашка вылезает за угол и повёрнута — донорский приём.
+                        top: "-8px",
+                        right: "-36px",
+                        height: "42px",
+                        width: "160px",
+                        rotate: "24.13deg",
+                        borderRadius: "999px",
+                        background: "var(--t-brand-tonal)",
+                        color: "var(--t-brand-tonal-on)",
+                        fontSize: "var(--t-font-section-title)",
+                        fontWeight: 400,
+                      }}
+                    >
+                      {plan.badge}
+                    </span>
+                  )}
+
+                  <div className="flex w-full flex-col items-center" style={{ gap: "4px" }}>
+                    <span
+                      style={{
+                        fontSize: "var(--t-font-h1)",
+                        fontWeight: "var(--t-title-weight)" as unknown as number,
+                        color: "var(--t-text-primary)",
+                      }}
+                    >
+                      {plan.title}
+                    </span>
+                    {plan.caption && (
+                      <span
+                        style={{
+                          fontSize: "var(--t-font-body)",
+                          fontWeight: "var(--t-label-weight)" as unknown as number,
+                          color: "var(--t-text-primary)",
+                        }}
+                      >
+                        {plan.caption}
+                      </span>
+                    )}
+                  </div>
+
+                  <span
+                    data-testid={`plan-price-${plan.id}`}
+                    className="flex w-full items-center justify-center"
+                    style={{
+                      paddingBlock: "18px",
+                      borderTop: "var(--t-border-width) solid var(--t-surface-divider)",
+                      borderBottom: "var(--t-border-width) solid var(--t-surface-divider)",
+                      fontSize: "var(--t-font-price)",
+                      fontWeight: "var(--t-title-weight)" as unknown as number,
+                      color: "var(--t-text-primary)",
+                    }}
+                  >
+                    {formatMoney(plan.sum)}
+                  </span>
+
+                  <button
+                    type="button"
+                    data-testid={`plan-cta-${plan.id}`}
+                    className="flex w-full items-center justify-center"
+                    style={{
+                      height: "40px",
+                      borderRadius: "999px",
+                      background: "transparent",
+                      border: "var(--t-border-width) solid var(--t-surface-border)",
+                      color: "var(--t-text-primary)",
+                      fontSize: "var(--t-font-body)",
+                      fontWeight: 400,
+                      cursor: "pointer",
+                    }}
+                    onClick={() => {
+                      setOpenPlanId(plan.id);
+                      onSelectAmount?.(plan.sum);
+                    }}
+                  >
+                    {plan.cta_label ?? content.plan_cta_label ?? tenant.cta.label}
+                  </button>
+                </div>
+              ) : plan.image ? (
                 <img
                   data-testid={`plan-poster-${plan.id}`}
                   src={plan.image}
@@ -317,18 +443,20 @@ export function PlanSheetScreen({
                 это отдельный элемент страницы, и между тарифами он повторяется
                 как ритм: афиша — кнопка, афиша — кнопка.
               */}
-              <div style={{ paddingInline: "10px" }}>
-                <PrimaryButton
-                  label={plan.cta_label ?? content.plan_cta_label ?? tenant.cta.label}
-                  loadingLabel={ctaLoadingLabel}
-                  state="default"
-                  onClick={() => {
-                    setOpenPlanId(plan.id);
-                    onSelectAmount?.(plan.sum);
-                  }}
-                  testId={`plan-cta-${plan.id}`}
-                />
-              </div>
+              {content.plan_card !== "panel" && (
+                <div style={{ paddingInline: "10px" }}>
+                  <PrimaryButton
+                    label={plan.cta_label ?? content.plan_cta_label ?? tenant.cta.label}
+                    loadingLabel={ctaLoadingLabel}
+                    state="default"
+                    onClick={() => {
+                      setOpenPlanId(plan.id);
+                      onSelectAmount?.(plan.sum);
+                    }}
+                    testId={`plan-cta-${plan.id}`}
+                  />
+                </div>
+              )}
             </article>
           ))}
         </div>

@@ -16,7 +16,8 @@
 | `/uchi` | UCHi.RU | `subscription_payment` — оплата подписки |
 | `/voroh`, `/voroh-light` | ВОРОХ | `ticket_checkout` — билет, форма покупателя |
 | `/monochrome` | MONOCHROME | `store_checkout` — заказ шагами, корзина под кнопкой |
-| `/padlhub` | ПАДЛ ХАБ | `plan_sheet` — афиши тарифов и шторка оплаты |
+| `/padlhub` | ПАДЛ ХАБ | `plan_sheet` (poster) — афиши тарифов и шторка оплаты |
+| `/yes-atlas` | Цифровые атласы | `plan_sheet` (panel) — прайс-лист на мягком рельефе |
 
 Корень `/` и любой неизвестный путь отдают нейтральную заглушку: подрядчик,
 получивший свою ссылку, не видит существования других тем.
@@ -76,7 +77,7 @@ yarn preview      # http://127.0.0.1:4319
 | `?a11y=` | `enforced` (по умолчанию), `donor_faithful` | Переключить режим контраста: с принудительными коррекциями до порогов либо как у донора |
 | `?archetype=` | `cart_checkout`, `subscription_payment`, `ticket_checkout`, `store_checkout`, `plan_sheet` | Проверить тему на чужой раскладке |
 | `?t=` | base64url от JSON-конфига тенанта | Отдать демо со своей темой ссылкой, без пересборки и деплоя |
-| `?tenant=` | `flowwow-like`, `uchi-like`, `voroh`, `voroh-light`, `monochrome`, `padlhub` | Явный выбор поставляемой темы (путь обычно удобнее) |
+| `?tenant=` | `flowwow-like`, `uchi-like`, `voroh`, `voroh-light`, `monochrome`, `padlhub`, `yes-atlas` | Явный выбор поставляемой темы (путь обычно удобнее) |
 
 Некорректный конфиг в `?t=` не приводит к белому экрану: показывается экран
 диагностики с кодом ошибки (`E_URL_BASE64`, `E_URL_JSON`, `E_OZON_LABEL` и т. д.).

@@ -29,6 +29,7 @@ const PATH_ROUTES: Record<string, { tenant: string; archetype: TenantConfig["arc
   "/monochrome": { tenant: "monochrome", archetype: "store_checkout" },
   "/padlhub": { tenant: "padlhub", archetype: "plan_sheet" },
   "/yes-atlas": { tenant: "yes-atlas", archetype: "plan_sheet" },
+  "/rml": { tenant: "rml", archetype: "order_steps" },
 };
 
 /** Лаунчер — только для локальной отладки, по неугадываемому пути и только в dev. */
@@ -49,6 +50,24 @@ export function App() {
       logDiagnostics(route.failure.slug ?? "unknown", route.failure.diagnostics);
     }
   }, [route]);
+
+  /*
+   * Гарнитуры донора. `@font-face` обязан жить в документе, а не на элементе
+   * -контейнере темы: правило описывает шрифт для всей страницы и на инлайн
+   * -стилях не выражается вовсе. Узел снимается при смене темы — иначе
+   * описания разных подрядчиков копились бы в head одной сессии.
+   */
+  const fontFaceCss = route.kind === "screen" ? route.theme.fontFaceCss : null;
+  useEffect(() => {
+    if (!fontFaceCss) return;
+    const node = document.createElement("style");
+    node.dataset.tenantFonts = "";
+    node.textContent = fontFaceCss;
+    document.head.appendChild(node);
+    return () => {
+      node.remove();
+    };
+  }, [fontFaceCss]);
 
   if (route.kind === "launcher") {
     // Вторая, compile-time защита поверх маршрутизации: `import.meta.env.DEV`
@@ -178,6 +197,7 @@ const ARCHETYPES: readonly TenantConfig["archetype"][] = [
   "ticket_checkout",
   "store_checkout",
   "plan_sheet",
+  "order_steps",
 ];
 
 function parseArchetype(value: string | null): TenantConfig["archetype"] | null {

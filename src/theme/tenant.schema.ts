@@ -64,6 +64,18 @@ export const lineItemSchema = z.object({
   price: z.string().min(1),
   old_price: z.string().nullable().default(null),
   media: z.boolean().default(true),
+  /**
+   * Фотография товара. У доноров-магазинов миниатюра несёт строку целиком:
+   * нейтральная плашка на её месте превращает состав заказа в список цен.
+   * Путь внутри `public/`, как и у афиш тарифов.
+   */
+  image: z.string().min(1).nullable().default(null),
+  image_alt: z.string().nullable().default(null),
+  /**
+   * Количество бейджем поверх угла миниатюры (донор RML). `null` — бейджа
+   * нет: у доноров с одним товаром в заказе его действительно нет.
+   */
+  quantity: z.number().int().min(1).nullable().default(null),
 });
 
 export const totalsSchema = z.object({
@@ -86,6 +98,18 @@ export const tenantSchema = z.object({
     "ticket_checkout",
     "store_checkout",
     "plan_sheet",
+    /**
+     * `order_steps` — донор RML (radimirailubvi.ru/checkout).
+     *
+     * Каркас «шаги → кнопка → корзина под ней» роднит его со
+     * `store_checkout`, но расходятся четыре вещи, и они узнаются раньше
+     * палитры: активный шаг у RML это ЦЕЛАЯ ФОРМА доставки (селект города,
+     * радио способов, сетка адресных карточек), пройденный шаг — карточка
+     * -сводка заливкой с круглой кнопкой правки, шапка несёт логотип и
+     * корзину, а H2 состава стоит ПОД кнопкой оплаты, а не над экраном.
+     * Подстановка в `store_checkout` даёт «перекрашенный MONOCHROME».
+     */
+    "order_steps",
   ]),
 
   // Нативной оболочки (статус-бар, home indicator) в контракте больше нет:
@@ -94,8 +118,17 @@ export const tenantSchema = z.object({
   // ── Шапка экрана ────────────────────────────────────────────────────
   header: z
     .object({
-      style: z.enum(["back_title", "centered_logo"]),
+      /**
+       * `logo_cart` — шапка донора RML: знак бренда и стрелка возврата слева,
+       * круглая кнопка корзины справа. Прозрачная и залипающая, без полосы и
+       * границы. Ни `back_title` (шеврон + заголовок), ни `centered_logo`
+       * (полоса с логотипом по центру) её не выражают: у RML в шапке нет ни
+       * заголовка, ни центровки, зато есть второй элемент справа.
+       */
+      style: z.enum(["back_title", "centered_logo", "logo_cart"]),
       back_label: z.string().nullable().default(null),
+      /** Точка-индикатор на кнопке корзины (`logo_cart`): у донора она есть. */
+      cart_dot: z.boolean().default(false),
     })
     .strict(),
 
@@ -214,7 +247,16 @@ export const tenantSchema = z.object({
   radius: z.object({
     card: clamped("radius.card", 0, 24, "> 24 читается как детская игра"),
     control: radiusValue("radius.control", 0, 28),
-    field: clamped("radius.field", 0, 16, "кламп формы"),
+    /*
+     * `pill` разрешён и полю — вслед за контролом и по той же причине, что
+     * нижний порог радиусов был снят до нуля. У RML поле города и поле
+     * подписки скруглены в капсулу при нулевом радиусе карточек: это не
+     * небрежность, а противопоставление, на котором держится вид страницы.
+     * Кламп 16 запрещал его выразить, и поле приезжало прямоугольным.
+     * Порядок field ≤ control ≤ card при этом нарушается — снимается
+     * явным `allow_inversion`, как и задумано.
+     */
+    field: radiusValue("radius.field", 0, 16),
     chip: radiusValue("radius.chip", 0, 999),
     allow_inversion: z.boolean().default(false),
   }),
@@ -264,10 +306,40 @@ export const tenantSchema = z.object({
      * не про плотность текста.
      */
     family: z.enum(["system", "rounded", "grotesk", "mono"]).default("system"),
-    body: clamped("typography.body", 13, 18, "кегль тела"),
+    /**
+     * Гарнитуры донора файлами. Системный стек не заменяет их даже
+     * приблизительно: у RML весь интерфейс набран подписями 10–12 px в
+     * Neue Machina, и на подстановке гротеска из стека страница перестаёт
+     * узнаваться раньше, чем расходится палитра.
+     *
+     * `display` — заголовки, кнопки, подписи; `body` — текст. Две гарнитуры,
+     * а не одна: это разные роли, и донор различает их последовательно.
+     * `src` — путь внутри `public/`, поэтому ссылка переживает `?t=`-конфиг.
+     */
+    fonts: z
+      .object({
+        display: z
+          .object({ family: z.string().min(1), src: z.string().min(1) })
+          .nullable()
+          .default(null),
+        body: z
+          .object({ family: z.string().min(1), src: z.string().min(1) })
+          .nullable()
+          .default(null),
+      })
+      .nullable()
+      .default(null),
+    body: clamped("typography.body", 12, 18, "кегль тела"),
     h1: clamped("typography.h1", 16, 32, "кегль H1"),
     section_title: clamped("typography.section_title", 15, 24, "кегль заголовка секции"),
-    caption: clamped("typography.caption", 11, 14, "кегль подписи"),
+    /*
+     * Нижняя граница опущена 11 → 10 вслед за радиусами и весом заголовка
+     * (решение владельца 2026-07-29, та же причина). У RML подписи полей,
+     * бейджи и метки набраны ровно десятью пикселями, и кламп до 11 стирал
+     * плотность, на которой держится минимализм донора. Порог зоны нажатия
+     * (44) не затронут: он про попадание пальцем, а не про кегль.
+     */
+    caption: clamped("typography.caption", 10, 14, "кегль подписи"),
     /**
      * Кегль цены на карточке тарифа. Отдельная ось, а не H1: у доноров с
      * прайс-листом цена крупнее заголовка карточки — она и есть главное,
@@ -275,7 +347,13 @@ export const tenantSchema = z.object({
      */
     price: clamped("typography.price", 18, 44, "кегль цены").default(24),
     label_weight: clamped("typography.label_weight", 400, 700, "вес label"),
-    title_weight: clamped("typography.title_weight", 500, 800, "вес заголовка"),
+    /*
+     * Нижняя граница опущена 500 → 400: у RML заголовок состава набран
+     * обычным весом дисплейной гарнитуры, и порог 500 заставлял браузер
+     * синтезировать полужирное начертание, которого в файле шрифта нет.
+     * Синтетический жир на геометрическом гротеске виден сразу.
+     */
+    title_weight: clamped("typography.title_weight", 400, 800, "вес заголовка"),
   }),
 
   // ── Главная кнопка ──────────────────────────────────────────────────
@@ -295,7 +373,14 @@ export const tenantSchema = z.object({
      * донора: у минималиста кнопка набрана тем же кеглем, что заголовок
      * секции, и обычным весом — жирный крупный текст выдавал чужой шаблон.
      */
-    font_size: clamped("cta.font_size", 13, 20, "кегль главной кнопки").default(17),
+    /*
+     * Нижняя граница опущена 13 → 10 по той же причине, что и у `caption`:
+     * у RML метка главной кнопки набрана десятью пикселями в дисплейной
+     * гарнитуре, и читается это как намеренная сдержанность, а не как ошибка.
+     * Высота кнопки при этом остаётся под порогом зоны нажатия — мелкий
+     * кегль не даёт права уменьшать цель для пальца.
+     */
+    font_size: clamped("cta.font_size", 10, 20, "кегль главной кнопки").default(17),
     font_weight: clamped("cta.font_weight", 400, 800, "вес главной кнопки").default(700),
     /**
      * Градиентная заливка кнопки. У доноров, где градиент — единственный
@@ -403,12 +488,26 @@ export const tenantSchema = z.object({
      * ссылкой правки. Галочка — не украшение: она и есть индикатор того, что
      * шаг заказа пройден.
      */
+    /**
+     * Подача пройденного шага. `bordered` — заголовок снаружи, содержимое в
+     * рамке (донор MONOCHROME). `filled_summary` — карточка-сводка заливкой
+     * без рамки, подпись и значение в две колонки, правка круглой кнопкой в
+     * углу (донор RML). Ось структурная: при одной палитре именно она
+     * решает, читается шаг как свой или как чужой шаблон.
+     */
+    sections_presentation: z.enum(["bordered", "filled_summary"]).default("bordered"),
     sections: z
       .array(
         z.object({
           title: z.string().min(1),
           done: z.boolean().default(true),
           action_label: z.string().nullable().default(null),
+          /**
+           * Вид действия правки. `link` — подчёркнутый текст на первой строке
+           * (MONOCHROME), `pencil` — круглая кнопка с карандашом в углу
+           * карточки (RML). Метка при `pencil` уходит в `aria-label`.
+           */
+          action_kind: z.enum(["link", "pencil"]).default("link"),
           rows: z
             .array(
               z.object({
@@ -555,6 +654,46 @@ export const tenantSchema = z.object({
           )
           .default([]),
         required_note: z.string().nullable().default(null),
+      })
+      .nullable()
+      .default(null),
+    /**
+     * Активный шаг заказа как ФОРМА выбора доставки (архетип `order_steps`).
+     *
+     * Отличается от `fulfillment` не оформлением, а моделью: `fulfillment` —
+     * свёрнутая строка «способ получения → значение» с вариантами-карточками,
+     * тогда как у RML это раскрытый шаг из трёх разнородных контролов —
+     * поиск города, радио способа и сетка адресных карточек, где сетка
+     * появляется только при выбранном самовывозе. Свернуть это в
+     * `choiceOptionSchema` нельзя: адрес там многострочный и несёт часы
+     * работы с телефоном, а не заголовок с ценой.
+     */
+    delivery: z
+      .object({
+        city: z
+          .object({ label: z.string().min(1), value: z.string().min(1) })
+          .nullable()
+          .default(null),
+        options: z
+          .array(z.object({ id: z.string().min(1), label: z.string().min(1) }))
+          .default([]),
+        selected: z.string().min(1),
+        /** Подпись над сеткой адресов: у донора она объясняет, что выбирать. */
+        pickup_hint: z.string().nullable().default(null),
+        /** Вариант, при котором показывается сетка адресов. */
+        pickup_option_id: z.string().nullable().default(null),
+        pickup_points: z
+          .array(
+            z.object({
+              id: z.string().min(1),
+              /** Многострочный адрес: переносы значимы, схлопывать нельзя. */
+              address: z.string().min(1),
+              hours: z.string().nullable().default(null),
+              phone: z.string().nullable().default(null),
+            }),
+          )
+          .default([]),
+        selected_point: z.string().nullable().default(null),
       })
       .nullable()
       .default(null),

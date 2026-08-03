@@ -14,6 +14,7 @@ import { BankPaymentScreen } from "./BankPaymentScreen";
 import { BankSplashScreen } from "./BankSplashScreen";
 import { BankSuccessScreen } from "./BankSuccessScreen";
 import { CartCheckoutScreen } from "./CartCheckoutScreen";
+import { OrderStepsScreen } from "./OrderStepsScreen";
 import { OzonRailScreen } from "./OzonRailScreen";
 import { PaidConfirmationScreen } from "./PaidConfirmationScreen";
 import { SubscriptionPaymentScreen } from "./SubscriptionPaymentScreen";
@@ -378,6 +379,8 @@ export function ScreenHost({ theme, forcedState, showHandoff, initialStage }: Pr
       <StoreCheckoutScreen {...screenProps} />
     ) : tenant.archetype === "plan_sheet" ? (
       <PlanSheetScreen {...screenProps} />
+    ) : tenant.archetype === "order_steps" ? (
+      <OrderStepsScreen {...screenProps} />
     ) : (
       <CartCheckoutScreen {...screenProps} />
     );

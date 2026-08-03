@@ -53,6 +53,12 @@ export interface BuiltTheme {
   /** Индекс «Ozon Банк» в списке способов оплаты (0-based). */
   ozonIndex: number;
   /**
+   * Правила `@font-face` для гарнитур донора. `null` — тема на системном
+   * стеке. Отдаётся отдельной строкой, а не вписывается в `vars`: описание
+   * шрифта живёт в документе, а не на элементе-контейнере темы.
+   */
+  fontFaceCss: string | null;
+  /**
    * Данные для экранов банка. Ни одного цвета, радиуса и отступа —
    * экраны банка получают payload и не получают theme.
    */
@@ -72,6 +78,28 @@ const FONT_STACKS: Record<TenantConfig["typography"]["family"], string> = {
   mono: '"Source Code Pro", "SF Mono", "JetBrains Mono", ui-monospace, "Cascadia Mono", monospace',
 };
 
+/**
+ * Правила `@font-face` для гарнитур донора.
+ *
+ * Формат один — woff2: демо ходит только в современные браузеры, а второй
+ * формат удвоил бы вес без адресата. `font-display: swap` намеренный: пока
+ * гарнитура едет, текст читается системным стеком — пустой экран хуже
+ * временно чужого шрифта.
+ */
+function buildFontFaceCss(tenant: TenantConfig): string | null {
+  const fonts = tenant.typography.fonts;
+  if (!fonts) return null;
+  const faces = [fonts.display, fonts.body]
+    .filter((face): face is { family: string; src: string } => face !== null)
+    // Одна и та же гарнитура в обеих ролях описывается один раз.
+    .filter((face, index, all) => all.findIndex((f) => f.family === face.family) === index)
+    .map(
+      (face) =>
+        `@font-face{font-family:"${face.family}";src:url("${face.src}") format("woff2");font-display:swap;}`,
+    );
+  return faces.length > 0 ? faces.join("\n") : null;
+}
+
 function radiusToCss(value: number | "pill"): string {
   return value === "pill" ? "9999px" : `${value}px`;
 }
@@ -89,7 +117,7 @@ function validateSemantics(tenant: TenantConfig): Diagnostic[] {
   const diagnostics: Diagnostic[] = [];
 
   // ── E_RADIUS_ORDER ─────────────────────────────────────────────────
-  const field = tenant.radius.field;
+  const field = radiusToNumber(tenant.radius.field);
   const control = radiusToNumber(tenant.radius.control);
   const card = tenant.radius.card;
   if (!tenant.radius.allow_inversion && !(field <= control && control <= card)) {
@@ -102,16 +130,65 @@ function validateSemantics(tenant: TenantConfig): Diagnostic[] {
   }
 
   // ── E_HEADER_LOGO ──────────────────────────────────────────────────
-  if (tenant.header.style === "centered_logo") {
+  if (tenant.header.style === "centered_logo" || tenant.header.style === "logo_cart") {
     const logo = tenant.brand.logo;
     const hasText = logo.kind === "text" && Boolean(logo.text?.trim());
     const hasSlot = logo.kind === "slot" && Boolean(logo.slot_ratio?.trim());
-    if (!hasText && !hasSlot) {
+    // `logo_cart` кладёт в шапку отрисованный знак, а не имя текстом: у RML
+    // это два цветных глифа, которые текстовым слотом не передаются вовсе.
+    const hasImage = Boolean(tenant.content.header_logo?.trim());
+    if (!hasText && !hasSlot && !hasImage) {
       diagnostics.push({
         code: "E_HEADER_LOGO",
         severity: "error",
-        message: 'header.style="centered_logo" требует заданного brand.logo',
-        detail: "kind=text → нужен brand.logo.text; kind=slot → нужен brand.logo.slot_ratio.",
+        message: `header.style="${tenant.header.style}" требует заданного логотипа`,
+        detail:
+          "kind=text → нужен brand.logo.text; kind=slot → нужен brand.logo.slot_ratio; либо content.header_logo с путём к знаку.",
+      });
+    }
+  }
+
+  // ── Шаг доставки (архетип order_steps) ─────────────────────────────
+  const delivery = tenant.content.delivery;
+  if (delivery) {
+    if (!delivery.options.some((option) => option.id === delivery.selected)) {
+      diagnostics.push({
+        code: "E_DELIVERY_SELECTED",
+        severity: "error",
+        message: `delivery.selected="${delivery.selected}" отсутствует в delivery.options`,
+        detail: "Шаг открылся бы без выбранного способа получения — состояние, которого у донора нет.",
+      });
+    }
+    if (
+      delivery.pickup_option_id !== null &&
+      !delivery.options.some((option) => option.id === delivery.pickup_option_id)
+    ) {
+      diagnostics.push({
+        code: "E_DELIVERY_PICKUP_OPTION",
+        severity: "error",
+        message: `delivery.pickup_option_id="${delivery.pickup_option_id}" отсутствует в delivery.options`,
+      });
+    }
+    if (
+      delivery.selected_point !== null &&
+      !delivery.pickup_points.some((point) => point.id === delivery.selected_point)
+    ) {
+      diagnostics.push({
+        code: "E_DELIVERY_POINT",
+        severity: "error",
+        message: `delivery.selected_point="${delivery.selected_point}" отсутствует в delivery.pickup_points`,
+      });
+    }
+    // Самовывоз без единого адреса — шаг, который нечем завершить.
+    if (
+      delivery.pickup_option_id !== null &&
+      delivery.pickup_points.length === 0
+    ) {
+      diagnostics.push({
+        code: "W_DELIVERY_NO_POINTS",
+        severity: "warning",
+        message: "Задан pickup_option_id, но список delivery.pickup_points пуст",
+        detail: "Выбор самовывоза откроет подпись «выберите адрес» и пустое место под ней.",
       });
     }
   }
@@ -256,7 +333,15 @@ function validateSemantics(tenant: TenantConfig): Diagnostic[] {
 
   // ── Архетип против раскладки ───────────────────────────────────────
   const expectedLayout =
-    tenant.archetype === "cart_checkout" ? "horizontal_cards" : tenant.archetype === "store_checkout" ? "radio_rows" : "vertical_buttons";
+    tenant.archetype === "cart_checkout"
+      ? "horizontal_cards"
+      : // `order_steps` держит способы оплаты в шторке, а не на экране: у
+        // донора выбора оплаты нет вовсе, кнопка ведёт сразу в платёж. В
+        // шторке минималиста строка с кружком весит столько же, сколько
+        // строка адреса, — плашка-кнопка там читается как чужая.
+        tenant.archetype === "store_checkout" || tenant.archetype === "order_steps"
+        ? "radio_rows"
+        : "vertical_buttons";
   if (tenant.payment_list.layout !== expectedLayout) {
     diagnostics.push({
       code: "W_LAYOUT_ARCHETYPE",
@@ -733,7 +818,18 @@ export function buildTheme(raw: unknown): BuiltTheme {
   vars["--t-payment-card-w"] = `${tenant.component_width.payment_card_pct}cqw`;
 
   // ── Типографика ────────────────────────────────────────────────────
-  vars["--t-font-family"] = FONT_STACKS[tenant.typography.family];
+  /*
+   * Гарнитуры донора идут ПЕРЕД системным стеком, а не вместо него: стек
+   * остаётся хвостом фолбэка на время загрузки woff2 и на случай, если файл
+   * недоступен. Дисплейная роль отдельным токеном — у доноров заголовки,
+   * кнопки и подписи набраны не тем же шрифтом, что текст.
+   */
+  const stack = FONT_STACKS[tenant.typography.family];
+  const fonts = tenant.typography.fonts;
+  vars["--t-font-family"] = fonts?.body ? `"${fonts.body.family}", ${stack}` : stack;
+  vars["--t-font-display"] = fonts?.display
+    ? `"${fonts.display.family}", ${stack}`
+    : vars["--t-font-family"];
   vars["--t-font-body"] = `${tenant.typography.body}px`;
   vars["--t-font-h1"] = `${tenant.typography.h1}px`;
   vars["--t-font-section-title"] = `${tenant.typography.section_title}px`;
@@ -750,6 +846,7 @@ export function buildTheme(raw: unknown): BuiltTheme {
     diagnostics,
     ozonIndex: tenant.payment_list.methods.findIndex((m) => m.id === OZON_METHOD_ID),
     bankPayload: bank.payload,
+    fontFaceCss: buildFontFaceCss(tenant),
   };
 }
 

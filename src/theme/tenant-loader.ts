@@ -5,6 +5,7 @@ import padlhub from "../../tenants/padlhub.json";
 import voroh from "../../tenants/voroh.json";
 import yesAtlas from "../../tenants/yes-atlas.json";
 import vorohLight from "../../tenants/voroh-light.json";
+import rml from "../../tenants/rml.json";
 
 import { buildTheme, TenantConfigError, type BuiltTheme, type Diagnostic } from "./build-theme";
 import type { TenantConfig } from "./tenant.schema";
@@ -28,6 +29,7 @@ export const BUNDLED_TENANTS: Record<string, unknown> = {
   "yes-atlas": yesAtlas,
   "voroh-light": vorohLight,
   monochrome,
+  rml,
 };
 
 export const DEFAULT_TENANT_SLUG = "flowwow-like";

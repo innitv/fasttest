@@ -1,0 +1,275 @@
+{
+  "tenant_id": "rml",
+  "display_name": "Ради мира и любви",
+  "archetype": "order_steps",
+  "header": {
+    "style": "logo_cart",
+    "back_label": null,
+    "cart_dot": true
+  },
+  "brand": {
+    "primary": "#000000",
+    "on_primary": "auto",
+    "accent": "#96FF60",
+    "tonal": "#F5F5F7",
+    "disabled": "#CCCCCC",
+    "secondary": null,
+    "logo": {
+      "kind": "text",
+      "text": "RML",
+      "slot_ratio": null
+    }
+  },
+  "surface": {
+    "background": "#FAFAFA",
+    "card": "#FFFFFF",
+    "form": "#F5F5F7",
+    "border": "#CCCCCC",
+    "divider": "#F5F5F7",
+    "text_primary": "#000000",
+    "text_secondary": "#BABABC",
+    "danger": "#D4311E",
+    "field_error": "#D4311E"
+  },
+  "elevation": {
+    "model": "flat_outline",
+    "border_width": 1,
+    "selected_border_width": 1.5,
+    "shadow": null
+  },
+  "radius": {
+    "card": 0,
+    "control": "pill",
+    "field": "pill",
+    "chip": "pill",
+    "allow_inversion": true
+  },
+  "density": {
+    "page_padding": 20,
+    "block_gap": 8,
+    "row_height": 44,
+    "control_height": 44,
+    "method_button_height": 44,
+    "section_gap": 20
+  },
+  "component_width": {
+    "choice_card_pct": 50,
+    "payment_card_pct": 32
+  },
+  "typography": {
+    "family": "grotesk",
+    "fonts": {
+      "display": {
+        "family": "Neue Machina",
+        "src": "/tenants/rml/fonts/NeueMachina-Regular.woff2"
+      },
+      "body": {
+        "family": "Codec Pro",
+        "src": "/tenants/rml/fonts/CodecPro-Light.woff2"
+      }
+    },
+    "body": 16,
+    "h1": 24,
+    "section_title": 16,
+    "caption": 12,
+    "price": 24,
+    "label_weight": 400,
+    "title_weight": 400
+  },
+  "cta": {
+    "placement": "inline",
+    "label": "Перейти к оплате",
+    "include_amount": false,
+    "requires_selection": false,
+    "font_size": 10,
+    "font_weight": 400
+  },
+  "payment_list": {
+    "layout": "radio_rows",
+    "selection": "row_press",
+    "section_title": "Способ оплаты",
+    "methods": [
+      {
+        "id": "other",
+        "label": "Другие способы оплаты",
+        "caption": null,
+        "logo": "none"
+      },
+      {
+        "id": "ozon",
+        "label": "Ozon Банк",
+        "caption": null,
+        "logo": "none"
+      }
+    ],
+    "default_selected": "other"
+  },
+  "ozon": {
+    "label": "Ozon Банк",
+    "position": 2,
+    "adopts_tenant_theme": true,
+    "handoff": "overlay"
+  },
+  "content": {
+    "title": "Оформление заказа",
+    "back_link": null,
+    "segments": null,
+    "rows": [],
+    "header_logo": "/tenants/rml/logo.svg",
+    "sections_presentation": "filled_summary",
+    "sections": [
+      {
+        "title": "01. Личная информация",
+        "done": true,
+        "action_label": "Изменить данные",
+        "action_kind": "pencil",
+        "rows": [
+          {
+            "label": "Имя",
+            "value": "Иван"
+          },
+          {
+            "label": "Фамилия",
+            "value": "Соколов"
+          },
+          {
+            "label": "E-Mail",
+            "value": "i.sokolov@example.com"
+          },
+          {
+            "label": "Телефон",
+            "value": "+7 (900) 000-00-00"
+          }
+        ]
+      },
+      {
+        "title": "02. Способ получения",
+        "done": false,
+        "action_label": null,
+        "action_kind": "link",
+        "rows": []
+      }
+    ],
+    "delivery": {
+      "city": {
+        "label": "Город (CDEK)",
+        "value": "Москва, Москва, Москва"
+      },
+      "options": [
+        {
+          "id": "courier",
+          "label": "Курьерская служба"
+        },
+        {
+          "id": "pvz",
+          "label": "ПВЗ СДЭК"
+        },
+        {
+          "id": "pickup",
+          "label": "Самовывоз"
+        }
+      ],
+      "selected": "pickup",
+      "pickup_hint": "Выберите адрес самовывоза из предложенных ниже",
+      "pickup_option_id": "pickup",
+      "pickup_points": [
+        {
+          "id": "trubnaya",
+          "address": "г. Москва,\nТрубная пл. 2,\nТЦ “Неглинная” -1 этаж,\n“Kometa Black”",
+          "hours": "Пн-Cб:12:00-20:00 ежедневно, Воскресенье выходной",
+          "phone": "+7 (916) 977-77-69"
+        }
+      ],
+      "selected_point": "trubnaya"
+    },
+    "fulfillment": null,
+    "form": null,
+    "autorenew": null,
+    "promo": null,
+    "items_title": "Оформление заказа",
+    "items_title_compact": null,
+    "line_items": [
+      {
+        "title": "Набор свечей RML (one size)",
+        "period": null,
+        "price": "3900 ₽",
+        "old_price": null,
+        "media": true,
+        "image": "/tenants/rml/candles.jpg",
+        "image_alt": "Набор свечей RML",
+        "quantity": 1
+      },
+      {
+        "title": "Носки (34-37)",
+        "period": null,
+        "price": "1200 ₽",
+        "old_price": null,
+        "media": true,
+        "image": "/tenants/rml/socks.jpg",
+        "image_alt": "Носки RML",
+        "quantity": 1
+      }
+    ],
+    "totals": {
+      "sum": 510000,
+      "discount": 0,
+      "currency": "RUB"
+    },
+    "cart": {
+      "item_title": "Набор свечей RML (one size)",
+      "item_meta": null,
+      "edit_label": null,
+      "quantity_label": null,
+      "rows": [
+        {
+          "label": "Сумма",
+          "value": "5100 ₽",
+          "emphasis": false
+        },
+        {
+          "label": "Доставка",
+          "value": "0 ₽",
+          "emphasis": false
+        },
+        {
+          "label": "Способ доставки",
+          "value": "Самовывоз",
+          "emphasis": false
+        },
+        {
+          "label": "Итого",
+          "value": "5100 ₽",
+          "emphasis": true
+        }
+      ]
+    },
+    "sheet_title": "Способ оплаты",
+    "event": null,
+    "buyer_form": null,
+    "account_email": null,
+    "gift_certificate": null,
+    "legal_note": null,
+    "plans": [],
+    "plan_card": "poster",
+    "plan_cta_label": null,
+    "scroll_hint": null,
+    "return_label": "Вернуться в магазин",
+    "paid_title": "Заказ оплачен",
+    "payment_purpose": "Оплата заказа",
+    "payment_category": "Покупки",
+    "summary_detail": "Заказ № 10482"
+  },
+  "demo": {
+    "balance": "34 190,50 ₽",
+    "timings": {
+      "push_delay_ms": 600,
+      "splash_ms": 1200,
+      "pay_loading_ms": 900,
+      "dots_cycle_ms": 900
+    }
+  },
+  "a11y_mode": "enforced",
+  "detail_rows": {
+    "layout": "stacked"
+  }
+}

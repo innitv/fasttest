@@ -1194,6 +1194,78 @@ for (const width of WIDTHS) {
   );
 }
 
+// ═══ Каждая поставляемая ссылка открывается своим экраном ════════════
+/*
+ * Проверки выше перечисляют маршруты руками и потому проверяют только те, о
+ * которых кто-то вспомнил. На прогоне 2026-08-11 из девяти мобильных проверок
+ * новые темы попали ровно в одну — две ссылки уехали бы подрядчикам,
+ * проверенные машинно по одной оси из девяти.
+ *
+ * Здесь список берётся ИЗ КОДА РОУТЕРА (`PATH_ROUTES` в `src/App.tsx`), а не
+ * переписывается в тест: тема, заведённая без строки в этом тесте, всё равно
+ * будет проверена. Проверяется дым, а не вид: экран подрядчика отрисован, это
+ * не заглушка и не экран ошибки конфига, есть главная кнопка, консоль чиста.
+ */
+{
+  const appSource = readFileSync(path.resolve(projectRoot, "src/App.tsx"), "utf8");
+  const routesBlock = appSource.split("const PATH_ROUTES")[1]?.split("};")[0] ?? "";
+  const routes = [...routesBlock.matchAll(/"(\/[a-z0-9-]+)":\s*\{\s*tenant:\s*"([a-z0-9-]+)"/g)]
+    .map((m) => [m[1], m[2]]);
+
+  const rows = [];
+  let ok = routes.length > 0;
+  if (routes.length === 0) rows.push("не разобран PATH_ROUTES в src/App.tsx");
+
+  for (const [route, tenant] of routes) {
+    const data = await withPage(392, `${BASE}${route}`, async (page, consoleErrors) => {
+      await page
+        .waitForSelector('[data-testid="phone-frame"]', { timeout: 4000 })
+        .catch(() => {});
+      const frame = await page.$('[data-testid="phone-frame"]');
+      return {
+        tenantId: frame
+          ? await page.locator('[data-testid="phone-frame"]').getAttribute("data-tenant")
+          : null,
+        stage: frame
+          ? await page.locator('[data-testid="phone-frame"]').getAttribute("data-stage")
+          : null,
+        /*
+         * «Главная кнопка» на первом экране называется по-разному, и это не
+         * небрежность, а разные модели донора: обычный чекаут платит сам
+         * (`primary-cta`), прайс-лист входит в оплату с карточки тарифа
+         * (`plan-cta-*`), а у RML кнопка открывает шторку способов
+         * (`open-payment-sheet`) — у его донора выбора оплаты на странице нет
+         * вовсе. Проверяется факт «действие на экране есть», а не его имя.
+         */
+        cta:
+          (await page.$('[data-testid="primary-cta"]')) !== null ||
+          (await page.$('[data-testid^="plan-cta"]')) !== null ||
+          (await page.$('[data-testid="open-payment-sheet"]')) !== null,
+        stub: (await page.$('[data-testid="stub"]')) !== null,
+        configError: (await page.$('[data-testid="config-error"]')) !== null,
+        consoleErrors,
+      };
+    });
+
+    const passed =
+      data.stage === "contractor" &&
+      data.cta &&
+      !data.stub &&
+      !data.configError &&
+      data.consoleErrors.length === 0;
+    if (!passed) ok = false;
+    rows.push(
+      `${route}→${tenant}: стадия ${data.stage}, кнопка=${data.cta}, заглушка=${data.stub}, ошибка конфига=${data.configError}, ошибок консоли ${data.consoleErrors.length}`,
+    );
+  }
+
+  record(
+    `Каждая поставляемая ссылка открывается своим экраном (${routes.length} шт., список из PATH_ROUTES)`,
+    ok,
+    rows.join(" | "),
+  );
+}
+
 // ═══ Проверка 6: скриншоты ════════════════════════════════════════════
 const shots = [
   ["stub-root-392", 392, ""],

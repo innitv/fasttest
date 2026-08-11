@@ -125,7 +125,7 @@ yarn tenant:diff <actual.json> <expected.json>
 ```bash
 yarn check:theme   # статическая проверка границы темы, сервер не нужен
 yarn preview       # в отдельном окне
-yarn verify        # 23 приёмочные проверки в реальном браузере + скриншоты
+yarn verify        # 24 приёмочные проверки в реальном браузере + скриншоты
 yarn check:mobile  # 9 проверок в профиле телефона + скриншоты
 ```
 

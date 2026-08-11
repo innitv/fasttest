@@ -103,6 +103,7 @@ yarn check:mobile   # 9 проверок в профиле iPhone с тач-же
 | Инженерные диагнозы дефектов и принятые компромиссы | `FIXES.md` |
 | Контракт темы: оси, клампы, коды ошибок | `src/theme/tenant.schema.ts` |
 | Исходные спеки (в другом репозитории) | студия, `outputs/contractor-payment-demo/2026-07-23/` |
+| Разборы прогонов: что сломалось и что стало нормой | студия, `docs/architecture/retro-fasttest-contractor-demo-<дата>.md` |
 
 Переносимое ремесло интерфейса — навыки `/ui-craft:build` и
 `/ui-craft:reference-check`; они живут в студии `ai native design` под

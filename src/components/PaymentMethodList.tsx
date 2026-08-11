@@ -5,7 +5,9 @@ import { useHorizontalScroll } from "@demo/lib/useHorizontalScroll";
 import type { TenantConfig } from "@demo/theme/tenant.schema";
 import { PaymentMethodButton } from "./PaymentMethodButton";
 import { PaymentMethodCard } from "./PaymentMethodCard";
+import { PaymentMethodPlainRow } from "./PaymentMethodPlainRow";
 import { PaymentMethodRadioRow } from "./PaymentMethodRadioRow";
+import { PaymentSelectRow } from "./PaymentSelectRow";
 
 interface Props {
   layout: TenantConfig["payment_list"]["layout"];
@@ -48,6 +50,55 @@ export function PaymentMethodList({
   // прикрепляется — хук видит `null` и не делает ничего.
   const rowRef = useRef<HTMLDivElement>(null);
   useHorizontalScroll(rowRef);
+
+  if (layout === "select_list") {
+    return (
+      <div
+        data-testid="payment-method-list"
+        data-layout="select_list"
+        className="flex w-full flex-col"
+        style={{ paddingInline: padded ? "var(--t-page-padding)" : undefined }}
+      >
+        <PaymentSelectRow
+          methods={methods}
+          selected={selected}
+          onSelect={onSelect}
+          renderAfter={renderAfter}
+        />
+      </div>
+    );
+  }
+
+  if (layout === "plain_rows") {
+    return (
+      <div
+        role="radiogroup"
+        aria-label={COPY["a11y.payment_group"]}
+        data-testid="payment-method-list"
+        data-layout="plain_rows"
+        className="flex w-full flex-col"
+        style={{
+          gap: "4px",
+          paddingInline: padded ? "var(--t-page-padding)" : undefined,
+        }}
+      >
+        {methods.map((method) => (
+          <div
+            key={method.id}
+            data-testid={`payment-method-card-${method.id}`}
+            className="flex w-full flex-col"
+          >
+            <PaymentMethodPlainRow
+              method={method}
+              selected={selected === method.id}
+              onSelect={onSelect}
+            />
+            {renderAfter?.(method.id)}
+          </div>
+        ))}
+      </div>
+    );
+  }
 
   if (layout === "radio_rows") {
     return (

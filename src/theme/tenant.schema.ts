@@ -110,6 +110,28 @@ export const tenantSchema = z.object({
      * Подстановка в `store_checkout` даёт «перекрашенный MONOCHROME».
      */
     "order_steps",
+    /**
+     * `slot_delivery` — донор «Хваловские воды» (msc.hvalwaters.ru/cart).
+     *
+     * Родство с `cart_checkout` кончается на слове «корзина»: у этого донора
+     * состав правится ПРЯМО на экране заказа счётчиком «− N +», способ оплаты
+     * выбирается ВЫПАДАЮЩИМ СПИСКОМ, а под ним стоит блок времени доставки из
+     * двух ячеек (дата и интервал). Плюс тумблер «Оставить у двери» с чипом
+     * и липкая панель, где слева «Итого» с суммой, а справа кнопка. Шесть
+     * блоков, которых нет ни в одном архетипе, — это экран, а не оси.
+     */
+    "slot_delivery",
+    /**
+     * `bonus_checkout` — донор Bombbar (bombbar.ru/cart/order).
+     *
+     * Каркас «кнопка → состав под ней» роднит его со `store_checkout`, но
+     * расходятся четыре вещи: секции лежат ИНСЕТНЫМИ карточками с рамкой (а
+     * не full-bleed), способ получения выбирается чипами, экран продаёт
+     * регистрацию плашкой бонусов, а итоги раскрашены — скидка красная,
+     * доставка зелёная, бонусы отдельной строкой. Подстановка в
+     * `store_checkout` даёт «перекрашенный MONOCHROME».
+     */
+    "bonus_checkout",
   ]),
 
   // Нативной оболочки (статус-бар, home indicator) в контракте больше нет:
@@ -125,10 +147,41 @@ export const tenantSchema = z.object({
        * (полоса с логотипом по центру) её не выражают: у RML в шапке нет ни
        * заголовка, ни центровки, зато есть второй элемент справа.
        */
-      style: z.enum(["back_title", "centered_logo", "logo_cart"]),
+      style: z.enum([
+        "back_title",
+        "centered_logo",
+        "logo_cart",
+        /**
+         * `logo_account` — шапка «Хваловских вод»: над рядом с логотипом идёт
+         * служебная полоса с городом и телефоном, слева стрелка возврата,
+         * справа круглый аватар с инициалами. Ни одна из прежних шапок не
+         * несёт ни второй полосы, ни аватара авторизованного пользователя, а
+         * именно они сообщают «это мой личный заказ, а не витрина».
+         */
+        "logo_account",
+        /**
+         * `logo_support` — шапка Bombbar на шаге оформления: логотип слева,
+         * телефон и подпись «Служба поддержки» справа. Каталожной навигации
+         * на этом шаге у донора нет вовсе — шапка сведена к «кто мы и куда
+         * звонить, если что-то пойдёт не так».
+         */
+        "logo_support",
+      ]),
       back_label: z.string().nullable().default(null),
       /** Точка-индикатор на кнопке корзины (`logo_cart`): у донора она есть. */
       cart_dot: z.boolean().default(false),
+      /** Служебная полоса над шапкой (`logo_account`): город и телефон. */
+      top_bar: z
+        .object({ city: z.string().min(1), phone: z.string().min(1) })
+        .nullable()
+        .default(null),
+      /** Инициалы в круглом аватаре (`logo_account`). */
+      account_initials: z.string().min(1).max(3).nullable().default(null),
+      /** Телефон поддержки с подписью (`logo_support`). */
+      support: z
+        .object({ phone: z.string().min(1), caption: z.string().min(1) })
+        .nullable()
+        .default(null),
     })
     .strict(),
 
@@ -189,6 +242,13 @@ export const tenantSchema = z.object({
     danger: hex("surface.danger").default("#D92D20"),
     /** Поправка №9: у донора B цвет ошибки поля не равен бренду. */
     field_error: hex("surface.field_error").default("#D4311E"),
+    /**
+     * Цвет «хорошей» суммы в итогах: у Bombbar бесплатная доставка зелёная,
+     * а скидка красная, и обе — рядом с чёрными числами. `null` — у донора
+     * итоги одноцветные; раскрашивать их «на всякий случай» нельзя, цвет
+     * здесь несёт смысл, а не оформление.
+     */
+    positive: hexOrNull("surface.positive").default(null),
   }),
 
   // ── Модель возвышения ───────────────────────────────────────────────
@@ -362,6 +422,16 @@ export const tenantSchema = z.object({
     label: z.string().min(1),
     include_amount: z.boolean().default(false),
     /**
+     * Липкая панель несёт СЛЕВА подпись «Итого» с суммой, а кнопка занимает
+     * оставшуюся ширину (донор «Хваловские воды»). Обычная панель отдаёт
+     * кнопке всю ширину; сумма в ней жила бы только внутри метки кнопки, и
+     * тогда цена читалась бы как часть действия, а не как результат заказа.
+     */
+    sticky_total: z
+      .object({ label: z.string().min(1).default("Итого") })
+      .nullable()
+      .default(null),
+    /**
      * Разрешение противоречия внутри `screens.md`: зона 6 экрана B описывает
      * состояние `disabled` как стартовое, зона 9 объясняет, почему кнопка
      * активна изначально. Поведение вынесено в параметр вместо молчаливого
@@ -429,7 +499,26 @@ export const tenantSchema = z.object({
      * читается как чужой элемент: у донора выбор оплаты весит ровно столько
      * же, сколько строка адреса.
      */
-    layout: z.enum(["horizontal_cards", "vertical_buttons", "radio_rows"]),
+    layout: z.enum([
+      "horizontal_cards",
+      "vertical_buttons",
+      "radio_rows",
+      /**
+       * `select_list` — выпадающий список (донор «Хваловские воды»). Способ
+       * оплаты у него занимает ОДНУ строку с текущим значением и шевроном, а
+       * варианты показываются только по нажатию. Развернуть его в столбик
+       * строк — значит отдать оплате втрое больше экрана, чем отдаёт донор,
+       * и сломать ритм «поле — поле — поле» его формы заказа.
+       */
+      "select_list",
+      /**
+       * `plain_rows` — радио-строки БЕЗ рамки вокруг каждой (донор Bombbar).
+       * Отличается от `radio_rows` тем, что рамку несёт карточка секции
+       * целиком: своя рамка у строки нарисовала бы вторую границу внутри
+       * первой.
+       */
+      "plain_rows",
+    ]),
     /** Заголовок секции: у донора он может называться иначе, чем «Оплата». */
     section_title: z.string().nullable().default(null),
     selection: z.enum(["radio_outline", "row_press"]),
@@ -495,7 +584,15 @@ export const tenantSchema = z.object({
      * углу (донор RML). Ось структурная: при одной палитре именно она
      * решает, читается шаг как свой или как чужой шаблон.
      */
-    sections_presentation: z.enum(["bordered", "filled_summary"]).default("bordered"),
+    /**
+     * `cards` — секция целиком лежит инсетной карточкой: заголовок ВНУТРИ
+     * рамки, поля страницы уменьшены до 8 px, между карточками воздух
+     * (донор Bombbar). Для full-bleed доноров это анти-паттерн R1, для этого
+     * — его собственный вид, и подменять его нельзя.
+     */
+    sections_presentation: z
+      .enum(["bordered", "filled_summary", "cards"])
+      .default("bordered"),
     sections: z
       .array(
         z.object({
@@ -613,18 +710,180 @@ export const tenantSchema = z.object({
         item_meta: z.string().nullable().default(null),
         edit_label: z.string().nullable().default(null),
         quantity_label: z.string().nullable().default(null),
+        /** Заголовок блока состава: у Bombbar это «Ваш заказ». */
+        title: z.string().nullable().default(null),
+        /**
+         * Состав показывается строками `line_items` с миниатюрами, а не одной
+         * плашкой товара (донор Bombbar против MONOCHROME).
+         */
+        use_line_items: z.boolean().default(false),
         rows: z
           .array(
             z.object({
               label: z.string().min(1),
               value: z.string().min(1),
               emphasis: z.boolean().default(false),
+              /**
+               * Цвет значения несёт смысл: `discount` — вычитание, `positive`
+               * — то, что достаётся бесплатно или начисляется. `default` —
+               * обычное число цветом текста. Раскрашивать всё подряд нельзя:
+               * у донора цветных значений ровно два.
+               */
+              tone: z.enum(["default", "discount", "positive"]).default("default"),
+              /** Мелкая серая пояснительная подпись рядом с меткой строки. */
+              hint: z.string().nullable().default(null),
             }),
           )
+          .default([]),
+        /**
+         * Итог отдельной парой, а не последней строкой списка: у донора он
+         * стоит СПРАВА в одной строке с бонусами, под чертой, и набран крупнее
+         * слагаемых. Строкой списка он вставал бы над бонусами — порядок,
+         * которого у донора нет.
+         */
+        total: z
+          .object({ label: z.string().min(1), value: z.string().min(1) })
+          .nullable()
+          .default(null),
+        /** Строка бонусов слева от итога («+42 бонуса»). */
+        bonus: z.string().nullable().default(null),
+        /** Зачёркнутая цена без скидки под итогом. */
+        old_total: z.string().nullable().default(null),
+        /** Мелкая справка справа под итогом («Вес заказа: 0.55 кг»). */
+        note: z.string().nullable().default(null),
+      })
+      .nullable()
+      .default(null),
+    /**
+     * Плашка-обещание под H1 (`slot_delivery`): иконка в белом кружке,
+     * заголовок и строка пояснения на серой капсуле. У донора она стоит
+     * ВЫШЕ состава заказа и задаёт тон всему экрану — «привезём, когда
+     * удобно», а не «проверьте товары».
+     */
+    promise: z
+      .object({
+        title: z.string().min(1),
+        caption: z.string().min(1),
+        icon: z.string().min(1).nullable().default(null),
+      })
+      .nullable()
+      .default(null),
+    /**
+     * Счётчик количества в строке товара. У донора состав заказа правится
+     * прямо здесь, а не «в корзине на другом экране»: это не украшение
+     * строки, а причина, по которой у экрана вообще есть список товаров.
+     */
+    items_counter: z.boolean().default(false),
+    /**
+     * Единица измерения внутри счётчика («бут.»). У донора она стоит рядом с
+     * числом и объясняет, что именно прибавляет плюс: бутыли, а не литры и не
+     * заказы. `null` — счётчик показывает только число.
+     */
+    items_counter_unit: z.string().min(1).nullable().default(null),
+    /**
+     * Карточка адреса доставки (`slot_delivery`): две строки заливкой и
+     * круглая кнопка правки справа. Отличается от `sections` тем, что это
+     * не пройденный ШАГ, а одно текущее значение с правкой.
+     */
+    address: z
+      .object({
+        title: z.string().min(1),
+        subtitle: z.string().nullable().default(null),
+        action_label: z.string().min(1).default("Изменить адрес"),
+      })
+      .nullable()
+      .default(null),
+    /**
+     * Строка-тумблер с чипом-пояснением («Оставить у двери» + «онлайн
+     * оплата»). Чип здесь не бейдж, а условие: опция доступна только при
+     * онлайн-оплате, и донор сообщает это прямо в строке.
+     */
+    door_toggle: z
+      .object({
+        label: z.string().min(1),
+        tag: z.string().nullable().default(null),
+        default_on: z.boolean().default(false),
+      })
+      .nullable()
+      .default(null),
+    /**
+     * Время доставки двумя ячейками: дата и интервал. Слот — то, ради чего
+     * этот донор вообще существует (вода привозится в окно), поэтому блок
+     * стоит рядом с оплатой, а не прячется в «дополнительно».
+     */
+    delivery_slot: z
+      .object({
+        title: z.string().min(1),
+        date: z.string().min(1),
+        time: z.string().min(1),
+      })
+      .nullable()
+      .default(null),
+    /**
+     * Ряды «Дополнительно»: заголовок слева, кнопка «Добавить» справа, всё
+     * в рамке. Свёрнутый промокод у этого донора не один — рядом с ним
+     * живёт комментарий к заказу, и они устроены одинаково.
+     */
+    extras_rows: z
+      .array(
+        z.object({
+          title: z.string().min(1),
+          action_label: z.string().min(1).default("Добавить"),
+        }),
+      )
+      .default([]),
+    /**
+     * Свёрнутая разбивка чека под сноской: у донора это мелкий серый список
+     * «позиция — сумма», раскрывающийся по строке-ссылке. Он объясняет, из
+     * чего сложилось «Итого», когда цены со скидкой не сходятся глазом.
+     */
+    receipt_breakdown: z
+      .object({
+        title: z.string().min(1),
+        rows: z
+          .array(z.object({ name: z.string().min(1), amount: z.string().min(1) }))
           .default([]),
       })
       .nullable()
       .default(null),
+    /**
+     * Плашка «войдите и получите бонусы» (`bonus_checkout`). У донора это
+     * первое, что видно в карточке контактов: экран продаёт регистрацию
+     * ровно там, где просит данные.
+     */
+    bonus_banner: z
+      .object({
+        title: z.string().min(1),
+        text: z.string().min(1),
+      })
+      .nullable()
+      .default(null),
+    /** Поле комментария к заказу открытой формой (`bonus_checkout`). */
+    comment_field: z
+      .object({
+        title: z.string().min(1),
+        placeholder: z.string().default(""),
+      })
+      .nullable()
+      .default(null),
+    /**
+     * Чекбоксы согласий. `accent` — тот, что у донора отмечен по умолчанию и
+     * залит брендом (согласие на обработку данных под кнопкой); остальные
+     * пустые. Список, а не одно поле: у донора их три, и два из них —
+     * маркетинговые.
+     */
+    agreements: z
+      .array(
+        z.object({
+          text: z.string().min(1),
+          checked: z.boolean().default(false),
+          /** Подписи ссылок внутри текста: подсвечиваются брендом. */
+          links: z.array(z.string().min(1)).default([]),
+          /** Место: под секциями оплаты или под главной кнопкой. */
+          placement: z.enum(["form", "cta"]).default("form"),
+        }),
+      )
+      .default([]),
     /**
      * Подзаголовок покупки под H1: место и время. Архетип `ticket_checkout`
      * без него нечитаем — билет без площадки и даты не билет, а строка цены.
@@ -705,6 +964,28 @@ export const tenantSchema = z.object({
         selected: z.string(),
         extras_hint: z.string().nullable().default(null),
         extras_hint_compact: z.string().nullable().default(null),
+        /**
+         * `cards` — ряд карточек-вариантов под строкой (донор Flowwow).
+         * `chips` — компактные капсулы В ОДНОЙ СТРОКЕ с заголовком секции,
+         * выбранная залита брендом (донор Bombbar). Ось структурная: у
+         * второго донора способ получения не занимает отдельного блока
+         * вовсе, он умещается справа от подписи.
+         */
+        presentation: z.enum(["cards", "chips"]).default("cards"),
+        /**
+         * Выбранный пункт выдачи: заголовок, многострочный адрес, срок и
+         * цена доставки, ссылка правки. Свернуть это в `value` нельзя —
+         * у донора здесь четыре разных по весу строки.
+         */
+        pickup: z
+          .object({
+            title: z.string().min(1),
+            address: z.string().min(1),
+            meta: z.string().nullable().default(null),
+            action_label: z.string().nullable().default(null),
+          })
+          .nullable()
+          .default(null),
       })
       .nullable()
       .default(null),

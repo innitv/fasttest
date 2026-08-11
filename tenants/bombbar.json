@@ -1,0 +1,293 @@
+{
+  "tenant_id": "bombbar",
+  "display_name": "Bombbar",
+  "archetype": "bonus_checkout",
+  "header": {
+    "style": "logo_support",
+    "back_label": null,
+    "cart_dot": false,
+    "top_bar": null,
+    "account_initials": null,
+    "support": {
+      "phone": "8 (800) 222-82-05",
+      "caption": "Служба поддержки"
+    }
+  },
+  "brand": {
+    "primary": "#FFB400",
+    "on_primary": "auto",
+    "accent": "#EC1C24",
+    "tonal": "#FFF5E5",
+    "disabled": "#EFEFEF",
+    "secondary": null,
+    "logo": {
+      "kind": "slot",
+      "text": null,
+      "slot_ratio": "209:14"
+    }
+  },
+  "surface": {
+    "background": "#FFFFFF",
+    "card": "#FFFFFF",
+    "form": "#F4F3ED",
+    "border": "#E5E5E5",
+    "divider": "#E5E5E5",
+    "text_primary": "#000000",
+    "text_secondary": "#A0A0A0",
+    "danger": "#EC1C24",
+    "field_error": "#EC1C24",
+    "positive": "#43C922"
+  },
+  "elevation": {
+    "model": "flat_outline",
+    "border_width": 1,
+    "selected_border_width": 1.5,
+    "shadow": null
+  },
+  "radius": {
+    "card": 8,
+    "control": 12,
+    "field": 12,
+    "chip": 8,
+    "allow_inversion": true
+  },
+  "density": {
+    "page_padding": 12,
+    "block_gap": 12,
+    "row_height": 44,
+    "control_height": 44,
+    "method_button_height": 44,
+    "section_gap": 16
+  },
+  "component_width": {
+    "choice_card_pct": 42,
+    "payment_card_pct": 32
+  },
+  "typography": {
+    "family": "system",
+    "fonts": null,
+    "body": 16,
+    "h1": 26,
+    "section_title": 18,
+    "caption": 12,
+    "price": 24,
+    "label_weight": 600,
+    "title_weight": 700
+  },
+  "cta": {
+    "placement": "inline",
+    "label": "Подтвердить",
+    "include_amount": false,
+    "requires_selection": false,
+    "font_size": 14,
+    "font_weight": 400,
+    "sticky_total": null
+  },
+  "detail_rows": {
+    "layout": "row"
+  },
+  "payment_list": {
+    "layout": "plain_rows",
+    "section_title": "Способ оплаты",
+    "selection": "radio_outline",
+    "methods": [
+      {
+        "id": "sbp",
+        "label": "СБП, банковской картой, SberPay",
+        "caption": null,
+        "logo": "none"
+      },
+      {
+        "id": "ozon",
+        "label": "Ozon Банк",
+        "caption": null,
+        "logo": "none"
+      }
+    ],
+    "default_selected": "sbp"
+  },
+  "ozon": {
+    "label": "Ozon Банк",
+    "position": 2,
+    "adopts_tenant_theme": true,
+    "handoff": "overlay",
+    "phone_gate": {
+      "enabled": true,
+      "not_client_number": "0000000000",
+      "check_ms": 700
+    }
+  },
+  "content": {
+    "title": "Оформление заказа",
+    "back_link": null,
+    "segments": null,
+    "rows": [],
+    "header_logo": "/tenants/bombbar/logo.svg",
+    "sections_presentation": "cards",
+    "sections": [
+      {
+        "title": "Контактные данные",
+        "done": false,
+        "action_label": "Заполнить",
+        "action_kind": "link",
+        "rows": [
+          {
+            "label": null,
+            "value": "Контактные данные не указаны"
+          }
+        ]
+      }
+    ],
+    "bonus_banner": {
+      "title": "Войдите или зарегистрируйтесь",
+      "text": "и получите 42 бонуса после оплаты и подарок в День Рождения"
+    },
+    "fulfillment": {
+      "title": "Способ получения",
+      "value": "Самовывоз",
+      "presentation": "chips",
+      "selected": "pickup",
+      "options": [
+        {
+          "id": "courier",
+          "title": "Курьером",
+          "caption": null,
+          "price": null,
+          "price_delta": 0
+        },
+        {
+          "id": "pickup",
+          "title": "Самовывоз",
+          "caption": null,
+          "price": null,
+          "price_delta": 0
+        }
+      ],
+      "pickup": {
+        "title": "Пункт выдачи: Магнит Пост",
+        "address": "г. Москва, ул. Верхняя, д. 3, корп. 2\n(магазин Магнит)",
+        "meta": "3 - 5 дней | 150 ₽",
+        "action_label": "Изменить"
+      },
+      "extras_hint": null,
+      "extras_hint_compact": null
+    },
+    "comment_field": {
+      "title": "Комментарий",
+      "placeholder": ""
+    },
+    "agreements": [
+      {
+        "text": "Согласие на прохождение опроса о качестве обслуживания",
+        "checked": false,
+        "links": [],
+        "placement": "form"
+      },
+      {
+        "text": "Подписаться на лучшие новости по Email",
+        "checked": false,
+        "links": [],
+        "placement": "form"
+      },
+      {
+        "text": "Согласие на обработку данных, с политикой конфиденциальности и публичной офертой",
+        "checked": true,
+        "links": ["политикой конфиденциальности", "публичной офертой"],
+        "placement": "cta"
+      }
+    ],
+    "items_counter": false,
+    "line_items": [
+      {
+        "title": "Протеиновый батончик Bombbar в шоколаде",
+        "period": "Банановый пудинг",
+        "price": "840 ₽",
+        "old_price": null,
+        "media": true,
+        "image": "/tenants/bombbar/bar.jpg",
+        "image_alt": "Протеиновый батончик Bombbar, банановый пудинг",
+        "quantity": 1
+      }
+    ],
+    "cart": {
+      "title": "Ваш заказ",
+      "use_line_items": true,
+      "item_title": "Протеиновый батончик Bombbar в шоколаде",
+      "item_meta": null,
+      "edit_label": null,
+      "quantity_label": null,
+      "rows": [
+        {
+          "label": "1 товар",
+          "value": "1200 ₽",
+          "emphasis": false,
+          "tone": "default",
+          "hint": null
+        },
+        {
+          "label": "Скидка",
+          "value": "−360 ₽",
+          "emphasis": false,
+          "tone": "discount",
+          "hint": "Подробнее"
+        },
+        {
+          "label": "Доставка",
+          "value": "150 ₽",
+          "emphasis": false,
+          "tone": "positive",
+          "hint": null
+        }
+      ],
+      "total": {
+        "label": "Итого:",
+        "value": "990 ₽"
+      },
+      "bonus": "+42 бонуса",
+      "old_total": "1200 ₽",
+      "note": "Вес заказа: 0.55 кг"
+    },
+    "promise": null,
+    "address": null,
+    "door_toggle": null,
+    "delivery_slot": null,
+    "extras_rows": [],
+    "receipt_breakdown": null,
+    "delivery": null,
+    "form": null,
+    "autorenew": null,
+    "promo": null,
+    "items_title": null,
+    "items_title_compact": null,
+    "totals": {
+      "sum": 99000,
+      "discount": 0,
+      "currency": "RUB"
+    },
+    "event": null,
+    "buyer_form": null,
+    "account_email": null,
+    "gift_certificate": null,
+    "legal_note": null,
+    "plans": [],
+    "plan_card": "poster",
+    "plan_cta_label": null,
+    "sheet_title": null,
+    "scroll_hint": null,
+    "return_label": "Вернуться в магазин",
+    "paid_title": "Заказ оплачен",
+    "payment_purpose": "Оплата заказа",
+    "payment_category": "Покупки",
+    "summary_detail": "Заказ № 3536"
+  },
+  "demo": {
+    "balance": "34 190,50 ₽",
+    "timings": {
+      "push_delay_ms": 600,
+      "splash_ms": 1200,
+      "pay_loading_ms": 900,
+      "dots_cycle_ms": 900
+    }
+  },
+  "a11y_mode": "enforced"
+}

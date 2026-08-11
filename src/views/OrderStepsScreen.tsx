@@ -6,7 +6,7 @@ import { PhoneGateBlock } from "@demo/components/PhoneGateBlock";
 import { PrimaryButton } from "@demo/components/PrimaryButton";
 import { ChevronDown } from "@demo/components/primitives";
 import { COPY, formatMoney, resolveCtaLabel } from "@demo/content/copy";
-import { OZON_METHOD_ID } from "@demo/theme/tenant.schema";
+import { OZON_METHOD_ID, type TenantConfig } from "@demo/theme/tenant.schema";
 import type { ScreenProps } from "./screen-props";
 
 /**
@@ -780,7 +780,13 @@ function SummaryCard({
   rows: { label: string | null; value: string }[];
   actionLabel: string | null;
   actionKind: "link" | "pencil";
-  presentation: "bordered" | "filled_summary";
+  /*
+   * Полный union схемы, а не два значения: подача `cards` принадлежит другому
+   * архетипу (инсетные карточки Bombbar) и сюда не приходит, но сужать тип
+   * в пропе — значит ронять сборку каждый раз, когда в схеме появляется
+   * новая подача, которой этот экран не касается.
+   */
+  presentation: TenantConfig["content"]["sections_presentation"];
   testId: string;
 }) {
   const filled = presentation === "filled_summary";

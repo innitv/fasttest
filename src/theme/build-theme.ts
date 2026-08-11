@@ -130,7 +130,8 @@ function validateSemantics(tenant: TenantConfig): Diagnostic[] {
   }
 
   // ── E_HEADER_LOGO ──────────────────────────────────────────────────
-  if (tenant.header.style === "centered_logo" || tenant.header.style === "logo_cart") {
+  const logoHeaders = ["centered_logo", "logo_cart", "logo_account", "logo_support"];
+  if (logoHeaders.includes(tenant.header.style)) {
     const logo = tenant.brand.logo;
     const hasText = logo.kind === "text" && Boolean(logo.text?.trim());
     const hasSlot = logo.kind === "slot" && Boolean(logo.slot_ratio?.trim());
@@ -332,16 +333,29 @@ function validateSemantics(tenant: TenantConfig): Diagnostic[] {
   }
 
   // ── Архетип против раскладки ───────────────────────────────────────
-  const expectedLayout =
-    tenant.archetype === "cart_checkout"
-      ? "horizontal_cards"
-      : // `order_steps` держит способы оплаты в шторке, а не на экране: у
-        // донора выбора оплаты нет вовсе, кнопка ведёт сразу в платёж. В
-        // шторке минималиста строка с кружком весит столько же, сколько
-        // строка адреса, — плашка-кнопка там читается как чужая.
-        tenant.archetype === "store_checkout" || tenant.archetype === "order_steps"
-        ? "radio_rows"
-        : "vertical_buttons";
+  /*
+   * Ожидаемая раскладка списка оплаты для каждого архетипа.
+   *
+   * `store_checkout` и `order_steps` держат способы оплаты строками с кружком:
+   * у их доноров выбор оплаты весит ровно столько же, сколько строка адреса, —
+   * плашка-кнопка там читается как чужая. `slot_delivery` прячет способы в
+   * выпадающий список (одна строка формы), `bonus_checkout` кладёт радио-строки
+   * внутрь карточки секции, поэтому своей рамки у строки нет.
+   */
+  const layoutByArchetype: Record<
+    TenantConfig["archetype"],
+    TenantConfig["payment_list"]["layout"]
+  > = {
+    cart_checkout: "horizontal_cards",
+    subscription_payment: "vertical_buttons",
+    ticket_checkout: "vertical_buttons",
+    plan_sheet: "vertical_buttons",
+    store_checkout: "radio_rows",
+    order_steps: "radio_rows",
+    slot_delivery: "select_list",
+    bonus_checkout: "plain_rows",
+  };
+  const expectedLayout = layoutByArchetype[tenant.archetype];
   if (tenant.payment_list.layout !== expectedLayout) {
     diagnostics.push({
       code: "W_LAYOUT_ARCHETYPE",
@@ -702,6 +716,40 @@ function deriveColors(tenant: TenantConfig): DerivedColors {
   vars["--t-text-primary"] = tenant.surface.text_primary;
   vars["--t-surface-danger"] = tenant.surface.danger;
   vars["--t-surface-field-error"] = tenant.surface.field_error;
+
+  /*
+   * Зелёное значение в итогах. Проверяется на ФОНЕ СТРАНИЦЫ, а не на карточке:
+   * зелёный донора (#43C922) на белом даёт 2.6:1 и в `enforced` затемняется —
+   * иначе «Доставка 150 ₽» читалась бы хуже соседних чёрных чисел, будучи при
+   * этом единственной строкой, ради которой цвет и введён. Знак смысла у
+   * донора дублирован словом, поэтому коррекция ничего не ломает.
+   */
+  if (tenant.surface.positive) {
+    const positive = enforced
+      ? ensureReadableOn(tenant.surface.positive, tenant.surface.background, 4.5)
+      : {
+          color: tenant.surface.positive,
+          contrast: contrastRatio(tenant.surface.positive, tenant.surface.background),
+          corrected: false,
+          failed: false,
+        };
+    vars["--t-surface-positive"] = positive.color;
+    if (positive.corrected) {
+      diagnostics.push({
+        code: "I_POSITIVE_CONTRAST_FIXED",
+        severity: "info",
+        message: `Цвет «хорошей» суммы ${shiftWordM}: ${tenant.surface.positive} → ${positive.color}`,
+        detail: `Донорское значение давало ${formatContrast(contrastRatio(tenant.surface.positive, tenant.surface.background))} на фоне ${tenant.surface.background}; после коррекции — ${formatContrast(positive.contrast)}.`,
+      });
+    } else if (!enforced && positive.contrast < 4.5) {
+      diagnostics.push({
+        code: "W_POSITIVE_CONTRAST",
+        severity: "warning",
+        message: `«Хорошая» сумма: ${formatContrast(positive.contrast)} при пороге 4.5:1`,
+        detail: "a11y_mode=donor_faithful: значение донора сохранено; слово в метке остаётся вторым каналом смысла.",
+      });
+    }
+  }
 
   // `surface.form` выводится из бренда ТОЛЬКО при явном "auto".
   // Дефолт null: подложки нет. Насильственный вывод из brand.primary —

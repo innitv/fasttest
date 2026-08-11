@@ -30,6 +30,8 @@ const PATH_ROUTES: Record<string, { tenant: string; archetype: TenantConfig["arc
   "/padlhub": { tenant: "padlhub", archetype: "plan_sheet" },
   "/yes-atlas": { tenant: "yes-atlas", archetype: "plan_sheet" },
   "/rml": { tenant: "rml", archetype: "order_steps" },
+  "/hval": { tenant: "hval", archetype: "slot_delivery" },
+  "/bombbar": { tenant: "bombbar", archetype: "bonus_checkout" },
 };
 
 /** Лаунчер — только для локальной отладки, по неугадываемому пути и только в dev. */
@@ -198,6 +200,8 @@ const ARCHETYPES: readonly TenantConfig["archetype"][] = [
   "store_checkout",
   "plan_sheet",
   "order_steps",
+  "slot_delivery",
+  "bonus_checkout",
 ];
 
 function parseArchetype(value: string | null): TenantConfig["archetype"] | null {

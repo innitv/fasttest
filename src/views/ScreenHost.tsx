@@ -13,7 +13,9 @@ import { OZON_METHOD_ID } from "@demo/theme/tenant.schema";
 import { BankPaymentScreen } from "./BankPaymentScreen";
 import { BankSplashScreen } from "./BankSplashScreen";
 import { BankSuccessScreen } from "./BankSuccessScreen";
+import { BonusCheckoutScreen } from "./BonusCheckoutScreen";
 import { CartCheckoutScreen } from "./CartCheckoutScreen";
+import { SlotDeliveryScreen } from "./SlotDeliveryScreen";
 import { OrderStepsScreen } from "./OrderStepsScreen";
 import { OzonRailScreen } from "./OzonRailScreen";
 import { PaidConfirmationScreen } from "./PaidConfirmationScreen";
@@ -381,6 +383,10 @@ export function ScreenHost({ theme, forcedState, showHandoff, initialStage }: Pr
       <PlanSheetScreen {...screenProps} />
     ) : tenant.archetype === "order_steps" ? (
       <OrderStepsScreen {...screenProps} />
+    ) : tenant.archetype === "slot_delivery" ? (
+      <SlotDeliveryScreen {...screenProps} />
+    ) : tenant.archetype === "bonus_checkout" ? (
+      <BonusCheckoutScreen {...screenProps} />
     ) : (
       <CartCheckoutScreen {...screenProps} />
     );

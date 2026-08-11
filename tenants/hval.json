@@ -1,0 +1,255 @@
+{
+  "tenant_id": "hval",
+  "display_name": "Хваловские воды",
+  "archetype": "slot_delivery",
+  "header": {
+    "style": "logo_account",
+    "back_label": null,
+    "cart_dot": false,
+    "top_bar": {
+      "city": "Москва",
+      "phone": "+7 (499) 550-88-88"
+    },
+    "account_initials": "ИВ",
+    "support": null
+  },
+  "brand": {
+    "primary": "#5A96FF",
+    "on_primary": "auto",
+    "accent": null,
+    "tonal": "#EDF3FF",
+    "disabled": "#CCD5E1",
+    "secondary": null,
+    "logo": {
+      "kind": "slot",
+      "text": null,
+      "slot_ratio": "135:32"
+    }
+  },
+  "surface": {
+    "background": "#FFFFFF",
+    "card": "#FFFFFF",
+    "form": "#F5F5F5",
+    "border": "#E2E2E2",
+    "divider": "#F5F5F5",
+    "text_primary": "#0C1D36",
+    "text_secondary": "#999999",
+    "danger": "#D4311E",
+    "field_error": "#D4311E",
+    "positive": null
+  },
+  "elevation": {
+    "model": "flat_outline",
+    "border_width": 1,
+    "selected_border_width": 1.5,
+    "shadow": null
+  },
+  "radius": {
+    "card": 8,
+    "control": "pill",
+    "field": 8,
+    "chip": "pill",
+    "allow_inversion": true
+  },
+  "density": {
+    "page_padding": 16,
+    "block_gap": 8,
+    "row_height": 44,
+    "control_height": 48,
+    "method_button_height": 44,
+    "section_gap": 28
+  },
+  "component_width": {
+    "choice_card_pct": 42,
+    "payment_card_pct": 32
+  },
+  "typography": {
+    "family": "grotesk",
+    "fonts": null,
+    "body": 14,
+    "h1": 24,
+    "section_title": 16,
+    "caption": 12,
+    "price": 24,
+    "label_weight": 500,
+    "title_weight": 600
+  },
+  "cta": {
+    "placement": "sticky",
+    "label": "Заказать",
+    "include_amount": false,
+    "requires_selection": false,
+    "font_size": 16,
+    "font_weight": 500,
+    "sticky_total": {
+      "label": "Итого"
+    }
+  },
+  "detail_rows": {
+    "layout": "row"
+  },
+  "payment_list": {
+    "layout": "select_list",
+    "section_title": "Оплата",
+    "selection": "radio_outline",
+    "methods": [
+      {
+        "id": "ozon",
+        "label": "Ozon Банк",
+        "caption": null,
+        "logo": "none"
+      },
+      {
+        "id": "cash",
+        "label": "Наличными при получении",
+        "caption": null,
+        "logo": "none"
+      },
+      {
+        "id": "card",
+        "label": "Картой на сайте",
+        "caption": null,
+        "logo": "none"
+      },
+      {
+        "id": "sbp",
+        "label": "Оплата через СБП",
+        "caption": null,
+        "logo": "none"
+      }
+    ],
+    "default_selected": "cash"
+  },
+  "ozon": {
+    "label": "Ozon Банк",
+    "position": 1,
+    "adopts_tenant_theme": true,
+    "handoff": "overlay",
+    "phone_gate": {
+      "enabled": true,
+      "not_client_number": "0000000000",
+      "check_ms": 700
+    }
+  },
+  "content": {
+    "title": "Заказ",
+    "back_link": null,
+    "segments": null,
+    "rows": [],
+    "header_logo": "/tenants/hval/logo.svg",
+    "promise": {
+      "title": "Быстрая доставка",
+      "caption": "Привезём в удобное время",
+      "icon": "/tenants/hval/shipping-icon.svg"
+    },
+    "items_counter": true,
+    "items_counter_unit": "бут.",
+    "line_items": [
+      {
+        "title": "Хваловская Премиум 19л (оборотная тара)",
+        "period": null,
+        "price": "216,33 ₽",
+        "old_price": "555 ₽",
+        "media": true,
+        "image": "/tenants/hval/water-premium.webp",
+        "image_alt": "Бутыль Хваловская Премиум 19 л",
+        "quantity": 3
+      },
+      {
+        "title": "Помпа механическая",
+        "period": null,
+        "price": "0 ₽",
+        "old_price": "590 ₽",
+        "media": true,
+        "image": "/tenants/hval/pump.webp",
+        "image_alt": "Механическая помпа для бутыли",
+        "quantity": 1
+      }
+    ],
+    "address": {
+      "title": "Москва, Тессинский переулок, 1",
+      "subtitle": "квартира 32, подъезд 2, этаж 2",
+      "action_label": "Изменить адрес"
+    },
+    "door_toggle": {
+      "label": "Оставить у двери",
+      "tag": "онлайн оплата",
+      "default_on": false
+    },
+    "delivery_slot": {
+      "title": "Время доставки",
+      "date": "Завтра 12 августа, ср",
+      "time": "08:00 — 14:00"
+    },
+    "extras_rows": [
+      {
+        "title": "Комментарий к заказу",
+        "action_label": "Добавить"
+      },
+      {
+        "title": "Промокод",
+        "action_label": "Добавить"
+      }
+    ],
+    "legal_note": "Нажимая кнопку «Заказать», я принимаю условия договора оферты для покупателей и даю согласие на обработку персональных данных.",
+    "receipt_breakdown": {
+      "title": "Разбивка позиций по чеку",
+      "rows": [
+        {
+          "name": "Хваловская Премиум 19л (оборотная тара)",
+          "amount": "407,32 ₽"
+        },
+        {
+          "name": "Скидка по акции «3 бутыли + помпа»",
+          "amount": "−1 296 ₽"
+        },
+        {
+          "name": "Помпа механическая",
+          "amount": "0 ₽"
+        }
+      ]
+    },
+    "sections_presentation": "bordered",
+    "sections": [],
+    "delivery": null,
+    "fulfillment": null,
+    "form": null,
+    "autorenew": null,
+    "promo": null,
+    "items_title": null,
+    "items_title_compact": null,
+    "totals": {
+      "sum": 64900,
+      "discount": 0,
+      "currency": "RUB"
+    },
+    "cart": null,
+    "event": null,
+    "buyer_form": null,
+    "account_email": null,
+    "gift_certificate": null,
+    "bonus_banner": null,
+    "comment_field": null,
+    "agreements": [],
+    "plans": [],
+    "plan_card": "poster",
+    "plan_cta_label": null,
+    "sheet_title": null,
+    "scroll_hint": null,
+    "return_label": "Вернуться в магазин",
+    "paid_title": "Заказ оплачен",
+    "payment_purpose": "Оплата заказа",
+    "payment_category": "Продукты",
+    "summary_detail": "Доставка воды, 3 бутыли"
+  },
+  "demo": {
+    "balance": "34 190,50 ₽",
+    "timings": {
+      "push_delay_ms": 600,
+      "splash_ms": 1200,
+      "pay_loading_ms": 900,
+      "dots_cycle_ms": 900
+    }
+  },
+  "a11y_mode": "enforced"
+}

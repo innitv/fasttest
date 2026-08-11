@@ -84,6 +84,20 @@ const ARCHETYPE_DEFAULTS: Record<
     paymentCategory: "Покупки",
     summaryDetail: "Заказ № 10482",
   },
+  slot_delivery: {
+    returnLabel: "Вернуться в магазин",
+    paidTitle: "Заказ оплачен",
+    paymentPurpose: "Оплата заказа",
+    paymentCategory: "Продукты",
+    summaryDetail: "Доставка воды",
+  },
+  bonus_checkout: {
+    returnLabel: "Вернуться в магазин",
+    paidTitle: "Заказ оплачен",
+    paymentPurpose: "Оплата заказа",
+    paymentCategory: "Покупки",
+    summaryDetail: "Заказ № 3536",
+  },
   ticket_checkout: {
     returnLabel: "Вернуться к событию",
     paidTitle: "Билет оплачен",

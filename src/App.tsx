@@ -2,7 +2,7 @@ import { useEffect, useMemo } from "react";
 
 import { logDiagnostics } from "@demo/theme/build-theme";
 import { loadTenant, TenantLoadError, type LoadFailure } from "@demo/theme/tenant-loader";
-import type { TenantConfig } from "@demo/theme/tenant.schema";
+import { tenantSchema, type TenantConfig } from "@demo/theme/tenant.schema";
 import { ConfigErrorView } from "@demo/views/ConfigErrorView";
 import { LauncherView } from "@demo/views/LauncherView";
 import { StubView } from "@demo/views/StubView";
@@ -193,16 +193,16 @@ function resolveScreen(search: string): Route {
   }
 }
 
-const ARCHETYPES: readonly TenantConfig["archetype"][] = [
-  "cart_checkout",
-  "subscription_payment",
-  "ticket_checkout",
-  "store_checkout",
-  "plan_sheet",
-  "order_steps",
-  "slot_delivery",
-  "bonus_checkout",
-];
+/*
+ * Список архетипов берётся ИЗ СХЕМЫ, а не переписывается здесь руками.
+ *
+ * Второй список расходился молча: `?archetype=` отбрасывал архетипы,
+ * добавленные позже, и путь терял управление видом экрана — спасал только
+ * совпадающий `archetype` внутри конфига темы. Производный список делает
+ * расхождение невозможным, а не маловероятным.
+ */
+const ARCHETYPES: readonly TenantConfig["archetype"][] =
+  tenantSchema.shape.archetype.options;
 
 function parseArchetype(value: string | null): TenantConfig["archetype"] | null {
   // Перебор по списку, а не сравнение с двумя именами: прежняя запись молча

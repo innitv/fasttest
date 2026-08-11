@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 
 import { HandoffOverlay } from "@demo/components/HandoffOverlay";
@@ -9,7 +9,7 @@ import { PushBanner } from "@demo/components/bank/PushBanner";
 import { COPY, formatMoney } from "@demo/content/copy";
 import { track } from "@demo/lib/analytics";
 import type { BuiltTheme } from "@demo/theme/build-theme";
-import { OZON_METHOD_ID } from "@demo/theme/tenant.schema";
+import { OZON_METHOD_ID, type TenantConfig } from "@demo/theme/tenant.schema";
 import { BankPaymentScreen } from "./BankPaymentScreen";
 import { BankSplashScreen } from "./BankSplashScreen";
 import { BankSuccessScreen } from "./BankSuccessScreen";
@@ -369,27 +369,34 @@ export function ScreenHost({ theme, forcedState, showHandoff, initialStage }: Pr
     phoneGate: phoneGateSlot,
   };
 
-  // Билетный архетип наследует ПОВЕДЕНИЕ архетипа A (инлайн-выбор способа,
-  // проверка телефона под рядом методов) и расходится с ним только раскладкой
-  // экрана — поэтому ветвление по поведению выше трогать не пришлось.
-  const contractorScreen =
-    tenant.archetype === "subscription_payment" ? (
-      <SubscriptionPaymentScreen {...screenProps} />
-    ) : tenant.archetype === "ticket_checkout" ? (
-      <TicketCheckoutScreen {...screenProps} />
-    ) : tenant.archetype === "store_checkout" ? (
-      <StoreCheckoutScreen {...screenProps} />
-    ) : tenant.archetype === "plan_sheet" ? (
-      <PlanSheetScreen {...screenProps} />
-    ) : tenant.archetype === "order_steps" ? (
-      <OrderStepsScreen {...screenProps} />
-    ) : tenant.archetype === "slot_delivery" ? (
-      <SlotDeliveryScreen {...screenProps} />
-    ) : tenant.archetype === "bonus_checkout" ? (
-      <BonusCheckoutScreen {...screenProps} />
-    ) : (
-      <CartCheckoutScreen {...screenProps} />
-    );
+  /*
+   * Экран подрядчика по архетипу — ТАБЛИЦА, а не цепочка ветвлений.
+   *
+   * Разница не в стиле: у цепочки был хвост `: (<CartCheckoutScreen/>)`, и
+   * новый архетип, забытый в ней, молча получал корзину Flowwow вместо своего
+   * экрана — расхождение, которое не ловил ни компилятор, ни приёмка. Здесь
+   * `Record<archetype, …>` заставляет компилятор потребовать экран для каждого
+   * значения enum: забыть нельзя, сборка не пройдёт.
+   *
+   * Билетный архетип наследует ПОВЕДЕНИЕ архетипа A (инлайн-выбор способа,
+   * проверка телефона под рядом методов) и расходится с ним только раскладкой
+   * экрана — поэтому ветвление по поведению выше таблицы не касается.
+   */
+  const CONTRACTOR_SCREENS: Record<
+    TenantConfig["archetype"],
+    (props: typeof screenProps) => ReactNode
+  > = {
+    cart_checkout: CartCheckoutScreen,
+    subscription_payment: SubscriptionPaymentScreen,
+    ticket_checkout: TicketCheckoutScreen,
+    store_checkout: StoreCheckoutScreen,
+    plan_sheet: PlanSheetScreen,
+    order_steps: OrderStepsScreen,
+    slot_delivery: SlotDeliveryScreen,
+    bonus_checkout: BonusCheckoutScreen,
+  };
+  const ContractorScreen = CONTRACTOR_SCREENS[tenant.archetype];
+  const contractorScreen = <ContractorScreen {...screenProps} />;
 
   // Отдельный экран «Оплата через Ozon Банк» — только архетип B.
   const railScreen = (

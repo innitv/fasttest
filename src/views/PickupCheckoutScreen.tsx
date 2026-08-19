@@ -572,7 +572,11 @@ export function PickupCheckoutScreen({
                 content.payment_sheet
                   ? {
                       title: content.payment_sheet.title,
-                      ctaLabel: content.payment_sheet.cta_label,
+                      // `cta_label` стал nullable вместе с появлением шторки
+                      // без подтверждения (донор Tripster). У MYBOX кнопка
+                      // есть, и её метка задана в теме; фолбэк — донорское
+                      // «Выбрать» из constant-строк.
+                      ctaLabel: content.payment_sheet.cta_label ?? COPY["pickup.sheet_cta"],
                     }
                   : undefined
               }

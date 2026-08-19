@@ -181,7 +181,10 @@ export function PaymentSheetRow({
               // Поле шторки у донора вдвое шире поля экрана: 30 против 15,
               // и одинаковое со всех сторон.
               padding: "30px 30px calc(30px + env(safe-area-inset-bottom, 0px))",
-              borderRadius: "24px 24px 0 0",
+              // Скругление листа — ось темы (`radius.sheet`), а не константа
+              // компонента: у MYBOX оно 24, у Tripster 16. Дефолт схемы равен
+              // прежней зашитой цифре, поэтому вид этой шторки не изменился.
+              borderRadius: "var(--t-radius-sheet) var(--t-radius-sheet) 0 0",
               display: "flex",
               flexDirection: "column",
             }}

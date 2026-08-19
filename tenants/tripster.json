@@ -1,0 +1,286 @@
+{
+  "tenant_id": "tripster",
+  "display_name": "Tripster",
+  "archetype": "order_prepay",
+  "header": {
+    "style": "centered_logo",
+    "back_label": null,
+    "cart_dot": false,
+    "top_bar": null,
+    "account_initials": null,
+    "support": null
+  },
+  "brand": {
+    "primary": "#00BE8B",
+    "on_primary": "#FFFFFF",
+    "accent": null,
+    "tonal": null,
+    "disabled": null,
+    "secondary": null,
+    "logo": {
+      "kind": "slot",
+      "text": null,
+      "slot_ratio": "184:32"
+    }
+  },
+  "surface": {
+    "background": "#FFFFFF",
+    "card": "#F2F2F2",
+    "form": "#EFEFEF",
+    "border": "#E6E6E6",
+    "divider": "#E6E6E6",
+    "text_primary": "#202020",
+    "text_secondary": "#8A95A1",
+    "danger": "#D4311E",
+    "field_error": "#D4311E",
+    "positive": null,
+    "link": "#2E78C1",
+    "notice": {
+      "fill": "#FDF1D2",
+      "marker": "#F19C38"
+    }
+  },
+  "elevation": {
+    "model": "flat_outline",
+    "border_width": 1,
+    "selected_border_width": 1.5,
+    "shadow": null
+  },
+  "radius": {
+    "card": 0,
+    "control": 8,
+    "field": 12,
+    "chip": 12,
+    "sheet": 16,
+    "allow_inversion": true
+  },
+  "density": {
+    "page_padding": 16,
+    "block_gap": 8,
+    "row_height": 44,
+    "control_height": 48,
+    "method_button_height": null,
+    "section_gap": 24
+  },
+  "component_width": {
+    "choice_card_pct": 42,
+    "payment_card_pct": 32
+  },
+  "typography": {
+    "family": "grotesk",
+    "fonts": {
+      "display": null,
+      "body": {
+        "family": "Inter",
+        "src": "/tenants/tripster/InterVariable.woff2",
+        "weight_range": {
+          "min": 100,
+          "max": 900
+        }
+      }
+    },
+    "body": 16,
+    "h1": 20,
+    "section_title": 20,
+    "caption": 14,
+    "label_weight": 400,
+    "title_weight": 800,
+    "emphasis_weight": 550
+  },
+  "cta": {
+    "placement": "inline",
+    "label": "Оплатить",
+    "include_amount": false,
+    "requires_selection": false,
+    "font_size": 16,
+    "font_weight": 475,
+    "sticky_total": null,
+    "gradient": null,
+    "shadow": null
+  },
+  "detail_rows": {
+    "layout": "row"
+  },
+  "payment_list": {
+    "layout": "sheet_select",
+    "section_title": "Оплата заказа",
+    "selection": "row_press",
+    "methods": [
+      {
+        "id": "ozon",
+        "label": "Ozon Банк",
+        "caption": null,
+        "logo": "none",
+        "amount": "1317 ₽"
+      },
+      {
+        "id": "card_ru",
+        "label": "Картой РФ",
+        "caption": "МИР · VISA · Mastercard",
+        "logo": "none",
+        "amount": "1317 ₽"
+      },
+      {
+        "id": "sbp",
+        "label": "СБП",
+        "caption": null,
+        "logo": "none",
+        "amount": "1317 ₽"
+      },
+      {
+        "id": "belkart",
+        "label": "Белкарт",
+        "caption": null,
+        "logo": "none",
+        "amount": "1317 ₽"
+      }
+    ],
+    "default_selected": null
+  },
+  "ozon": {
+    "label": "Ozon Банк",
+    "position": 1,
+    "adopts_tenant_theme": true,
+    "handoff": "overlay",
+    "phone_gate": {
+      "enabled": true,
+      "not_client_number": "0000000000",
+      "check_ms": 700
+    }
+  },
+  "content": {
+    "title": "Аудиогид по центру Санкт-Петербурга (6+)",
+    "title_as_link": true,
+    "back_link": null,
+    "segments": null,
+    "rows": [],
+    "header_logo": "/tenants/tripster/logo.svg",
+    "order_ref": {
+      "label": "Заказ",
+      "number": "№ 7066270"
+    },
+    "organizer": {
+      "name": "Аудиогиды Трипстера",
+      "avatar": "/tenants/tripster/organizer.png"
+    },
+    "notice": {
+      "title": "Оплатите аудиогид",
+      "expanded": false,
+      "items": [
+        "После оплаты аудиогид появится в приложении Tripster и будет доступен в течение 1 года",
+        "Оплата проходит в рублях РФ, но можно использовать карту в любой валюте — сумма автоматически пересчитается по курсу вашего банка",
+        "После покупки вернуть аудиогид не получится"
+      ]
+    },
+    "payment_card": {
+      "terms": "Покупка завершится после оплаты. Внесите предоплату, чтобы завершить бронирование. Остаток организатору напрямую: −50 ₽",
+      "promo_link": "Ввести промокод или карту лояльности",
+      "due_label": "К оплате сейчас",
+      "due_value": "1317 ₽",
+      "currency_note": "Предоплата списывается в рублях РФ",
+      "systems": ["СБП", "МИР", "Белкарт", "VISA", "Mastercard"],
+      "systems_image": {
+        "src": "/tenants/tripster/payment-systems.svg",
+        "width": 259,
+        "height": 26
+      },
+      "secure_note": "Безопасная оплата"
+    },
+    "cost_breakdown": {
+      "title": "Стоимость",
+      "rows": [
+        {
+          "label": "1 × Аудиогид",
+          "value": "1267 ₽"
+        }
+      ],
+      "total": {
+        "label": "Итого",
+        "value": "1267 ₽"
+      },
+      "split_rows": [
+        {
+          "label": "Оплата на Трипстере",
+          "value": "1317 ₽"
+        },
+        {
+          "label": "Организатору напрямую",
+          "value": "−50 ₽"
+        }
+      ],
+      "note": "Если хотите изменить заказ, напишите организатору или нам в чат",
+      "note_link": "нам в чат"
+    },
+    "info_sections": [
+      {
+        "title": "Политика возврата",
+        "text": "Деньги за аудиогид не возвращаются.",
+        "link": "Подробнее"
+      }
+    ],
+    "payment_sheet": {
+      "title": "Способы оплаты",
+      "cta_label": null,
+      "presentation": "amount_rows",
+      "note": "На Трипстере вы оплачиваете 1317 ₽. Деньги списываются в российских рублях. Если карта в другой валюте, ваш банк конвертирует сумму по своему курсу"
+    },
+    "promise": null,
+    "items_counter": false,
+    "items_counter_unit": null,
+    "line_items": [],
+    "address": null,
+    "pickup_eta": null,
+    "utensils": null,
+    "pickup_time": null,
+    "change_chips": null,
+    "cost_options": [],
+    "receipt_toggle": null,
+    "comment_field": null,
+    "door_toggle": null,
+    "delivery_slot": null,
+    "extras_rows": [],
+    "receipt_breakdown": null,
+    "legal_note": null,
+    "sections_presentation": "bordered",
+    "sections": [],
+    "delivery": null,
+    "fulfillment": null,
+    "form": null,
+    "autorenew": null,
+    "promo": null,
+    "items_title": null,
+    "items_title_compact": null,
+    "totals": {
+      "sum": 131700,
+      "discount": 0,
+      "currency": "RUB"
+    },
+    "cart": null,
+    "event": null,
+    "buyer_form": null,
+    "account_email": null,
+    "gift_certificate": null,
+    "bonus_banner": null,
+    "agreements": [],
+    "plans": [],
+    "plan_card": "poster",
+    "plan_cta_label": null,
+    "sheet_title": null,
+    "scroll_hint": null,
+    "return_label": "Вернуться к заказу",
+    "paid_title": "Заказ оплачен",
+    "payment_purpose": "Предоплата заказа",
+    "payment_category": "Путешествия",
+    "summary_detail": "Аудиогид, предоплата"
+  },
+  "demo": {
+    "balance": "34 190,50 ₽",
+    "timings": {
+      "push_delay_ms": 600,
+      "splash_ms": 1200,
+      "pay_loading_ms": 900,
+      "dots_cycle_ms": 900
+    }
+  },
+  "a11y_mode": "enforced"
+}

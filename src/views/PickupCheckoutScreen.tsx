@@ -609,6 +609,7 @@ export function PickupCheckoutScreen({
                       color: active ? "var(--t-accent)" : "var(--t-text-primary)",
                       fontSize: "var(--t-font-body)",
                       fontWeight: "var(--t-label-weight)",
+                      transition: "border-color var(--k-motion-fast) ease-out, color var(--k-motion-fast) ease-out",
                       cursor: "pointer",
                     }}
                   >
@@ -725,7 +726,7 @@ export function PickupCheckoutScreen({
                   background: receiptOn
                     ? "var(--t-surface-background)"
                     : "var(--t-text-primary)",
-                  transition: "left 160ms ease",
+                  transition: "left var(--k-motion-medium) ease-in-out",
                 }}
               />
             </button>
@@ -773,9 +774,13 @@ function RadioRow({
         cursor: "pointer",
       }}
     >
+      {/*
+        Отметка донора — ПУСТОЕ кольцо: ни точки внутри, ни заливки (проверено
+        и на радио экрана, и в шторке — детей и псевдоэлементов нет). Выбор
+        читается только по цвету рамки.
+      */}
       <span
         aria-hidden
-        className="flex items-center justify-center"
         style={{
           width: "22px",
           height: "22px",
@@ -784,19 +789,9 @@ function RadioRow({
           border: `var(--t-border-width) solid ${
             checked ? "var(--t-accent)" : "var(--t-text-primary)"
           }`,
+          transition: "border-color var(--k-motion-fast) ease-out",
         }}
-      >
-        {checked ? (
-          <span
-            style={{
-              width: "10px",
-              height: "10px",
-              borderRadius: "50%",
-              background: "var(--t-accent)",
-            }}
-          />
-        ) : null}
-      </span>
+      />
       <span
         style={{
           fontSize: "var(--t-font-body)",

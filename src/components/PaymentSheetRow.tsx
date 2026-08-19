@@ -1,7 +1,9 @@
+import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useId, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 
 import { COPY, methodAccessibleName } from "@demo/content/copy";
+import { SHEET_OVERLAY_SPEC } from "@demo/views/stage-motion";
 import type { PaymentMethod } from "@demo/theme/tenant.schema";
 
 interface Props {
@@ -129,12 +131,31 @@ export function PaymentSheetRow({
         <PencilGlyph />
       </button>
 
-      {open && root ? (
-        createPortal(
-        <div
+      {/*
+        AnimatePresence живёт ВНУТРИ портала, а не снаружи: обёрнутый ею
+        `createPortal(...)` она не видит как собственного потомка и не
+        монтирует содержимое вовсе — шторка просто перестаёт открываться,
+        молча и без ошибки в консоли.
+      */}
+      {root
+        ? createPortal(
+            <AnimatePresence>
+              {open ? (
+        <motion.div
+          key="payment-sheet"
           className="absolute inset-0 z-20 flex flex-col justify-end"
           data-testid="payment-sheet"
           style={{ background: "rgba(0, 0, 0, 0.6)" }}
+          /*
+           * Движение — ОБЩИЙ слой демо (`SHEET_OVERLAY_SPEC`), а не тайминги
+           * донора: подложка проявляется прозрачностью, лист выезжает снизу
+           * по той же iOS-кривой и на те же 320 мс, что и остальные оверлеи.
+           * `prefers-reduced-motion` обрабатывает MotionConfig в main.tsx.
+           */
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={SHEET_OVERLAY_SPEC}
         >
           {/*
             Подложка закрывает шторку без применения черновика — так ведёт
@@ -147,24 +168,29 @@ export function PaymentSheetRow({
             className="flex-1"
             style={{ background: "none", border: "none", cursor: "default" }}
           />
-          <div
+          <motion.div
             role="dialog"
             aria-modal="true"
             aria-labelledby={titleId}
+            initial={{ y: "100%" }}
+            animate={{ y: 0 }}
+            exit={{ y: "100%" }}
+            transition={SHEET_OVERLAY_SPEC}
             style={{
               background: "var(--t-surface-background)",
-              // Поле шторки у донора вдвое шире поля экрана: 30 против 15.
-              padding: "25px 30px calc(25px + env(safe-area-inset-bottom, 0px))",
+              // Поле шторки у донора вдвое шире поля экрана: 30 против 15,
+              // и одинаковое со всех сторон.
+              padding: "30px 30px calc(30px + env(safe-area-inset-bottom, 0px))",
               borderRadius: "24px 24px 0 0",
               display: "flex",
               flexDirection: "column",
-              gap: "20px",
             }}
           >
             <h2
               id={titleId}
               style={{
                 fontSize: "var(--t-font-section-title)",
+                lineHeight: 1.25,
                 fontWeight: "var(--t-title-weight)",
                 color: "var(--t-text-primary)",
                 margin: 0,
@@ -177,7 +203,13 @@ export function PaymentSheetRow({
               role="radiogroup"
               aria-label={sheetTitle}
               className="flex flex-col"
-              style={{ gap: "16px" }}
+              /*
+               * Зазоры донора: 30 от заголовка до списка, 40 от списка до
+               * кнопки. Внутри списка у него шаг строк 38 при высоте отметки
+               * 22; у нас строка 44 по зоне нажатия, поэтому зазор нулевой —
+               * шаг выходит 44, ближе к донорскому, чем 44 + 16.
+               */
+              style={{ gap: "0px", margin: "30px 0 40px" }}
             >
               {methods.map((method) => {
                 const checked = draft === method.id;
@@ -210,30 +242,21 @@ export function PaymentSheetRow({
                         flexShrink: 0,
                         borderRadius: "50%",
                         /*
-                         * Отметка донора — кольцо бренда с точкой внутри, а не
-                         * залитый кружок: акцент здесь работает контуром, и
-                         * заливка сделала бы отметку тяжелее всей секции.
+                         * Отметка донора — ПУСТОЕ кольцо: ни точки внутри, ни
+                         * заливки. Выбранное состояние отличается только
+                         * цветом рамки. Точка внутри кольца выглядит
+                         * убедительно и является добавленной деталью.
                          */
                         border: `var(--t-border-width) solid ${
                           checked ? "var(--t-accent)" : "var(--t-text-primary)"
                         }`,
-                        color: "var(--t-accent)",
+                        transition: "border-color var(--k-motion-fast) ease-out",
                       }}
-                    >
-                      {checked ? (
-                        <span
-                          style={{
-                            width: "10px",
-                            height: "10px",
-                            borderRadius: "50%",
-                            background: "var(--t-accent)",
-                          }}
-                        />
-                      ) : null}
-                    </span>
+                    />
                     <span
                       style={{
                         fontSize: "var(--t-font-body)",
+                        lineHeight: 1.15,
                         fontWeight: "var(--t-label-weight)",
                         color: "var(--t-text-primary)",
                       }}
@@ -262,11 +285,13 @@ export function PaymentSheetRow({
             >
               {ctaLabel}
             </button>
-          </div>
-        </div>,
-        root,
-        )
-      ) : null}
+          </motion.div>
+        </motion.div>
+              ) : null}
+            </AnimatePresence>,
+            root,
+          )
+        : null}
     </>
   );
 }

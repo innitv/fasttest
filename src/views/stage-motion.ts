@@ -61,7 +61,18 @@ export function transitionFor(prev: DemoStage | null, next: DemoStage): Transiti
 }
 
 // iOS-кривая выезда шитов и stack-переходов.
-const IOS_EASE = [0.32, 0.72, 0, 1] as const;
+export const IOS_EASE = [0.32, 0.72, 0, 1] as const;
+
+/**
+ * Спека выезда для шитов ВНУТРИ экрана подрядчика (шторка выбора оплаты).
+ *
+ * Живёт здесь, а не по месту, по той же причине, что и остальной motion:
+ * движение — общий механизм, тема его не задаёт. 320 мс — то же значение,
+ * что у `--k-motion-overlay` в `styles.css` (им же анимируется
+ * `HandoffOverlay`), кривая — общая iOS-кривая шитов. Донорские тайминги
+ * сюда НЕ переносятся: у каждого донора они свои, а движение в демо одно.
+ */
+export const SHEET_OVERLAY_SPEC: Transition = { duration: 0.32, ease: IOS_EASE };
 
 function spec(type: TransitionType): Transition {
   switch (type) {

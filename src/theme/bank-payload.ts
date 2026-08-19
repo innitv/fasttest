@@ -105,6 +105,13 @@ const ARCHETYPE_DEFAULTS: Record<
     paymentCategory: "Развлечения",
     summaryDetail: "Билет на событие",
   },
+  pickup_checkout: {
+    returnLabel: "Вернуться к заказу",
+    paidTitle: "Заказ оплачен",
+    paymentPurpose: "Оплата заказа",
+    paymentCategory: "Кафе и рестораны",
+    summaryDetail: "Самовывоз, 4 позиции",
+  },
 };
 
 function pick(value: string | null, fallback: string): string {

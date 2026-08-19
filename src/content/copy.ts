@@ -78,14 +78,21 @@ export const COPY = {
   "extras.section_title": "Дополнительно",
   "counter.decrease": "Уменьшить количество",
   "counter.increase": "Увеличить количество",
+  "cart.clear": "Очистить корзину",
   "counter.unit": "бут.",
   "address.edit": "Изменить адрес",
   "slot.date": "Дата доставки",
   "slot.time": "Интервал доставки",
   "receipt.collapse": "Свернуть разбивку",
 
+  // ── Самовывоз (архетип `pickup_checkout`) ──────────────────────────
+  "pickup.sheet_title": "Способы оплаты",
+  "pickup.sheet_cta": "Выбрать",
+
   // ── Доступность ────────────────────────────────────────────────────
   "a11y.payment_group": "Способ оплаты",
+  "a11y.sheet_close": "Закрыть выбор способа оплаты",
+  "a11y.counter_zero": "Не добавлено",
   "a11y.handoff_live": "Переход в Ozon Банк",
   "a11y.phone.field": "Номер телефона, код страны плюс семь",
   "a11y.phone.checking": "Проверяем номер",

@@ -32,6 +32,7 @@ const PATH_ROUTES: Record<string, { tenant: string; archetype: TenantConfig["arc
   "/rml": { tenant: "rml", archetype: "order_steps" },
   "/hval": { tenant: "hval", archetype: "slot_delivery" },
   "/bombbar": { tenant: "bombbar", archetype: "bonus_checkout" },
+  "/mybox": { tenant: "mybox", archetype: "pickup_checkout" },
 };
 
 /** Лаунчер — только для локальной отладки, по неугадываемому пути и только в dev. */

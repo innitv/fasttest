@@ -79,12 +79,28 @@ const FONT_STACKS: Record<TenantConfig["typography"]["family"], string> = {
 };
 
 /**
+ * Формат `@font-face` по расширению файла.
+ *
+ * Раньше формат был зашит как woff2 в предположении «демо ходит только в
+ * современные браузеры». Предположение верное, но не про то: браузер тут ни
+ * при чём — формат диктует ДОНОР. MYBOX отдаёт `Golos-Text_Regular.woff`, и
+ * объявленный woff2 поверх woff-файла роняет загрузку молча: правило
+ * отбрасывается, текст остаётся на системном стеке, а консоль пуста.
+ */
+function fontFormat(src: string): string {
+  const path = src.split(/[?#]/)[0].toLowerCase();
+  if (path.endsWith(".woff2")) return "woff2";
+  if (path.endsWith(".woff")) return "woff";
+  if (path.endsWith(".otf")) return "opentype";
+  if (path.endsWith(".ttf")) return "truetype";
+  return "woff2";
+}
+
+/**
  * Правила `@font-face` для гарнитур донора.
  *
- * Формат один — woff2: демо ходит только в современные браузеры, а второй
- * формат удвоил бы вес без адресата. `font-display: swap` намеренный: пока
- * гарнитура едет, текст читается системным стеком — пустой экран хуже
- * временно чужого шрифта.
+ * `font-display: swap` намеренный: пока гарнитура едет, текст читается
+ * системным стеком — пустой экран хуже временно чужого шрифта.
  */
 function buildFontFaceCss(tenant: TenantConfig): string | null {
   const fonts = tenant.typography.fonts;
@@ -95,7 +111,7 @@ function buildFontFaceCss(tenant: TenantConfig): string | null {
     .filter((face, index, all) => all.findIndex((f) => f.family === face.family) === index)
     .map(
       (face) =>
-        `@font-face{font-family:"${face.family}";src:url("${face.src}") format("woff2");font-display:swap;}`,
+        `@font-face{font-family:"${face.family}";src:url("${face.src}") format("${fontFormat(face.src)}");font-display:swap;}`,
     );
   return faces.length > 0 ? faces.join("\n") : null;
 }
@@ -354,6 +370,7 @@ function validateSemantics(tenant: TenantConfig): Diagnostic[] {
     order_steps: "radio_rows",
     slot_delivery: "select_list",
     bonus_checkout: "plain_rows",
+    pickup_checkout: "sheet_select",
   };
   const expectedLayout = layoutByArchetype[tenant.archetype];
   if (tenant.payment_list.layout !== expectedLayout) {

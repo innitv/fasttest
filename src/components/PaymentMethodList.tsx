@@ -8,6 +8,7 @@ import { PaymentMethodCard } from "./PaymentMethodCard";
 import { PaymentMethodPlainRow } from "./PaymentMethodPlainRow";
 import { PaymentMethodRadioRow } from "./PaymentMethodRadioRow";
 import { PaymentSelectRow } from "./PaymentSelectRow";
+import { PaymentSheetRow } from "./PaymentSheetRow";
 
 interface Props {
   layout: TenantConfig["payment_list"]["layout"];
@@ -27,6 +28,12 @@ interface Props {
    * применяется: там блок вставляется вне списка.
    */
   renderAfter?: (methodId: string) => ReactNode;
+  /**
+   * Тексты нижней шторки — раскладка `sheet_select`. Заголовок и метка
+   * кнопки принадлежат донору и не выводятся из названия секции: у MYBOX
+   * секция называется «Способ оплаты», а шторка — «Способы оплаты».
+   */
+  sheet?: { title: string; ctaLabel: string; forceOpen?: boolean };
 }
 
 /**
@@ -45,11 +52,33 @@ export function PaymentMethodList({
   onSelect,
   padded,
   renderAfter,
+  sheet,
 }: Props) {
   // Ref для мышь-прокрутки горизонтального ряда. В вертикальной раскладке не
   // прикрепляется — хук видит `null` и не делает ничего.
   const rowRef = useRef<HTMLDivElement>(null);
   useHorizontalScroll(rowRef);
+
+  if (layout === "sheet_select") {
+    return (
+      <div
+        data-testid="payment-method-list"
+        data-layout="sheet_select"
+        className="flex w-full flex-col"
+        style={{ paddingInline: padded ? "var(--t-page-padding)" : undefined }}
+      >
+        <PaymentSheetRow
+          methods={methods}
+          selected={selected}
+          onSelect={onSelect}
+          sheetTitle={sheet?.title ?? COPY["pickup.sheet_title"]}
+          ctaLabel={sheet?.ctaLabel ?? COPY["pickup.sheet_cta"]}
+          forceOpen={sheet?.forceOpen}
+        />
+        {renderAfter?.(selected ?? "")}
+      </div>
+    );
+  }
 
   if (layout === "select_list") {
     return (

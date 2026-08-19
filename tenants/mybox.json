@@ -1,0 +1,319 @@
+{
+  "tenant_id": "mybox",
+  "display_name": "MYBOX",
+  "archetype": "pickup_checkout",
+  "header": {
+    "style": "logo_cart",
+    "back_label": null,
+    "cart_dot": true,
+    "top_bar": null,
+    "account_initials": null,
+    "support": null
+  },
+  "brand": {
+    "primary": "#000000",
+    "on_primary": "auto",
+    "accent": "#EE7233",
+    "tonal": "#F8F9F8",
+    "disabled": "#C4C4C4",
+    "secondary": null,
+    "logo": {
+      "kind": "text",
+      "text": "MYBOX",
+      "slot_ratio": null
+    }
+  },
+  "surface": {
+    "background": "#FFFFFF",
+    "card": "#F8F9F8",
+    "form": "#FFFFFF",
+    "border": "#C4C4C4",
+    "divider": "#000000",
+    "text_primary": "#000000",
+    "text_secondary": "#757575",
+    "danger": "#D4311E",
+    "field_error": "#D4311E",
+    "positive": null
+  },
+  "elevation": {
+    "model": "flat_outline",
+    "border_width": 1,
+    "selected_border_width": 1,
+    "shadow": null
+  },
+  "radius": {
+    "card": 16,
+    "control": "pill",
+    "field": 13,
+    "chip": "pill",
+    "allow_inversion": true
+  },
+  "density": {
+    "page_padding": 15,
+    "block_gap": 8,
+    "row_height": 44,
+    "control_height": 64,
+    "method_button_height": 44,
+    "section_gap": 28
+  },
+  "component_width": {
+    "choice_card_pct": 46,
+    "payment_card_pct": 32
+  },
+  "typography": {
+    "family": "grotesk",
+    "fonts": {
+      "display": null,
+      "body": {
+        "family": "Golos Text",
+        "src": "/tenants/mybox/golos-text-400.woff2"
+      }
+    },
+    "body": 16,
+    "h1": 22,
+    "section_title": 20,
+    "caption": 12,
+    "price": 18,
+    "label_weight": 400,
+    "title_weight": 400
+  },
+  "cta": {
+    "placement": "inline",
+    "label": "Оформить",
+    "include_amount": false,
+    "requires_selection": false,
+    "font_size": 18,
+    "font_weight": 400,
+    "sticky_total": null
+  },
+  "detail_rows": {
+    "layout": "row"
+  },
+  "payment_list": {
+    "layout": "sheet_select",
+    "section_title": "Способ оплаты",
+    "selection": "radio_outline",
+    "methods": [
+      {
+        "id": "ozon",
+        "label": "Ozon Банк",
+        "caption": null,
+        "logo": "none"
+      },
+      {
+        "id": "cash",
+        "label": "Наличные",
+        "caption": null,
+        "logo": "none"
+      },
+      {
+        "id": "card",
+        "label": "Картой при получении",
+        "caption": null,
+        "logo": "none"
+      }
+    ],
+    "default_selected": "cash"
+  },
+  "ozon": {
+    "label": "Ozon Банк",
+    "position": 1,
+    "adopts_tenant_theme": true,
+    "handoff": "overlay",
+    "phone_gate": {
+      "enabled": true,
+      "not_client_number": "0000000000",
+      "check_ms": 700
+    }
+  },
+  "content": {
+    "title": "Заказ",
+    "back_link": null,
+    "segments": null,
+    "rows": [],
+    "header_logo": null,
+    "promise": null,
+    "items_counter": true,
+    "items_counter_unit": null,
+    "line_items": [
+      {
+        "title": "Сет Сеул",
+        "period": "3 шт / 172 г",
+        "price": "250 ₽",
+        "old_price": null,
+        "media": true,
+        "image": "/tenants/mybox/set-seul.png",
+        "image_alt": "Сет Сеул",
+        "quantity": 1
+      },
+      {
+        "title": "Панчан яркий дайкон",
+        "period": "1 шт / 156 г",
+        "price": "195 ₽",
+        "old_price": null,
+        "media": true,
+        "image": "/tenants/mybox/panchan-daikon.png",
+        "image_alt": "Панчан яркий дайкон",
+        "quantity": 1
+      },
+      {
+        "title": "Панчан капуста в стиле кимчи",
+        "period": "1 шт / 156 г",
+        "price": "145 ₽",
+        "old_price": null,
+        "media": true,
+        "image": "/tenants/mybox/panchan-kimchi.png",
+        "image_alt": "Панчан капуста в стиле кимчи",
+        "quantity": 1
+      },
+      {
+        "title": "Суп Кукси холодный и освежающий",
+        "period": "1 шт / 484 г",
+        "price": "440 ₽",
+        "old_price": null,
+        "media": true,
+        "image": "/tenants/mybox/sup-kuksi.png",
+        "image_alt": "Суп Кукси холодный и освежающий",
+        "quantity": 1
+      }
+    ],
+    "address": {
+      "title": "Самовывоз по адресу ТРЦ PRIME PLAZA",
+      "subtitle": "Москва, ул Каховка 29А, 4 этаж",
+      "action_label": "Изменить"
+    },
+    "pickup_eta": "~25-29 минут",
+    "utensils": {
+      "items": [
+        {
+          "name": "Васаби",
+          "caption": "Бесплатно",
+          "image": "/tenants/mybox/wasabi.png"
+        },
+        {
+          "name": "Имбирь",
+          "caption": "Бесплатно",
+          "image": "/tenants/mybox/ginger.png"
+        },
+        {
+          "name": "Соус Соевый",
+          "caption": "Бесплатно",
+          "image": "/tenants/mybox/soy.png"
+        },
+        {
+          "name": "Вилка",
+          "caption": "Бесплатно",
+          "image": "/tenants/mybox/fork.png"
+        },
+        {
+          "name": "Ложка",
+          "caption": "Бесплатно",
+          "image": "/tenants/mybox/spoon.png"
+        },
+        {
+          "name": "Палочки",
+          "caption": "Бесплатно",
+          "image": "/tenants/mybox/chopsticks.png"
+        }
+      ],
+      "hint": "Добавьте приборы — они могут понадобиться",
+      "hint_icon": "/tenants/mybox/spoonfork.png",
+      "title": "Приборы и соусы"
+    },
+    "pickup_time": {
+      "title": "Время получения",
+      "options": [
+        {
+          "id": "asap",
+          "label": "Ближайшее ~25-29 минут"
+        },
+        {
+          "id": "scheduled",
+          "label": "Ко времени"
+        }
+      ],
+      "selected": "asap"
+    },
+    "change_chips": {
+      "options": [
+        "Без сдачи",
+        "с 500 ₽",
+        "с 1000 ₽",
+        "с 2000 ₽",
+        "с 5000 ₽"
+      ],
+      "selected": "Без сдачи",
+      "visible_for": [
+        "cash"
+      ]
+    },
+    "cost_options": [
+      {
+        "id": "bonus",
+        "label": "Списать майбаксы"
+      },
+      {
+        "id": "promo",
+        "label": "Ввести промокод"
+      }
+    ],
+    "receipt_toggle": {
+      "label": "Получать электронный чек на почту",
+      "default_on": false
+    },
+    "payment_sheet": {
+      "title": "Способы оплаты",
+      "cta_label": "Выбрать"
+    },
+    "comment_field": {
+      "title": "Комментарий к заказу",
+      "placeholder": "Добавь комментарий к заказу, если нужно"
+    },
+    "door_toggle": null,
+    "delivery_slot": null,
+    "extras_rows": [],
+    "receipt_breakdown": null,
+    "legal_note": null,
+    "sections_presentation": "bordered",
+    "sections": [],
+    "delivery": null,
+    "fulfillment": null,
+    "form": null,
+    "autorenew": null,
+    "promo": null,
+    "items_title": "Заказ",
+    "items_title_compact": null,
+    "totals": {
+      "sum": 103000,
+      "discount": 0,
+      "currency": "RUB"
+    },
+    "cart": null,
+    "event": null,
+    "buyer_form": null,
+    "account_email": null,
+    "gift_certificate": null,
+    "bonus_banner": null,
+    "agreements": [],
+    "plans": [],
+    "plan_card": "poster",
+    "plan_cta_label": null,
+    "sheet_title": null,
+    "scroll_hint": null,
+    "return_label": "Вернуться к заказу",
+    "paid_title": "Заказ оплачен",
+    "payment_purpose": "Оплата заказа",
+    "payment_category": "Кафе и рестораны",
+    "summary_detail": "Самовывоз, 4 позиции"
+  },
+  "demo": {
+    "balance": "34 190,50 ₽",
+    "timings": {
+      "push_delay_ms": 600,
+      "splash_ms": 1200,
+      "pay_loading_ms": 900,
+      "dots_cycle_ms": 900
+    }
+  },
+  "a11y_mode": "enforced"
+}

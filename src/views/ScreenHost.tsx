@@ -14,6 +14,7 @@ import { BankPaymentScreen } from "./BankPaymentScreen";
 import { BankSplashScreen } from "./BankSplashScreen";
 import { BankSuccessScreen } from "./BankSuccessScreen";
 import { BonusCheckoutScreen } from "./BonusCheckoutScreen";
+import { PickupCheckoutScreen } from "./PickupCheckoutScreen";
 import { CartCheckoutScreen } from "./CartCheckoutScreen";
 import { SlotDeliveryScreen } from "./SlotDeliveryScreen";
 import { OrderStepsScreen } from "./OrderStepsScreen";
@@ -394,6 +395,7 @@ export function ScreenHost({ theme, forcedState, showHandoff, initialStage }: Pr
     order_steps: OrderStepsScreen,
     slot_delivery: SlotDeliveryScreen,
     bonus_checkout: BonusCheckoutScreen,
+    pickup_checkout: PickupCheckoutScreen,
   };
   const ContractorScreen = CONTRACTOR_SCREENS[tenant.archetype];
   const contractorScreen = <ContractorScreen {...screenProps} />;

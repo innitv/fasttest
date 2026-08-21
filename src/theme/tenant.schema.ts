@@ -34,11 +34,39 @@ const radiusValue = (label: string, min: number, max: number) =>
     z.literal("pill"),
   ]);
 
+/**
+ * Дополнительные начертания гарнитуры файлами.
+ *
+ * Без них `@font-face` описывает ОДИН файл без `font-weight`, и браузер
+ * считает его подходящим для любого веса: 600 и 700 он рисует, растягивая
+ * контуры Regular. Синтетический жир виден сразу — буквы «толстеют» неровно,
+ * и гарнитура перестаёт быть похожей на себя, оставаясь при этом со статусом
+ * `loaded` и правильным именем в `font-family`. Проверка «шрифт подключён»
+ * этого не ловит: подключён он честно.
+ *
+ * Базовый `src` считается весом 400.
+ */
+export const fontWeightsSchema = z
+  .array(
+    z.object({
+      weight: z.number().int().min(100).max(900),
+      src: z.string().min(1),
+    }),
+  )
+  .default([]);
+
 export const paymentMethodSchema = z.object({
   id: z.string().min(1),
   label: z.string().min(1),
   caption: z.string().nullable().default(null),
   logo: z.enum(["slot", "none"]).default("none"),
+  /**
+   * Путь к логотипу способа оплаты. У доноров, где карточка выбора — это
+   * ЦЕЛИКОМ картинка платёжной системы без подписи (EWA), подпись `label`
+   * уходит в `aria-label`: нарисовать её текстом значит добавить строку,
+   * которой у донора нет.
+   */
+  logo_src: z.string().min(1).nullable().default(null),
 });
 
 export const detailRowSchema = z.object({
@@ -149,6 +177,31 @@ export const tenantSchema = z.object({
      * bottom sheet поверх страницы, а не страница.
      */
     "pickup_checkout",
+    /**
+     * `carrier_delivery` — донор EWA PRODUCT (ewaproduct.com/ru/checkout/delivery).
+     *
+     * Первый донор, у которого доставка и оплата — ДВА РАЗНЫХ ШАГА чекаута,
+     * и характер держит первый: сетка перевозчиков 3×2, где каждая карточка
+     * это логотип + срок + цена, а выбранная обведена рамкой в фирменную
+     * магенту. Ни один прежний архетип такой сетки не выражает: у
+     * `slot_delivery` способ доставки это строка выпадающего списка, у
+     * `pickup_checkout` — радио-пара времени.
+     *
+     * Расходятся семь блоков, и они узнаются раньше палитры: тумблер
+     * международной доставки строкой-карточкой, город подчёркнутым полем (не
+     * рамкой), сегментед «Пункт выдачи / Курьер», сетка перевозчиков, полоса
+     * «до бесплатной доставки» с зелёным прогрессом, строка получателя с
+     * шевроном и — блок допродажи «Возьмите пакет» с фотографиями товаров и
+     * кнопкой «В корзину» у каждой позиции. Итоги при этом лежат в карточке
+     * ДРУГОГО фона и радиуса, чем секции формы: у донора это два разных
+     * материала, и сведение их к одному теряет его вид.
+     *
+     * Второй донор после MYBOX с собственным экраном выбора оплаты: на шаге
+     * подтверждения у него сетка карточек-логотипов (СБП, карта, «Подели»,
+     * Robokassa). «Ozon Банк» встаёт в неё пятой карточкой — демо ничего не
+     * достраивает сверх донора.
+     */
+    "carrier_delivery",
   ]),
 
   // Нативной оболочки (статус-бар, home indicator) в контракте больше нет:
@@ -230,6 +283,14 @@ export const tenantSchema = z.object({
      */
     disabled: hexOrNull("brand.disabled").default(null),
     /**
+     * Цвет рамки ВЫБРАННОЙ карточки, когда донор берёт его не от основного
+     * цвета. Формула `withLightness(primary, 0.6)` осветляет primary, и у
+     * донора с чёрными кнопками (EWA) даёт серую рамку — тогда как выбор у
+     * него отмечен фирменной магентой. Это единственное цветное пятно его
+     * чекаута, и терять его нельзя. `null` — прежняя формула.
+     */
+    selected_border: hexOrNull("brand.selected_border").default(null),
+    /**
      * Расширение контракта: донор B использует шесть активных цветов
      * (ось темы 23). Сведение к «primary + серый» — анти-паттерн R7,
      * поэтому лавандовая пара и бирюзовая поддержка вынесены в тему.
@@ -266,6 +327,30 @@ export const tenantSchema = z.object({
      * здесь несёт смысл, а не оформление.
      */
     positive: hexOrNull("surface.positive").default(null),
+    /**
+     * Фон карточки СЧЁТА, когда он у донора не тот же, что у карточек формы.
+     * У EWA форма лежит на #F2F2F2, а итоги — на #F1F1F2 и с большим
+     * радиусом: это два разных материала, счёт и анкета. `null` — счёт
+     * рисуется на том же `card`, как у прежних доноров.
+     */
+    card_alt: hexOrNull("surface.card_alt").default(null),
+    /**
+     * Заливка АКТИВНОГО сегмента переключателя, когда она не совпадает с
+     * основным цветом бренда: у EWA кнопки чёрные (#0B0B0B), а активный
+     * сегмент «Пункт выдачи» — серо-чёрный #272727.
+     */
+    control_active: hexOrNull("surface.control_active").default(null),
+    /**
+     * Заливка полосы прогресса. Отдельно от `positive`: у EWA слово
+     * «бесплатно» набрано #37A72E, а дорожка до бесплатной доставки залита
+     * заметно более ярким #1CD263 — тонкая полоса и мелкий текст требуют
+     * разной насыщенности, и донор это различает.
+     */
+    progress: hexOrNull("surface.progress").default(null),
+    /**
+     * Дорожка выключенного тумблера. `null` — берётся `border`.
+     */
+    track: hexOrNull("surface.track").default(null),
   }),
 
   // ── Модель возвышения ───────────────────────────────────────────────
@@ -402,11 +487,38 @@ export const tenantSchema = z.object({
     fonts: z
       .object({
         display: z
-          .object({ family: z.string().min(1), src: z.string().min(1) })
+          .object({
+            family: z.string().min(1),
+            src: z.string().min(1),
+            weights: fontWeightsSchema,
+          })
           .nullable()
           .default(null),
         body: z
-          .object({ family: z.string().min(1), src: z.string().min(1) })
+          .object({
+            family: z.string().min(1),
+            src: z.string().min(1),
+            weights: fontWeightsSchema,
+          })
+          .nullable()
+          .default(null),
+        /**
+         * Третья гарнитура — для блоков, которые у донора набраны шрифтом
+         * САЙТА, а не шрифтом чекаута.
+         *
+         * У EWA чекаут набран TT Firs Neue, но реферальный блок стоит вне его
+         * компонента и наследует Raleway страницы. Разница видна: Raleway 600
+         * это SemiBold, а у TT Firs Neue шестисотого начертания нет вовсе, и
+         * запрос 600 уезжает к Bold 700 — блок выходит заметно жирнее
+         * донорского. Свести к общей гарнитуре значит либо утяжелить
+         * заголовок, либо облегчить его мимо донора.
+         */
+        secondary: z
+          .object({
+            family: z.string().min(1),
+            src: z.string().min(1),
+            weights: fontWeightsSchema,
+          })
           .nullable()
           .default(null),
       })
@@ -461,6 +573,13 @@ export const tenantSchema = z.object({
      * выбора одной из формулировок. Дефолт — донорский (кнопка активна).
      */
     requires_selection: z.boolean().default(false),
+    /**
+     * Метка кнопки на ВТОРОМ экране подрядчика, когда чекаут донора
+     * двухшаговый: у EWA на доставке кнопка называется «Оформить заказ», а на
+     * странице оплаты — «ОПЛАТИТЬ». Это две разные кнопки донора, а не одна
+     * переиспользованная, и общая метка врала бы на одной из них.
+     */
+    pay_label: z.string().min(1).nullable().default(null),
     /**
      * Типографика главной кнопки. Раньше была зашита 17/700 и не зависела от
      * донора: у минималиста кнопка набрана тем же кеглем, что заголовок
@@ -553,6 +672,15 @@ export const tenantSchema = z.object({
        * готовый список подрядчика, а не достраивает его сверх донора.
        */
       "sheet_select",
+      /**
+       * `logo_grid` — СЕТКА карточек-логотипов по три в ряд с переносом
+       * (донор EWA). Отличие от `horizontal_cards` не косметическое: там ряд
+       * с горизонтальной прокруткой и обрезкой правым краем (peek — признак
+       * донора), здесь все способы видны сразу, а выбранный обведён рамкой в
+       * два пикселя. Карточка не несёт подписи вовсе: логотип занимает её
+       * целиком, поэтому `label` уходит в `aria-label`.
+       */
+      "logo_grid",
     ]),
     /** Заголовок секции: у донора он может называться иначе, чем «Оплата». */
     section_title: z.string().nullable().default(null),
@@ -1146,6 +1274,149 @@ export const tenantSchema = z.object({
         enabled: z.boolean(),
         presentation: z.enum(["accordion", "field"]).default("accordion"),
         title: z.string().nullable().default(null),
+      })
+      .nullable()
+      .default(null),
+    /**
+     * Тумблер международной доставки отдельной строкой-карточкой. У донора
+     * это ПЕРВОЕ, что стоит в форме: он делит весь дальнейший экран надвое,
+     * поэтому лежит выше города, а не в «дополнительно».
+     */
+    intl_toggle: z
+      .object({
+        label: z.string().min(1),
+        default_on: z.boolean().default(false),
+      })
+      .nullable()
+      .default(null),
+    /**
+     * Город. `underline` — подчёркнутое поле Material с подписью над
+     * значением (донор EWA), `boxed` — поле в рамке. Ось структурная:
+     * подчёркивание держит форму донора лёгкой, рамка утяжеляет её до вида
+     * анкеты.
+     */
+    city_field: z
+      .object({
+        label: z.string().min(1),
+        value: z.string().min(1),
+        placeholder: z.string().nullable().default(null),
+        presentation: z.enum(["underline", "boxed"]).default("underline"),
+      })
+      .nullable()
+      .default(null),
+    /**
+     * Сетка перевозчиков. Каждая карточка несёт ЛОГОТИП компании, срок и
+     * цену — три строки, где логотип занимает первую: подменить его textом
+     * значит потерять то единственное, по чему перевозчик узнаётся.
+     * Бесплатная доставка выделена не ценой, а словом («бесплатно»)
+     * в положительном цвете — у донора это единственное цветное пятно
+     * в сетке, кроме рамки выбора.
+     */
+    carriers: z
+      .object({
+        title: z.string().min(1),
+        /** Сегментед над сеткой: способ получения меняет её состав. */
+        modes: z
+          .object({
+            items: z.array(z.object({ id: z.string().min(1), label: z.string().min(1) })),
+            active: z.string().min(1),
+          })
+          .nullable()
+          .default(null),
+        items: z
+          .array(
+            z.object({
+              id: z.string().min(1),
+              label: z.string().min(1),
+              logo: z.string().min(1).nullable().default(null),
+              eta: z.string().min(1),
+              price: z.string().min(1),
+              /** true → цена набрана положительным цветом («бесплатно»). */
+              free: z.boolean().default(false),
+            }),
+          )
+          .default([]),
+        selected: z.string().nullable().default(null),
+      })
+      .nullable()
+      .default(null),
+    /**
+     * Карточка выбранного пункта выдачи: адрес и часы работы двумя
+     * подписанными группами. Появляется ТОЛЬКО после выбора и внутри той же
+     * секции, что и сетка, — у донора это не отдельный блок, а её
+     * продолжение.
+     */
+    pickup_point: z
+      .object({
+        title: z.string().min(1),
+        address_label: z.string().min(1).default("Адрес:"),
+        address: z.string().min(1),
+        hours_label: z.string().min(1).default("Часы работы:"),
+        hours: z.array(z.string().min(1)).default([]),
+      })
+      .nullable()
+      .default(null),
+    /**
+     * Полоса «до бесплатной доставки»: подпись, зелёный прогресс и ссылка на
+     * условия с шевроном. Это продающий блок, а не индикатор: он называет
+     * недостающую сумму, а не пройденную долю.
+     */
+    free_delivery: z
+      .object({
+        label: z.string().min(1),
+        hint: z.string().nullable().default(null),
+        /** Заполненная доля дорожки, 0-100. */
+        progress_pct: z.number().int().min(0).max(100).default(0),
+      })
+      .nullable()
+      .default(null),
+    /**
+     * Данные получателя строкой с шевроном: имя, телефон и почта столбиком,
+     * правка — переход, а не инлайн-поле.
+     */
+    recipient: z
+      .object({
+        title: z.string().min(1),
+        lines: z.array(z.string().min(1)).default([]),
+      })
+      .nullable()
+      .default(null),
+    /**
+     * Допродажа перед итогами («Возьмите пакет»). Позиция — фотография
+     * товара, название, характеристика, цена и СВОЯ кнопка «В корзину»:
+     * это не состав заказа, а витрина внутри чекаута, и кнопка у каждой
+     * строки своя именно поэтому.
+     */
+    upsell: z
+      .object({
+        title: z.string().min(1),
+        caption: z.string().nullable().default(null),
+        items: z
+          .array(
+            z.object({
+              id: z.string().min(1),
+              image: z.string().min(1).nullable().default(null),
+              image_alt: z.string().nullable().default(null),
+              title: z.string().min(1),
+              caption: z.string().nullable().default(null),
+              price: z.string().min(1),
+              cta_label: z.string().min(1).default("В корзину"),
+            }),
+          )
+          .default([]),
+      })
+      .nullable()
+      .default(null),
+    /**
+     * Реферальная покупка: подпись и ID бизнес-партнёра. Лежит НИЖЕ кнопки
+     * оплаты и вне карточки итогов — у донора это хвост страницы, а не часть
+     * заказа.
+     */
+    referral: z
+      .object({
+        title: z.string().min(1),
+        field_label: z.string().min(1),
+        value: z.string().min(1),
       })
       .nullable()
       .default(null),

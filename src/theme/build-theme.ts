@@ -105,14 +105,30 @@ function fontFormat(src: string): string {
 function buildFontFaceCss(tenant: TenantConfig): string | null {
   const fonts = tenant.typography.fonts;
   if (!fonts) return null;
-  const faces = [fonts.display, fonts.body]
-    .filter((face): face is { family: string; src: string } => face !== null)
+  const faces = [fonts.display, fonts.body, fonts.secondary]
+    .filter((face) => face !== null)
     // Одна и та же гарнитура в обеих ролях описывается один раз.
-    .filter((face, index, all) => all.findIndex((f) => f.family === face.family) === index)
-    .map(
-      (face) =>
-        `@font-face{font-family:"${face.family}";src:url("${face.src}") format("${fontFormat(face.src)}");font-display:swap;}`,
-    );
+    .filter((face, index, all) => all.findIndex((f) => f!.family === face!.family) === index)
+    .flatMap((face) => {
+      /*
+       * Вес пишется в КАЖДОМ правиле, включая базовое.
+       *
+       * Правило без `font-weight` объявляет файл подходящим для всех весов
+       * (`font-weight: normal` по спецификации трактуется как 400, но при
+       * отсутствии других правил браузер берёт этот файл и на 700 —
+       * синтезируя жир). Пока файл был один, это давало искусственное
+       * полужирное на заголовках и бейджах.
+       */
+      const rules = [
+        `@font-face{font-family:"${face!.family}";src:url("${face!.src}") format("${fontFormat(face!.src)}");font-weight:400;font-display:swap;}`,
+      ];
+      for (const extra of face!.weights) {
+        rules.push(
+          `@font-face{font-family:"${face!.family}";src:url("${extra.src}") format("${fontFormat(extra.src)}");font-weight:${extra.weight};font-display:swap;}`,
+        );
+      }
+      return rules;
+    });
   return faces.length > 0 ? faces.join("\n") : null;
 }
 
@@ -371,6 +387,7 @@ function validateSemantics(tenant: TenantConfig): Diagnostic[] {
     slot_delivery: "select_list",
     bonus_checkout: "plain_rows",
     pickup_checkout: "sheet_select",
+    carrier_delivery: "logo_grid",
   };
   const expectedLayout = layoutByArchetype[tenant.archetype];
   if (tenant.payment_list.layout !== expectedLayout) {
@@ -543,7 +560,8 @@ function deriveColors(tenant: TenantConfig): DerivedColors {
   const tonalFill =
     tenant.brand.tonal ?? withLightness(primary, surfaceTonalStop(1, surfaceIsDark));
   vars["--t-brand-tonal"] = tonalFill;
-  vars["--t-brand-border-selected"] = withLightness(primary, 0.6);
+  vars["--t-brand-border-selected"] =
+    tenant.brand.selected_border ?? withLightness(primary, 0.6);
   vars["--t-brand-disabled"] =
     tenant.brand.disabled ?? withLightness(primary, surfaceTonalStop(2, surfaceIsDark));
 
@@ -732,6 +750,14 @@ function deriveColors(tenant: TenantConfig): DerivedColors {
   vars["--t-surface-divider"] = tenant.surface.divider;
   vars["--t-text-primary"] = tenant.surface.text_primary;
   vars["--t-surface-danger"] = tenant.surface.danger;
+  /*
+   * Четыре поверхности с фолбэком на уже существующие: тема, которая их не
+   * задаёт, получает прежнее поведение и ни одного нового цвета.
+   */
+  vars["--t-surface-card-alt"] = tenant.surface.card_alt ?? tenant.surface.card;
+  vars["--t-surface-control-active"] =
+    tenant.surface.control_active ?? tenant.surface.text_primary;
+  vars["--t-surface-track"] = tenant.surface.track ?? tenant.surface.border;
   vars["--t-surface-field-error"] = tenant.surface.field_error;
 
   /*
@@ -751,6 +777,7 @@ function deriveColors(tenant: TenantConfig): DerivedColors {
           failed: false,
         };
     vars["--t-surface-positive"] = positive.color;
+    vars["--t-surface-progress"] = tenant.surface.progress ?? positive.color;
     if (positive.corrected) {
       diagnostics.push({
         code: "I_POSITIVE_CONTRAST_FIXED",
@@ -894,6 +921,13 @@ export function buildTheme(raw: unknown): BuiltTheme {
   vars["--t-font-family"] = fonts?.body ? `"${fonts.body.family}", ${stack}` : stack;
   vars["--t-font-display"] = fonts?.display
     ? `"${fonts.display.family}", ${stack}`
+    : vars["--t-font-family"];
+  /*
+   * Гарнитура блоков, унаследованных от сайта донора. Без темы, задавшей её,
+   * равна основной — прежние темы ничего не меняют.
+   */
+  vars["--t-font-secondary"] = fonts?.secondary
+    ? `"${fonts.secondary.family}", ${stack}`
     : vars["--t-font-family"];
   vars["--t-font-body"] = `${tenant.typography.body}px`;
   vars["--t-font-h1"] = `${tenant.typography.h1}px`;

@@ -3,6 +3,7 @@ import { useRef, type ReactNode } from "react";
 import { COPY } from "@demo/content/copy";
 import { useHorizontalScroll } from "@demo/lib/useHorizontalScroll";
 import type { TenantConfig } from "@demo/theme/tenant.schema";
+import { BankWordmark } from "./bank/BankWordmark";
 import { PaymentMethodButton } from "./PaymentMethodButton";
 import { PaymentMethodCard } from "./PaymentMethodCard";
 import { PaymentMethodPlainRow } from "./PaymentMethodPlainRow";
@@ -58,6 +59,94 @@ export function PaymentMethodList({
   // прикрепляется — хук видит `null` и не делает ничего.
   const rowRef = useRef<HTMLDivElement>(null);
   useHorizontalScroll(rowRef);
+
+  /*
+   * `logo_grid` — сетка карточек-логотипов по три в ряд (донор EWA).
+   *
+   * Карточка не несёт подписи вовсе: платёжная система узнаётся логотипом, а
+   * дорисованное название добавило бы строку, которой у донора нет. Поэтому
+   * `label` уходит в `aria-label` — для скринридера способ назван, для глаза
+   * остаётся то же, что у донора.
+   *
+   * Карточка «Ozon Банка» несёт слот знака (`logo: "slot"`), а не подпись
+   * текстом: у соседей по сетке логотипы платёжных систем, и один способ,
+   * названный словами, читается как незаполненная строка формы. Знак рисует
+   * `BankWordmark` — тот же слот, что на экранах банка, в компактном
+   * варианте. Токенов `--bank-*` он в этом варианте не несёт, поэтому
+   * граница темы не нарушается; цвет наследуется от карточки подрядчика,
+   * потому что смена айдентики наступает только на пуше.
+   */
+  if (layout === "logo_grid") {
+    return (
+      <div
+        role="radiogroup"
+        aria-label={COPY["a11y.payment_group"]}
+        data-testid="payment-method-list"
+        data-layout="logo_grid"
+        className="grid w-full"
+        style={{
+          gridTemplateColumns: "repeat(3, 1fr)",
+          gap: "var(--k-payment-card-gap)",
+          paddingInline: padded ? "var(--t-page-padding)" : undefined,
+        }}
+      >
+        {methods.map((method) => {
+          const isSelected = selected === method.id;
+          return (
+            <button
+              key={method.id}
+              type="button"
+              role="radio"
+              aria-checked={isSelected}
+              aria-label={method.label}
+              onClick={() => onSelect(method.id)}
+              data-testid="payment-method"
+              data-method-id={method.id}
+              data-selected={isSelected || undefined}
+              className="flex items-center justify-center"
+              style={{
+                height: "var(--t-method-button-height)",
+                minHeight: "var(--k-tap-min)",
+                padding: "8px 6px",
+                background: "var(--t-surface-form)",
+                borderRadius: "var(--t-radius-field)",
+                // Рамка есть всегда: меняется только цвет, иначе карточка
+                // прыгает на её толщину в момент выбора.
+                border: `var(--t-selected-border-width) solid ${
+                  isSelected ? "var(--t-brand-border-selected)" : "var(--t-surface-border)"
+                }`,
+                transition: "border-color var(--k-motion-fast)",
+              }}
+            >
+              {method.logo_src ? (
+                <img
+                  src={method.logo_src}
+                  alt=""
+                  aria-hidden
+                  style={{ maxWidth: "100%", maxHeight: "100%", objectFit: "contain" }}
+                />
+              ) : method.logo === "slot" ? (
+                <BankWordmark variant="compact" />
+              ) : (
+                <span
+                  aria-hidden
+                  style={{
+                    fontSize: "var(--t-font-caption)",
+                    fontWeight: 500,
+                    textAlign: "center",
+                    lineHeight: 1.15,
+                    color: "var(--t-text-primary)",
+                  }}
+                >
+                  {method.label}
+                </span>
+              )}
+            </button>
+          );
+        })}
+      </div>
+    );
+  }
 
   if (layout === "sheet_select") {
     return (

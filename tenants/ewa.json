@@ -1,0 +1,336 @@
+{
+  "tenant_id": "ewa",
+  "display_name": "EWA PRODUCT",
+  "archetype": "carrier_delivery",
+  "header": {
+    "style": "logo_cart",
+    "back_label": null,
+    "cart_dot": true,
+    "top_bar": {
+      "city": "Тюмень",
+      "phone": "RU"
+    },
+    "account_initials": null,
+    "support": null
+  },
+  "brand": {
+    "primary": "#0B0B0B",
+    "on_primary": "auto",
+    "accent": "#E0008D",
+    "tonal": "#F2F2F2",
+    "disabled": "#C4C4C4",
+    "secondary": {
+      "fill": "#FF33B5",
+      "text": "#FFFFFF"
+    },
+    "logo": {
+      "kind": "slot",
+      "text": "EWA PRODUCT",
+      "slot_ratio": null
+    },
+    "selected_border": "#E0008D"
+  },
+  "surface": {
+    "background": "#FAFAFA",
+    "card": "#F2F2F2",
+    "form": "#FFFFFF",
+    "border": "#E8E8E8",
+    "divider": "#E8E8E8",
+    "text_primary": "#0B0B0B",
+    "text_secondary": "#8E8E8E",
+    "danger": "#D4311E",
+    "field_error": "#D4311E",
+    "positive": "#37A72E",
+    "card_alt": "#F1F1F2",
+    "control_active": "#272727",
+    "progress": "#1CD263",
+    "track": "#CCCCCC"
+  },
+  "elevation": {
+    "model": "flat_outline",
+    "border_width": 1,
+    "selected_border_width": 2,
+    "shadow": null
+  },
+  "radius": {
+    "card": 14,
+    "control": "pill",
+    "field": 12,
+    "chip": "pill",
+    "allow_inversion": true
+  },
+  "density": {
+    "page_padding": 19,
+    "block_gap": 9,
+    "row_height": 44,
+    "control_height": 44,
+    "method_button_height": 60,
+    "section_gap": 27
+  },
+  "component_width": {
+    "choice_card_pct": 27,
+    "payment_card_pct": 26
+  },
+  "typography": {
+    "family": "grotesk",
+    "fonts": {
+      "display": {
+        "family": "DIN Condensed",
+        "src": "/tenants/ewa/DINCondensed-Regular.woff2",
+        "weights": []
+      },
+      "body": {
+        "family": "TT Firs Neue",
+        "src": "/tenants/ewa/TTFirsNeue-Regular.woff2",
+        "weights": [
+          {
+            "weight": 300,
+            "src": "/tenants/ewa/TTFirsNeue-Light.woff"
+          },
+          {
+            "weight": 500,
+            "src": "/tenants/ewa/TTFirsNeue-Medium.woff2"
+          },
+          {
+            "weight": 700,
+            "src": "/tenants/ewa/TTFirsNeue-Bold.woff"
+          }
+        ]
+      },
+      "secondary": {
+        "family": "Raleway",
+        "src": "/tenants/ewa/Raleway-Regular.woff2",
+        "weights": [
+          {
+            "weight": 600,
+            "src": "/tenants/ewa/Raleway-SemiBold.woff2"
+          }
+        ]
+      }
+    },
+    "body": 14,
+    "h1": 32,
+    "section_title": 19,
+    "caption": 12,
+    "price": 19,
+    "label_weight": 500,
+    "title_weight": 500
+  },
+  "cta": {
+    "placement": "inline",
+    "label": "Оформить заказ",
+    "include_amount": false,
+    "requires_selection": false,
+    "font_size": 16,
+    "font_weight": 400,
+    "sticky_total": null,
+    "pay_label": "ОПЛАТИТЬ"
+  },
+  "detail_rows": {
+    "layout": "row"
+  },
+  "payment_list": {
+    "layout": "logo_grid",
+    "section_title": "Способы оплаты",
+    "selection": "radio_outline",
+    "methods": [
+      {
+        "id": "ozon",
+        "label": "Ozon Банк",
+        "caption": null,
+        "logo": "slot",
+        "logo_src": null
+      },
+      {
+        "id": "sbp",
+        "label": "СБП",
+        "caption": null,
+        "logo": "none",
+        "logo_src": "/tenants/ewa/pay-sbp.png"
+      },
+      {
+        "id": "card",
+        "label": "Банковской картой",
+        "caption": null,
+        "logo": "none",
+        "logo_src": "/tenants/ewa/pay-cart.png"
+      },
+      {
+        "id": "podeli",
+        "label": "Подели",
+        "caption": null,
+        "logo": "none",
+        "logo_src": "/tenants/ewa/pay-podeli.png"
+      },
+      {
+        "id": "robokassa",
+        "label": "Robokassa",
+        "caption": null,
+        "logo": "none",
+        "logo_src": "/tenants/ewa/pay-robokassa.png"
+      }
+    ],
+    "default_selected": null
+  },
+  "ozon": {
+    "label": "Ozon Банк",
+    "position": 1,
+    "adopts_tenant_theme": true,
+    "handoff": "overlay",
+    "phone_gate": {
+      "enabled": true,
+      "not_client_number": "0000000000",
+      "check_ms": 700
+    }
+  },
+  "content": {
+    "title": "Доставка",
+    "back_link": null,
+    "segments": null,
+    "rows": [],
+    "header_logo": "/tenants/ewa/carrier-ewa.svg",
+    "intl_toggle": {
+      "label": "Международная доставка из России",
+      "default_on": false
+    },
+    "city_field": {
+      "label": "Введите город",
+      "value": "Тюмень,",
+      "placeholder": "Тюменская Область",
+      "presentation": "underline"
+    },
+    "carriers": {
+      "title": "Способ получения",
+      "modes": {
+        "items": [
+          {
+            "id": "pickup",
+            "label": "Пункт выдачи"
+          },
+          {
+            "id": "courier",
+            "label": "Курьер"
+          }
+        ],
+        "active": "pickup"
+      },
+      "items": [
+        {
+          "id": "ewa",
+          "label": "Пункт выдачи EWA",
+          "logo": "/tenants/ewa/carrier-ewa.svg",
+          "eta": "Пункт выдачи",
+          "price": "бесплатно",
+          "free": true
+        },
+        {
+          "id": "yandex",
+          "label": "Яндекс Доставка",
+          "logo": "/tenants/ewa/carrier-yandex-delivery-ru.svg",
+          "eta": "От 13 дней",
+          "price": "199 ₽",
+          "free": false
+        },
+        {
+          "id": "cdek",
+          "label": "СДЭК",
+          "logo": "/tenants/ewa/carrier-cdek.svg",
+          "eta": "От 4 дней",
+          "price": "342 ₽",
+          "free": false
+        },
+        {
+          "id": "ru-post",
+          "label": "Почта России",
+          "logo": "/tenants/ewa/carrier-ru-post.svg",
+          "eta": "От 4 дней",
+          "price": "349 ₽",
+          "free": false
+        },
+        {
+          "id": "dpd",
+          "label": "DPD",
+          "logo": "/tenants/ewa/carrier-dpd.svg",
+          "eta": "От 4 дней",
+          "price": "227 ₽",
+          "free": false
+        },
+        {
+          "id": "5post",
+          "label": "5Post",
+          "logo": "/tenants/ewa/carrier-5post.svg",
+          "eta": "От 5 дней",
+          "price": "347 ₽",
+          "free": false
+        }
+      ],
+      "selected": "ewa"
+    },
+    "pickup_point": {
+      "title": "Пункт выдачи EWA",
+      "address_label": "Адрес:",
+      "address": "Россия, 625026, Тюменская Область, Тюмень, 50 лет ВЛКСМ, 63, ТЦ Премьер, этаж 3,",
+      "hours_label": "Часы работы:",
+      "hours": [
+        "ВТ-ПТ: 11:00-19:00",
+        "СБ: 11:00-18:00",
+        "ПН, ВС: Выходной"
+      ]
+    },
+    "free_delivery": {
+      "label": "До бесплатной доставки еще 1 640 ₽",
+      "hint": "Подробные условия доставки",
+      "progress_pct": 73
+    },
+    "recipient": {
+      "title": "Данные получателя",
+      "lines": [
+        "Иванова Мария",
+        "+7 999 123-45-67",
+        "maria@example.com"
+      ]
+    },
+    "upsell": {
+      "title": "Возьмите пакет",
+      "caption": "для удобства получения заказа",
+      "items": [
+        {
+          "id": "bag-l",
+          "image": "/tenants/ewa/bag-35.png",
+          "image_alt": "Пакет крафтовый большой",
+          "title": "Пакет крафтовый (большой)",
+          "caption": "Размеры: 350×150×400 мм",
+          "price": "29 ₽",
+          "cta_label": "В корзину"
+        },
+        {
+          "id": "bag-s",
+          "image": "/tenants/ewa/bag-36.png",
+          "image_alt": "Пакет крафтовый малый",
+          "title": "Пакет крафтовый (малый)",
+          "caption": "Размеры: 280×240×140 мм",
+          "price": "19 ₽",
+          "cta_label": "В корзину"
+        }
+      ]
+    },
+    "referral": {
+      "title": "Реферальная покупка",
+      "field_label": "ID бизнес-партнёра",
+      "value": "4353425345345345"
+    },
+    "items_title": null,
+    "items_title_compact": null,
+    "line_items": [],
+    "totals": {
+      "sum": 436000,
+      "discount": 0,
+      "currency": "RUB"
+    },
+    "return_label": "Вернуться к заказу",
+    "paid_title": "Заказ оплачен",
+    "payment_purpose": "Оплата заказа",
+    "payment_category": "Покупки",
+    "summary_detail": "Пункт выдачи, 4 позиции"
+  }
+}

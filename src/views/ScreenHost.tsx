@@ -14,6 +14,8 @@ import { BankPaymentScreen } from "./BankPaymentScreen";
 import { BankSplashScreen } from "./BankSplashScreen";
 import { BankSuccessScreen } from "./BankSuccessScreen";
 import { BonusCheckoutScreen } from "./BonusCheckoutScreen";
+import { CarrierDeliveryScreen } from "./CarrierDeliveryScreen";
+import { CarrierPaymentScreen } from "./CarrierPaymentScreen";
 import { PickupCheckoutScreen } from "./PickupCheckoutScreen";
 import { CartCheckoutScreen } from "./CartCheckoutScreen";
 import { SlotDeliveryScreen } from "./SlotDeliveryScreen";
@@ -186,6 +188,18 @@ export function ScreenHost({ theme, forcedState, showHandoff, initialStage }: Pr
   // ── Шаг 1: главная кнопка экрана подрядчика ────────────────────────
   const handleCta = useCallback(() => {
     if (ctaState === "loading" || phoneChecking) return;
+
+    /*
+     * Двухшаговый чекаут донора EWA: с экрана доставки кнопка «Оформить
+     * заказ» НИЧЕГО не оплачивает — она ведёт на его страницу оплаты, где
+     * стоит сетка способов и живёт проверка телефона. Ветка стоит первой:
+     * на экране доставки способ оплаты не выбран в принципе, и без неё
+     * кнопка упала бы в ветку «gate выключен» и увела бы прямо в push.
+     */
+    if (tenant.archetype === "carrier_delivery" && stage === "contractor") {
+      setStage("ozon_rail");
+      return;
+    }
 
     // Ветка проверки телефона: активна, только когда выбран «Ozon Банк»
     // и gate включён. Поле НЕ является источником disabled — кнопка живая.
@@ -396,22 +410,41 @@ export function ScreenHost({ theme, forcedState, showHandoff, initialStage }: Pr
     slot_delivery: SlotDeliveryScreen,
     bonus_checkout: BonusCheckoutScreen,
     pickup_checkout: PickupCheckoutScreen,
+    carrier_delivery: CarrierDeliveryScreen,
   };
   const ContractorScreen = CONTRACTOR_SCREENS[tenant.archetype];
   const contractorScreen = <ContractorScreen {...screenProps} />;
 
   // Отдельный экран «Оплата через Ozon Банк» — только архетип B.
-  const railScreen = (
-    <OzonRailScreen
-      tenant={tenant}
-      ctaState={screenProps.ctaState}
-      ctaLoadingLabel={ctaLoadingLabel}
-      ctaSentLabel={ctaSentLabel}
-      onCta={handleCta}
-      onBack={handleOzonRailBack}
-      phoneGate={phoneGateSlot}
-    />
-  );
+  const railScreen =
+    tenant.archetype === "carrier_delivery" ? (
+      /*
+       * У этого донора оплата — ОТДЕЛЬНАЯ СТРАНИЦА чекаута, а не экран одного
+       * способа: стадия `ozon_rail` несёт его собственную сетку выбора, куда
+       * «Ozon Банк» встаёт первой карточкой из пяти.
+       */
+      <CarrierPaymentScreen
+        tenant={tenant}
+        selectedMethod={screenProps.selectedMethod}
+        onSelectMethod={screenProps.onSelectMethod}
+        ctaState={screenProps.ctaState}
+        ctaLoadingLabel={ctaLoadingLabel}
+        ctaSentLabel={ctaSentLabel}
+        onCta={handleCta}
+        onBack={handleOzonRailBack}
+        phoneGate={phoneGateSlot}
+      />
+    ) : (
+      <OzonRailScreen
+        tenant={tenant}
+        ctaState={screenProps.ctaState}
+        ctaLoadingLabel={ctaLoadingLabel}
+        ctaSentLabel={ctaSentLabel}
+        onCta={handleCta}
+        onBack={handleOzonRailBack}
+        phoneGate={phoneGateSlot}
+      />
+    );
 
   /*
    * Пуш — НЕ отдельный экран, а слой поверх того, где пользователь стоит.
@@ -429,7 +462,9 @@ export function ScreenHost({ theme, forcedState, showHandoff, initialStage }: Pr
    * для A — экран подрядчика. Смена айдентики наступает на самом пуше.
    */
   const backdropStage: DemoStage =
-    tenant.archetype === "subscription_payment" ? "ozon_rail" : "contractor";
+    tenant.archetype === "subscription_payment" || tenant.archetype === "carrier_delivery"
+      ? "ozon_rail"
+      : "contractor";
   const pushOpen = stage === "push";
   const visualStage: DemoStage = pushOpen ? backdropStage : stage;
 

@@ -105,6 +105,13 @@ const ARCHETYPE_DEFAULTS: Record<
     paymentCategory: "Развлечения",
     summaryDetail: "Билет на событие",
   },
+  carrier_delivery: {
+    returnLabel: "Вернуться к заказу",
+    paidTitle: "Заказ оплачен",
+    paymentPurpose: "Оплата заказа",
+    paymentCategory: "Покупки",
+    summaryDetail: "Пункт выдачи, 4 позиции",
+  },
   pickup_checkout: {
     returnLabel: "Вернуться к заказу",
     paidTitle: "Заказ оплачен",

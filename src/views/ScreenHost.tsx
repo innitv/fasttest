@@ -17,6 +17,7 @@ import { BonusCheckoutScreen } from "./BonusCheckoutScreen";
 import { CarrierDeliveryScreen } from "./CarrierDeliveryScreen";
 import { CarrierPaymentScreen } from "./CarrierPaymentScreen";
 import { PickupCheckoutScreen } from "./PickupCheckoutScreen";
+import { OrderPrepayScreen } from "./OrderPrepayScreen";
 import { CartCheckoutScreen } from "./CartCheckoutScreen";
 import { SlotDeliveryScreen } from "./SlotDeliveryScreen";
 import { OrderStepsScreen } from "./OrderStepsScreen";
@@ -411,6 +412,7 @@ export function ScreenHost({ theme, forcedState, showHandoff, initialStage }: Pr
     bonus_checkout: BonusCheckoutScreen,
     pickup_checkout: PickupCheckoutScreen,
     carrier_delivery: CarrierDeliveryScreen,
+    order_prepay: OrderPrepayScreen,
   };
   const ContractorScreen = CONTRACTOR_SCREENS[tenant.archetype];
   const contractorScreen = <ContractorScreen {...screenProps} />;

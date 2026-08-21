@@ -105,26 +105,39 @@ function fontFormat(src: string): string {
 function buildFontFaceCss(tenant: TenantConfig): string | null {
   const fonts = tenant.typography.fonts;
   if (!fonts) return null;
+  type Face = NonNullable<NonNullable<TenantConfig["typography"]["fonts"]>["body"]>;
   const faces = [fonts.display, fonts.body, fonts.secondary]
-    .filter((face) => face !== null)
-    // Одна и та же гарнитура в обеих ролях описывается один раз.
-    .filter((face, index, all) => all.findIndex((f) => f!.family === face!.family) === index)
+    .filter((face): face is Face => face !== null)
+    // Одна и та же гарнитура в нескольких ролях описывается один раз.
+    .filter((face, index, all) => all.findIndex((f) => f.family === face.family) === index)
     .flatMap((face) => {
       /*
-       * Вес пишется в КАЖДОМ правиле, включая базовое.
+       * Вес объявляется ВСЕГДА, и двумя разными способами.
        *
-       * Правило без `font-weight` объявляет файл подходящим для всех весов
-       * (`font-weight: normal` по спецификации трактуется как 400, но при
-       * отсутствии других правил браузер берёт этот файл и на 700 —
-       * синтезируя жир). Пока файл был один, это давало искусственное
-       * полужирное на заголовках и бейджах.
+       * `weight_range` — дескриптор оси вариативного файла (донор Tripster).
+       * Без него `@font-face` объявляет вес `normal`, и запрошенные 725/800 в
+       * дескриптор не попадают. Замерено на InterVariable с негативным
+       * контролем (`font-weight:400`): Chromium ось активирует и без
+       * дескриптора — рендер совпал побайтово, — а WebKit, движок Safari на
+       * целевом iPhone, дорисовывает поверх настоящего начертания
+       * синтетический жир: 475.36 / 482.52 px против 452.03 / 459.19 с
+       * диапазоном.
+       *
+       * `weights` — отдельные ФАЙЛЫ начертаний (донор EWA). Правило без
+       * `font-weight` объявляет файл годным на любой вес, и 600/700 браузер
+       * синтезирует из Regular — растянутые контуры вместо настоящего
+       * полужирного. Поэтому базовое правило статичной гарнитуры несёт
+       * ровно 400, а каждый доп. файл — свой вес.
        */
+      const base = face.weight_range
+        ? `font-weight:${face.weight_range.min} ${face.weight_range.max};`
+        : "font-weight:400;";
       const rules = [
-        `@font-face{font-family:"${face!.family}";src:url("${face!.src}") format("${fontFormat(face!.src)}");font-weight:400;font-display:swap;}`,
+        `@font-face{font-family:"${face.family}";src:url("${face.src}") format("${fontFormat(face.src)}");${base}font-display:swap;}`,
       ];
-      for (const extra of face!.weights) {
+      for (const extra of face.weights) {
         rules.push(
-          `@font-face{font-family:"${face!.family}";src:url("${extra.src}") format("${fontFormat(extra.src)}");font-weight:${extra.weight};font-display:swap;}`,
+          `@font-face{font-family:"${face.family}";src:url("${extra.src}") format("${fontFormat(extra.src)}");font-weight:${extra.weight};font-display:swap;}`,
         );
       }
       return rules;
@@ -388,6 +401,10 @@ function validateSemantics(tenant: TenantConfig): Diagnostic[] {
     bonus_checkout: "plain_rows",
     pickup_checkout: "sheet_select",
     carrier_delivery: "logo_grid",
+    // `order_prepay` — второй донор со СВОЕЙ шторкой выбора оплаты: список
+    // способов у Tripster тоже уезжает в лист поверх страницы, поэтому
+    // «Ozon Банк» встаёт в готовый список подрядчика, а не в достроенный.
+    order_prepay: "sheet_select",
   };
   const expectedLayout = layoutByArchetype[tenant.archetype];
   if (tenant.payment_list.layout !== expectedLayout) {
@@ -435,15 +452,34 @@ function deriveColors(tenant: TenantConfig): DerivedColors {
   let ctaOn: string;
 
   if (on_primary !== "auto") {
+    /*
+     * Явный hex — ИЗМЕРЕННОЕ решение донора, и автоподбор его не трогает ни в
+     * одном режиме. Белый на брендовой заливке Tripster (#00BE8B) даёт 2.40:1,
+     * но именно белый текст кнопки и есть тот донор, ради которого тема
+     * снималась. Решение владельца 2026-08-19, того же рода, что опущенные до
+     * донорских радиусы и кегли: минимализм донора держится в том числе им.
+     *
+     * Локальность решения важнее удобства: ослабляется не порог для всех тем,
+     * а ОДНО поле ОДНОЙ темы. Значение "auto" (дефолт двенадцати тем из
+     * четырнадцати) продолжает корректироваться при `enforced` как раньше —
+     * тема, не назвавшая цвет, защиту не теряет.
+     *
+     * Цена решения — падение контраста ниже 4.5:1, и оно обязано быть
+     * ЗАПИСАНО: молчаливое падение хуже осознанного. Отсюда предупреждение в
+     * консоли в ОБОИХ режимах вместо прежней ошибки: ошибка при `enforced`
+     * роняла тему на экран диагностики (severity=error → TenantConfigError) и
+     * делала явный hex непригодным для основного маршрута — цвет донора жил
+     * только под `?a11y=donor_faithful`.
+     */
     ctaOn = on_primary;
     const ratio = contrastRatio(ctaFill, ctaOn);
     if (ratio < 4.5) {
       diagnostics.push({
-        code: enforced ? "E_CONTRAST_BRAND" : "W_CTA_CONTRAST",
-        severity: enforced ? "error" : "warning",
-        message: `brand.on_primary задан явно и даёт ${formatContrast(ratio)} на brand.primary`,
+        code: "W_CTA_CONTRAST_PINNED",
+        severity: "warning",
+        message: `brand.on_primary задан явно (${on_primary}) и даёт ${formatContrast(ratio)} на brand.primary ${primary} при пороге 4.5:1`,
         detail: enforced
-          ? 'Явный on_primary отключает автоподбор. Уберите его или поставьте "auto".'
+          ? 'a11y_mode=enforced: автоподбор НЕ применён — явный цвет это решение темы, а не пропуск. Вернуть коррекцию можно значением "auto".'
           : "a11y_mode=donor_faithful: значение донора сохранено.",
       });
     }
@@ -795,6 +831,61 @@ function deriveColors(tenant: TenantConfig): DerivedColors {
     }
   }
 
+  /*
+   * Цвет ссылки. Проверяется на фоне страницы тем же порогом, что обычный
+   * текст (4.5:1): у донора ссылками набраны целые абзацы и заголовок заказа,
+   * то есть это текст, а не индикатор. Роли `brand`/`accent` сюда не годятся —
+   * у донора кнопка зелёная, а ссылки синие, и совпадение цветов стёрло бы
+   * разницу между «заплатить» и «прочитать».
+   */
+  if (tenant.surface.link) {
+    const link = enforced
+      ? ensureReadableOn(tenant.surface.link, tenant.surface.background, 4.5)
+      : {
+          color: tenant.surface.link,
+          contrast: contrastRatio(tenant.surface.link, tenant.surface.background),
+          corrected: false,
+          failed: false,
+        };
+    vars["--t-link"] = link.color;
+    if (link.corrected) {
+      diagnostics.push({
+        code: "I_LINK_CONTRAST_FIXED",
+        severity: "info",
+        message: `Цвет ссылки ${shiftWordM}: ${tenant.surface.link} → ${link.color}`,
+        detail: `Донорское значение давало ${formatContrast(contrastRatio(tenant.surface.link, tenant.surface.background))} на фоне ${tenant.surface.background}; после коррекции — ${formatContrast(link.contrast)}.`,
+      });
+    } else if (!enforced && link.contrast < 4.5) {
+      diagnostics.push({
+        code: "W_LINK_CONTRAST",
+        severity: "warning",
+        message: `Ссылки: ${formatContrast(link.contrast)} при пороге 4.5:1`,
+        detail: "a11y_mode=donor_faithful: значение донора сохранено; подчёркивание остаётся вторым каналом.",
+      });
+    }
+  }
+
+  /*
+   * Плашка-памятка. Текст на ней проверяется по её собственной заливке, а не
+   * по фону страницы: кремовая подложка светлее белого по восприятию не
+   * становится, но чернило выбирается по ней — иначе на тёмной теме с той же
+   * осью текст ушёл бы в невидимое.
+   */
+  if (tenant.surface.notice) {
+    vars["--t-notice-fill"] = tenant.surface.notice.fill;
+    vars["--t-notice-marker"] = tenant.surface.notice.marker;
+    const noticeText = pickOnColor(tenant.surface.notice.fill, inks, 4.5);
+    vars["--t-notice-on"] = noticeText.on;
+    if (noticeText.failed) {
+      diagnostics.push({
+        code: "W_NOTICE_TEXT_CONTRAST",
+        severity: "warning",
+        message: `Текст на плашке-памятке ${tenant.surface.notice.fill} даёт ${formatContrast(noticeText.contrast)} при пороге 4.5:1`,
+        detail: `Лучшее из двух чернил (${inks.light} / ${inks.dark}) — ${noticeText.on}. Заливка задана явно, коррекция НЕ применена.`,
+      });
+    }
+  }
+
   // `surface.form` выводится из бренда ТОЛЬКО при явном "auto".
   // Дефолт null: подложки нет. Насильственный вывод из brand.primary —
   // анти-паттерн R5 (у донора B подложка серо-голубая при коралловом бренде).
@@ -894,6 +985,7 @@ export function buildTheme(raw: unknown): BuiltTheme {
   vars["--t-radius-control"] = radiusToCss(tenant.radius.control);
   vars["--t-radius-field"] = radiusToCss(tenant.radius.field);
   vars["--t-radius-chip"] = radiusToCss(tenant.radius.chip);
+  vars["--t-radius-sheet"] = radiusToCss(tenant.radius.sheet);
 
   // ── Плотность ──────────────────────────────────────────────────────
   vars["--t-page-padding"] = `${tenant.density.page_padding}px`;
@@ -936,6 +1028,7 @@ export function buildTheme(raw: unknown): BuiltTheme {
   vars["--t-font-price"] = `${tenant.typography.price}px`;
   vars["--t-label-weight"] = String(tenant.typography.label_weight);
   vars["--t-title-weight"] = String(tenant.typography.title_weight);
+  vars["--t-emphasis-weight"] = String(tenant.typography.emphasis_weight);
   vars["--t-cta-font-size"] = `${tenant.cta.font_size}px`;
   vars["--t-cta-font-weight"] = String(tenant.cta.font_weight);
 

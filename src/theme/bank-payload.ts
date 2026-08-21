@@ -119,6 +119,16 @@ const ARCHETYPE_DEFAULTS: Record<
     paymentCategory: "Кафе и рестораны",
     summaryDetail: "Самовывоз, 4 позиции",
   },
+  order_prepay: {
+    // Заказ у этого архетипа уже создан, и платёж — предоплата по нему:
+    // «Вернуться в магазин» врало бы дважды — магазина нет, и возвращаются
+    // к конкретному заказу.
+    returnLabel: "Вернуться к заказу",
+    paidTitle: "Заказ оплачен",
+    paymentPurpose: "Предоплата заказа",
+    paymentCategory: "Путешествия",
+    summaryDetail: "Предоплата по заказу",
+  },
 };
 
 function pick(value: string | null, fallback: string): string {

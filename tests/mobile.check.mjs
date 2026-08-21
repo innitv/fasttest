@@ -817,37 +817,54 @@ const DESK_GREY = [230, 231, 234];
  * номера телефона.
  */
 {
+  /*
+   * Третий элемент — сколько полей на маршруте ОЖИДАЕТСЯ увидеть: `true`
+   * (есть) или `false` (у темы полей нет по устройству). Проверяется в обе
+   * стороны, и это не педантизм: фильтр «кегль < 16» на пустом наборе даёт
+   * пустой результат, поэтому маршрут, где поле не раскрылось, рапортовал
+   * «все поля ≥ 16px», не посмотрев ни одного. Так и было у `/padlhub` —
+   * запись в списке была, проверки не было.
+   */
   const ROUTES = [
-    ["/flowwow", "ozon"],
-    ["/voroh", "ozon"],
-    ["/monochrome", "ozon"],
-    ["/padlhub", null],
+    ["/flowwow", "ozon", true],
+    ["/voroh", "ozon", true],
+    ["/monochrome", "ozon", true],
+    // У ПАДЛ ХАБа проверки клиентства нет вовсе (`ozon.phone_gate` не задан),
+    // и полей на экране не появляется ни в одном состоянии. Маршрут оставлен
+    // в списке с ожиданием «полей нет»: если поле здесь заведётся, проверка
+    // об этом скажет, а не промолчит.
+    ["/padlhub", null, false],
     // У RML способы оплаты живут в шторке, а не на экране: у донора выбора
     // оплаты нет вовсе. Кликать по строке метода до её открытия нечем,
     // поэтому состояние задаётся адресом.
-    ["/rml?state=phone_expanded", null],
+    ["/rml?state=phone_expanded", null, true],
     // У «Хваловских вод» способы оплаты спрятаны в выпадающий список, и
     // строка «Ozon Банк» появляется только после его открытия — проще
     // задать состояние адресом, как у RML.
-    ["/hval?state=phone_expanded", null],
+    ["/hval?state=phone_expanded", null, true],
     // У Bombbar под правило попадает не только телефон: в карточке
     // комментария стоит textarea, и её кегль задаётся отдельно от полей.
-    ["/bombbar", "ozon"],
+    ["/bombbar", "ozon", true],
     // У MYBOX выбор оплаты двухшаговый: строка открывает нижнюю шторку, и
     // «Ozon Банк» выбирается уже в ней. Кликать по строке метода до этого
     // нечем — состояние задаётся адресом, как у RML и «Хваловских вод».
     // Под правило кегля здесь попадает и textarea комментария.
-    ["/mybox?state=phone_expanded", null],
+    ["/mybox?state=phone_expanded", null, true],
     // У EWA чекаут двухшаговый: на экране доставки полей ввода нет вовсе
     // (город у донора — статичная строка), поле телефона живёт на его
     // СТРАНИЦЕ ОПЛАТЫ. Поэтому маршрут задаёт и стадию, и состояние: без
     // `stage=ozon_rail` проверка нашла бы ноль полей и прошла вхолостую.
-    ["/ewa?stage=ozon_rail&state=phone_expanded", null],
+    ["/ewa?stage=ozon_rail&state=phone_expanded", null, true],
+    // У Tripster полей на экране нет вовсе: заказ уже создан, и единственное
+    // поле демо — проверка клиентства — появляется внутри карты оплаты после
+    // выбора «Ozon Банк» в шторке. Шторка открывается кнопкой, поэтому
+    // состояние задаётся адресом, как у RML, «Хваловских вод» и MYBOX.
+    ["/tripster?state=phone_expanded", null, true],
   ];
   const rows = [];
   let ok = true;
 
-  for (const [route, expandOzon] of ROUTES) {
+  for (const [route, expandOzon, expectFields] of ROUTES) {
     const context = await browser.newContext({ ...PHONE });
     const page = await context.newPage();
     await page.goto(`${BASE}${route}`, { waitUntil: "networkidle" });
@@ -865,7 +882,7 @@ const DESK_GREY = [230, 231, 234];
       }
       await page.waitForTimeout(250);
     }
-    const small = await page.evaluate(() =>
+    const fields = await page.evaluate(() =>
       [...document.querySelectorAll("input, textarea, select")]
         .filter((el) => {
           const r = el.getBoundingClientRect();
@@ -874,22 +891,36 @@ const DESK_GREY = [230, 231, 234];
         .map((el) => ({
           id: el.dataset.testid ?? el.getAttribute("name") ?? el.type,
           size: Math.round(parseFloat(getComputedStyle(el).fontSize) * 100) / 100,
-        }))
-        .filter((item) => item.size < 16),
+        })),
     );
+    const small = fields.filter((item) => item.size < 16);
     await context.close();
 
-    if (small.length > 0) ok = false;
+    // Расхождение с ожиданием — провал в ОБЕ стороны: маршрут без полей там,
+    // где они заявлены, ничего не проверил; поле там, где их не ждали, —
+    // признак, что список устарел.
+    const countMismatch = expectFields !== (fields.length > 0);
+    if (countMismatch || small.length > 0) ok = false;
     rows.push(
       `${route}: ${
-        small.length === 0
-          ? "все поля ≥ 16px"
-          : small.map((s) => `${s.id}=${s.size}px`).join(", ")
+        countMismatch
+          ? expectFields
+            ? "ПОЛЕЙ НЕТ — проверять нечего, состояние в адресе не раскрыло поле"
+            : `появились поля (${fields.length} шт.), хотя маршрут заявлен без них`
+          : small.length === 0
+            ? expectFields
+              ? `все поля ≥ 16px (${fields.length} шт.)`
+              : "полей нет — как и заявлено"
+            : small.map((s) => `${s.id}=${s.size}px`).join(", ")
       }`,
     );
   }
 
-  record("9. Кегль полей ввода ≥ 16px — iOS не зумит страницу при фокусе", ok, rows.join(" | "));
+  record(
+    "9. Кегль полей ввода ≥ 16px на каждом маршруте, и поля там действительно есть",
+    ok,
+    rows.join(" | "),
+  );
 }
 
 await browser.close();

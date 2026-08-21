@@ -9,6 +9,7 @@ import rml from "../../tenants/rml.json";
 import hval from "../../tenants/hval.json";
 import bombbar from "../../tenants/bombbar.json";
 import mybox from "../../tenants/mybox.json";
+import tripster from "../../tenants/tripster.json";
 import ewa from "../../tenants/ewa.json";
 
 import { buildTheme, TenantConfigError, type BuiltTheme, type Diagnostic } from "./build-theme";
@@ -37,6 +38,7 @@ export const BUNDLED_TENANTS: Record<string, unknown> = {
   hval,
   bombbar,
   mybox,
+  tripster,
   ewa,
 };
 

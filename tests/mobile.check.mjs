@@ -828,6 +828,13 @@ const DESK_GREY = [230, 231, 234];
   const ROUTES = [
     ["/flowwow", "ozon", true],
     ["/voroh", "ozon", true],
+    // Внесены 2026-08-21 после того, как сверка с PATH_ROUTES показала их
+    // отсутствие. Ожидания сняты замером в профиле 390×844, а не выведены из
+    // схемы: у `/voroh-light` те же пять полей, что у `/voroh`, у `/uchi` —
+    // поле телефона после выбора «Ozon Банк», у `/yes-atlas` полей нет вовсе.
+    ["/voroh-light", "ozon", true],
+    ["/uchi", "ozon", true],
+    ["/yes-atlas", null, false],
     ["/monochrome", "ozon", true],
     // У ПАДЛ ХАБа проверки клиентства нет вовсе (`ozon.phone_gate` не задан),
     // и полей на экране не появляется ни в одном состоянии. Маршрут оставлен
@@ -863,6 +870,32 @@ const DESK_GREY = [230, 231, 234];
   ];
   const rows = [];
   let ok = true;
+
+  /*
+   * 🔴 Перечень выше не обходит темы сам: маршрут, не внесённый в него, зелен,
+   * потому что не проверялся. На 2026-08-21 так выпали ТРИ темы из тринадцати —
+   * `/uchi` (одно поле), `/voroh-light` (пять полей, ровно как у `/voroh`,
+   * который в списке) и `/yes-atlas` (полей нет, но и записи об этом нет).
+   * Дефекта в них не было; не было сторожа.
+   *
+   * Поэтому список сверяется с источником правды — `PATH_ROUTES` в `App.tsx`.
+   * Не выводится из него, а сверяется: ожидание «есть поля или нет» остаётся
+   * осознанным решением человека, но забыть тему нельзя. Импортировать
+   * константу нечем — тест на `.mjs`, а `App.tsx` компилируется TypeScript,
+   * поэтому пути читаются разбором исходника.
+   */
+  const appSource = readFileSync(path.join(here, "..", "src", "App.tsx"), "utf8");
+  const shipped = [...appSource.matchAll(/"(\/[a-z0-9-]+)":\s*\{\s*tenant:/g)].map((m) => m[1]);
+  const covered = new Set(ROUTES.map(([route]) => route.split("?")[0]));
+  const uncovered = shipped.filter((route) => !covered.has(route));
+
+  if (uncovered.length > 0) {
+    ok = false;
+    rows.push(
+      `НЕ В СПИСКЕ: ${uncovered.join(", ")} — тема заведена в PATH_ROUTES, но кегль её полей ` +
+        "никто не проверяет; внеси маршрут с ожиданием (true/false)",
+    );
+  }
 
   for (const [route, expandOzon, expectFields] of ROUTES) {
     const context = await browser.newContext({ ...PHONE });

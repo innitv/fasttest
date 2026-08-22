@@ -68,6 +68,7 @@
 ```bash
 yarn build          # tsc --noEmit + vite build
 yarn check:theme    # граница темы, сервер не нужен
+yarn check:docs     # нумерация диагнозов и ссылки на них, сервер не нужен
 yarn preview        # в отдельном окне, затем:
 yarn verify         # 24 приёмочные проверки в браузере
 yarn check:mobile   # 9 проверок в профиле iPhone с тач-жестами

@@ -12,7 +12,8 @@
     "tenant:diff": "node tests/tenant-diff.mjs",
     "verify": "node tests/verify.mjs",
     "check:mobile": "node tests/mobile.check.mjs",
-    "check:theme": "node tests/theme-boundary.check.mjs"
+    "check:theme": "node tests/theme-boundary.check.mjs",
+    "check:docs": "node tests/docs.check.mjs"
   },
   "dependencies": {
     "framer-motion": "12.40.0",

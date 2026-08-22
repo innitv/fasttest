@@ -1357,6 +1357,124 @@ for (const [name, query] of [
   });
 }
 
+/*
+ * ─── ВЕС, КОТОРЫЙ ПРОСИТ ЭКРАН, ОБЯЗАН БЫТЬ ЗАГРУЖЕН ───────────────────────
+ *
+ * Если элемент просит `font-weight: 600`, а такого начертания в загруженных
+ * нет, браузер НЕ падает и не предупреждает: он берёт ближайшее и растягивает
+ * контуры — синтетический полужирный. Отличить это по коду нельзя.
+ *
+ * Ретро 2026-08-21: три захода владельца подряд были об одном предмете —
+ * шрифте, и один из слоёв ровно этот. Проверка «шрифт подключён» отвечала
+ * утвердительно на всех трёх: статус `loaded`, имя в `font-family` верное,
+ * `document.fonts.check` возвращает true.
+ *
+ * 🔴 Проверяется РЕЗУЛЬТАТ, а не намерение. Первая версия сверяла список
+ * объявленных в теме весов со списком загруженных — и падала на здоровом коде
+ * дважды: неиспользуемое начертание браузер не грузит вовсе (ленивая
+ * загрузка), а у вариативного файла вес записан диапазоном `100 900`, а не
+ * числом. Поэтому берутся веса, которые страница РЕАЛЬНО просит у своих узлов,
+ * и для каждого ищется покрывающее его загруженное начертание.
+ *
+ * Что гарнитура совпадает с донорской, машина проверить не может — эталон
+ * живёт в интернете; это остаётся за процедурой замера
+ * (`/ui-craft:reference-check` §3.4.3).
+ */
+{
+  const appSource = readFileSync(path.resolve(projectRoot, "src/App.tsx"), "utf8");
+  const routesBlock = appSource.split("const PATH_ROUTES")[1]?.split("};")[0] ?? "";
+  const routes = [...routesBlock.matchAll(/"(\/[a-z0-9-]+)":\s*\{\s*tenant:\s*"([a-z0-9-]+)"/g)]
+    .map((m) => [m[1], m[2]]);
+
+  const rows = [];
+  let ok = true;
+
+  for (const [route, tenant] of routes) {
+    const theme = JSON.parse(readFileSync(tenantPath(tenant), "utf8"));
+    const fonts = theme.typography?.fonts ?? null;
+    if (!fonts) continue;
+
+    // Семейства, которые тема привозит файлами. Системный стек не проверяем:
+    // у него начертания есть по определению.
+    const families = new Set(
+      ["display", "body", "secondary"].map((role) => fonts[role]?.family).filter(Boolean),
+    );
+    if (families.size === 0) continue;
+
+    const data = await withPage(392, `${BASE}${route}`, async (page) => {
+      await page.waitForSelector('[data-testid="phone-frame"]', { timeout: 4000 }).catch(() => {});
+      await page.evaluate(() => document.fonts.ready);
+      return page.evaluate(() => {
+        const used = new Set();
+        for (const el of document.querySelectorAll("*")) {
+          if (el.children.length > 0) continue;
+          if (!el.textContent || !el.textContent.trim()) continue;
+          const cs = getComputedStyle(el);
+          const family = cs.fontFamily.split(",")[0].replace(/["']/g, "").trim();
+          used.add(`${family}::${cs.fontWeight}`);
+        }
+        return {
+          used: [...used],
+          faces: [...document.fonts].map((f) => ({
+            family: f.family,
+            weight: f.weight,
+            status: f.status,
+          })),
+        };
+      });
+    });
+
+    /*
+     * Точная граница дефекта. Подбор ближайшего начертания — это НОРМА CSS:
+     * при запросе 600 браузер возьмёт загруженный 700, при запросе 500 —
+     * загруженный 400, и нарисует настоящие контуры. Синтетический жир
+     * включается, когда полужирного нет ВОВСЕ: запрошено 600 и выше, а
+     * максимум среди загруженных легче. Именно так и выглядел дефект, ради
+     * которого проверка заведена: тема просила 600 и 700, имея один файл 400.
+     *
+     * Проверять точное совпадение веса нельзя — на здоровом коде это даёт
+     * ложные падения (проверено: /ewa на 600 при наличии 700, /rml на 300).
+     */
+    const BOLD = 600;
+    const maxLoaded = (family) =>
+      Math.max(
+        0,
+        ...data.faces
+          .filter((f) => f.family === family && f.status === "loaded")
+          .flatMap((f) => String(f.weight).trim().split(/\s+/).map(Number))
+          .filter(Number.isFinite),
+      );
+
+    const synthetic = [];
+    for (const entry of data.used) {
+      const [family, weightRaw] = entry.split("::");
+      if (!families.has(family)) continue;
+      const weight = Number(weightRaw);
+      if (!Number.isFinite(weight) || weight < BOLD) continue;
+      const available = maxLoaded(family);
+      if (available < BOLD) {
+        synthetic.push(`${family} ${weight} (загружен максимум ${available || "ничего"})`);
+      }
+    }
+
+    if (synthetic.length > 0) {
+      ok = false;
+      rows.push(
+        `${route}: экран просит ${synthetic.join(", ")}, а такого начертания не загружено — ` +
+          "браузер рисует его синтетикой",
+      );
+    } else {
+      rows.push(`${route}: запрошенные веса покрыты загруженными начертаниями`);
+    }
+  }
+
+  record(
+    "Вес, который просит экран, загружен, а не синтезируется браузером",
+    ok,
+    rows.length > 0 ? rows.join(" | ") : "ни одна тема не привозит гарнитуры файлами",
+  );
+}
+
 record(
   "6. Скриншоты сняты",
   true,

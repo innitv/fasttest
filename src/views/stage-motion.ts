@@ -122,6 +122,16 @@ export const PUSH_BANNER_OUT_SPEC: Transition = { duration: 0.2, ease: "easeIn" 
 export const PUSH_BANNER_OUT_MS = 200;
 
 /**
+ * Нажатие (просадка `scale` под пальцем). Без явной спеки Motion берёт свою
+ * пружину по умолчанию — единственное движение демо, шкалой не заданное.
+ * Длительность читается из `--k-motion-fast`, чтобы отклик контрола в JS и в
+ * CSS был один и тот же.
+ */
+export function tapPressSpec(): Transition {
+  return { duration: motionMs("fast") / 1000, ease: "easeOut" };
+}
+
+/**
  * Длительность из CSS-шкалы `--k-motion-*` в миллисекундах.
  *
  * Нужна там, где CSS-переход надо дождаться в JS (`HandoffOverlay`). Читаем

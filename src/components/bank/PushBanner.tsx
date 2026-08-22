@@ -7,6 +7,7 @@ import {
   PUSH_BANNER_IN_SPEC,
   PUSH_BANNER_OUT_MS,
   PUSH_BANNER_OUT_SPEC,
+  tapPressSpec,
 } from "@demo/views/stage-motion";
 import { BankAppIcon } from "./BankWordmark";
 
@@ -82,7 +83,9 @@ export function PushBanner({ merchant, amount, onOpen, onDismiss }: Props) {
         initial={{ y: "-170%", opacity: 0 }}
         animate={{ y: leaving ? "-170%" : 0, opacity: leaving ? 0 : 1 }}
         transition={leaving ? PUSH_BANNER_OUT_SPEC : PUSH_BANNER_IN_SPEC}
-        whileTap={{ scale: 0.98 }}
+        // Просадка под пальцем — той же длительности, что отклик контролов в
+        // CSS (`--k-motion-fast`), а не дефолтной пружиной Motion.
+        whileTap={{ scale: 0.98, transition: tapPressSpec() }}
         onClick={() => {
           // После свайпа браузер всё равно шлёт click — открывать банк по
           // жесту, который означал «убрать», нельзя.

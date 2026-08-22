@@ -74,7 +74,7 @@ export function HandoffOverlay({ onBack, onSettled }: Props) {
         fontFamily: "var(--h-font)",
         paddingInline: "24px",
         transform: settled ? "translateY(0)" : "translateY(100%)",
-        transition: "transform var(--k-motion-overlay) var(--k-ease-overlay)",
+        transition: "transform var(--k-motion-overlay) var(--k-ease-ios)",
       }}
     >
       <span aria-live="assertive" className="sr-only" style={{ position: "absolute", width: 1, height: 1, overflow: "hidden", clip: "rect(0 0 0 0)" }}>

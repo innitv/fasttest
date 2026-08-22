@@ -140,12 +140,13 @@ export function PhoneGateBlock({
       aria-hidden={expanded ? undefined : true}
       aria-busy={checking || undefined}
       style={{
-        // Анимация высоты 200 мс раскрытие / 160 мс сворачивание. При
-        // prefers-reduced-motion глобальное правило styles.css делает её
-        // мгновенной — движение убрано, но блок и его длительности живут.
+        // Раскрытие — из ОБЩЕГО слоя (`--k-motion-medium` + кривая демо), а
+        // не свои 200/160 мс по месту: движение задаёт шкала, а не компонент.
+        // При prefers-reduced-motion глобальное правило styles.css делает
+        // смену мгновенной — движение убрано, блок и его высота живут.
         height: expanded ? "108px" : "0px",
         overflow: "hidden",
-        transition: `height ${expanded ? 200 : 160}ms ease-in-out`,
+        transition: "height var(--k-motion-medium) var(--k-ease-ios)",
       }}
     >
       <div style={{ paddingTop: "12px" }}>

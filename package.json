@@ -10,9 +10,12 @@
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview --host 127.0.0.1 --port 4319",
     "tenant:diff": "node tests/tenant-diff.mjs",
+    "motion:trace": "node tools/motion-trace.mjs",
+    "donor:snap": "node tools/donor-snap.mjs",
     "verify": "node tests/verify.mjs",
     "check:mobile": "node tests/mobile.check.mjs",
     "check:theme": "node tests/theme-boundary.check.mjs",
+    "check:motion": "node tests/motion.check.mjs",
     "check:docs": "node tests/docs.check.mjs",
     "check:registry": "node tests/registry.check.mjs"
   },

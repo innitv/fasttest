@@ -1475,6 +1475,68 @@ for (const [name, query] of [
   );
 }
 
+/*
+ * ─── ЛИСТ ШТОРКИ НЕ НАСЛЕДУЕТ ПРОЗРАЧНОСТЬ ЗАТЕМНЕНИЯ ─────────────────────
+ *
+ * `opacity` — наследуемый эффект: потомок не может быть непрозрачнее
+ * родителя. Пока затемнение идёт от 0 к 1, вложенный в него лист умножается
+ * на ту же величину и просвечивает — сквозь белую шторку читается экран под
+ * ней. Диагноз — `FIXES.md`, баг 17.
+ *
+ * Дефект жил в коде долго и был почти незаметен, пока затемнение шло 0.18-0.32 с;
+ * подтяжка темпа к системному (0.44 с) растянула полупрозрачную фазу до
+ * полусекунды. То есть тайминг его не создал, а проявил — и создаст снова,
+ * если кто-то вернёт лист внутрь затемнения.
+ *
+ * Меряется не `opacity` листа (она и во вложенном случае равна 1), а
+ * ПРОИЗВЕДЕНИЕ по всей цепочке предков — фактическая непрозрачность на экране.
+ *
+ * 🔴 Негативный контроль механизма: тем же замером, но с листом, программно
+ * перенесённым внутрь затемнения (`scrim.appendChild(panel)`), метрика падает
+ * до 0.00 и проверка краснеет — фактический вывод в коммите, которым она
+ * заведена.
+ */
+{
+  const SHEETS = [
+    ["/tripster", '[data-testid="primary-cta"]'],
+    ["/mybox", '[data-testid="payment-sheet-trigger"]'],
+  ];
+
+  const rows = [];
+  let ok = true;
+
+  for (const [route, trigger] of SHEETS) {
+    await withPage(390, `${BASE}${route}`, async (page) => {
+      await page.click(trigger);
+      const worst = await page.evaluate(async () => {
+        let min = 1;
+        const t0 = performance.now();
+        while (performance.now() - t0 < 700) {
+          const panel = document.querySelector('[role="dialog"][aria-modal="true"]');
+          if (panel) {
+            let eff = 1;
+            for (let n = panel; n && n !== document.body; n = n.parentElement) {
+              eff *= Number(getComputedStyle(n).opacity);
+            }
+            min = Math.min(min, eff);
+          }
+          await new Promise((r) => requestAnimationFrame(r));
+        }
+        return min;
+      });
+
+      if (worst < 0.99) {
+        ok = false;
+        rows.push(`${route}: лист просвечивает, минимум ${worst.toFixed(2)} — он внутри затемнения`);
+      } else {
+        rows.push(`${route}: лист непрозрачен всю анимацию (минимум ${worst.toFixed(2)})`);
+      }
+    });
+  }
+
+  record("Лист шторки не наследует прозрачность затемнения", ok, rows.join(" | "));
+}
+
 record(
   "6. Скриншоты сняты",
   true,

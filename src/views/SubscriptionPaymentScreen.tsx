@@ -127,7 +127,7 @@ export function SubscriptionPaymentScreen({
             marginTop: "8px",
             marginBottom: "16px",
             fontSize: "var(--t-font-h1)",
-            fontWeight: "var(--t-title-weight)" as unknown as number,
+            fontWeight: "var(--t-title-weight)",
             textAlign: "left",
             color: "var(--t-text-primary)",
             lineHeight: 1.2,
@@ -275,7 +275,7 @@ export function SubscriptionPaymentScreen({
                   margin: 0,
                   marginBottom: "0px",
                   fontSize: "var(--t-font-section-title)",
-                  fontWeight: "var(--t-title-weight)" as unknown as number,
+                  fontWeight: "var(--t-title-weight)",
                   color: "var(--t-text-primary)",
                 }}
               >

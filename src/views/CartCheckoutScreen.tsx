@@ -187,7 +187,7 @@ export function CartCheckoutScreen({
                 paddingInline: "var(--t-page-padding)",
                 paddingBottom: "12px",
                 fontSize: "var(--t-font-section-title)",
-                fontWeight: "var(--t-title-weight)" as unknown as number,
+                fontWeight: "var(--t-title-weight)",
                 color: "var(--t-text-primary)",
               }}
             >

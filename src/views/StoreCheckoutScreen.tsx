@@ -83,7 +83,7 @@ export function StoreCheckoutScreen({
             style={{
               margin: 0,
               fontSize: "var(--t-font-h1)",
-              fontWeight: "var(--t-title-weight)" as unknown as number,
+              fontWeight: "var(--t-title-weight)",
               color: "var(--t-text-primary)",
               lineHeight: 1.3,
             }}
@@ -409,7 +409,7 @@ export function StoreCheckoutScreen({
                     style={{
                       fontSize: "var(--t-font-caption)",
                       fontWeight: row.emphasis
-                        ? ("var(--t-label-weight)" as unknown as number)
+                        ? "var(--t-label-weight)"
                         : 400,
                       color: row.emphasis
                         ? "var(--t-text-primary)"

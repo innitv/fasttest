@@ -51,7 +51,7 @@ export function PaidConfirmationScreen({ tenant, payload, onRestart }: Props) {
           <span
             style={{
               fontSize: "var(--t-font-body)",
-              fontWeight: "var(--t-label-weight)" as unknown as number,
+              fontWeight: "var(--t-label-weight)",
               color: "var(--t-text-primary)",
             }}
           >

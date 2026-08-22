@@ -98,7 +98,7 @@ export function BonusCheckoutScreen({
             data-testid="header-logo"
             style={{
               fontSize: "var(--t-font-section-title)",
-              fontWeight: "var(--t-title-weight)" as unknown as number,
+              fontWeight: "var(--t-title-weight)",
               color: "var(--t-text-primary)",
             }}
           >
@@ -145,7 +145,7 @@ export function BonusCheckoutScreen({
             paddingTop: "18px",
             paddingBottom: "18px",
             fontSize: "var(--t-font-h1)",
-            fontWeight: "var(--t-title-weight)" as unknown as number,
+            fontWeight: "var(--t-title-weight)",
             color: "var(--t-text-primary)",
             lineHeight: 1.2,
           }}
@@ -678,7 +678,7 @@ export function BonusCheckoutScreen({
 const sectionTitleStyle: CSSProperties = {
   margin: 0,
   fontSize: "var(--t-font-section-title)",
-  fontWeight: "var(--t-title-weight)" as unknown as number,
+  fontWeight: "var(--t-title-weight)",
   color: "var(--t-text-primary)",
 };
 

@@ -72,7 +72,7 @@ export function ScreenHeader(props: Props) {
         className="w-full truncate text-center"
         style={{
           fontSize: "var(--t-font-h1)",
-          fontWeight: "var(--t-title-weight)" as unknown as number,
+          fontWeight: "var(--t-title-weight)",
           color: "var(--t-text-primary)",
           paddingInline: "calc(var(--t-page-padding) + var(--k-tap-min))",
           margin: 0,

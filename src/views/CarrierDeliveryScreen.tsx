@@ -71,7 +71,7 @@ export function CarrierDeliveryScreen({
   const sectionTitle: CSSProperties = {
     margin: 0,
     fontSize: "var(--t-font-body)",
-    fontWeight: "var(--t-label-weight)" as unknown as number,
+    fontWeight: "var(--t-label-weight)",
     color: "var(--t-text-primary)",
     lineHeight: LINE,
   };
@@ -194,7 +194,7 @@ export function CarrierDeliveryScreen({
             paddingBottom: "22px",
             fontFamily: "var(--t-font-display)",
             fontSize: "var(--t-font-h1)",
-            fontWeight: "var(--t-title-weight)" as unknown as number,
+            fontWeight: "var(--t-title-weight)",
             textTransform: "uppercase",
             color: "var(--t-text-primary)",
             lineHeight: 1,
@@ -269,7 +269,7 @@ export function CarrierDeliveryScreen({
               <div
                 style={{
                   fontSize: "var(--t-font-body)",
-                  fontWeight: "var(--t-label-weight)" as unknown as number,
+                  fontWeight: "var(--t-label-weight)",
                   color: "var(--t-text-primary)",
                   lineHeight: LINE,
                 }}
@@ -465,14 +465,14 @@ export function CarrierDeliveryScreen({
                       lineHeight: 1.35,
                     }}
                   >
-                    <div style={{ fontWeight: "var(--t-label-weight)" as unknown as number }}>
+                    <div style={{ fontWeight: "var(--t-label-weight)" }}>
                       {content.pickup_point.address_label}
                     </div>
                     <div style={{ marginTop: "4px" }}>{content.pickup_point.address}</div>
                     <div
                       style={{
                         marginTop: "14px",
-                        fontWeight: "var(--t-label-weight)" as unknown as number,
+                        fontWeight: "var(--t-label-weight)",
                       }}
                     >
                       {content.pickup_point.hours_label}
@@ -665,7 +665,7 @@ export function CarrierDeliveryScreen({
                 style={{
                   margin: 0,
                   fontSize: "var(--t-font-section-title)",
-                  fontWeight: "var(--t-title-weight)" as unknown as number,
+                  fontWeight: "var(--t-title-weight)",
                   color: "var(--t-text-primary)",
                 }}
               >

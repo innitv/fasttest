@@ -116,7 +116,7 @@ export function PlanSheetScreen({
               style={{
                 margin: 0,
                 fontSize: "var(--t-font-h1)",
-                fontWeight: "var(--t-title-weight)" as unknown as number,
+                fontWeight: "var(--t-title-weight)",
                 color: "var(--t-text-primary)",
               }}
             >
@@ -222,7 +222,7 @@ export function PlanSheetScreen({
                     <span
                       style={{
                         fontSize: "var(--t-font-h1)",
-                        fontWeight: "var(--t-title-weight)" as unknown as number,
+                        fontWeight: "var(--t-title-weight)",
                         color: "var(--t-text-primary)",
                       }}
                     >
@@ -232,7 +232,7 @@ export function PlanSheetScreen({
                       <span
                         style={{
                           fontSize: "var(--t-font-body)",
-                          fontWeight: "var(--t-label-weight)" as unknown as number,
+                          fontWeight: "var(--t-label-weight)",
                           color: "var(--t-text-primary)",
                         }}
                       >
@@ -249,7 +249,7 @@ export function PlanSheetScreen({
                       borderTop: "var(--t-border-width) solid var(--t-surface-divider)",
                       borderBottom: "var(--t-border-width) solid var(--t-surface-divider)",
                       fontSize: "var(--t-font-price)",
-                      fontWeight: "var(--t-title-weight)" as unknown as number,
+                      fontWeight: "var(--t-title-weight)",
                       color: "var(--t-text-primary)",
                     }}
                   >
@@ -347,7 +347,7 @@ export function PlanSheetScreen({
                     style={{
                       margin: 0,
                       fontSize: "var(--t-font-section-title)",
-                      fontWeight: "var(--t-title-weight)" as unknown as number,
+                      fontWeight: "var(--t-title-weight)",
                       textTransform: "uppercase",
                       lineHeight: 1.2,
                     }}
@@ -371,7 +371,7 @@ export function PlanSheetScreen({
                   data-testid={`plan-price-${plan.id}`}
                   style={{
                     fontSize: "var(--t-font-body)",
-                    fontWeight: "var(--t-label-weight)" as unknown as number,
+                    fontWeight: "var(--t-label-weight)",
                     whiteSpace: "nowrap",
                   }}
                 >
@@ -524,7 +524,7 @@ export function PlanSheetScreen({
                     style={{
                       margin: 0,
                       fontSize: "var(--t-font-section-title)",
-                      fontWeight: "var(--t-title-weight)" as unknown as number,
+                      fontWeight: "var(--t-title-weight)",
                       color: "var(--t-text-primary)",
                       lineHeight: 1.2,
                     }}
@@ -536,7 +536,7 @@ export function PlanSheetScreen({
                   data-testid="totals-value"
                   style={{
                     fontSize: "var(--t-font-section-title)",
-                    fontWeight: "var(--t-title-weight)" as unknown as number,
+                    fontWeight: "var(--t-title-weight)",
                     color: "var(--t-text-primary)",
                     whiteSpace: "nowrap",
                   }}

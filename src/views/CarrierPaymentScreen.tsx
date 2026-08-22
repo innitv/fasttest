@@ -75,7 +75,7 @@ export function CarrierPaymentScreen({
 
   const groupTitle: CSSProperties = {
     fontSize: "var(--t-font-body)",
-    fontWeight: "var(--t-label-weight)" as unknown as number,
+    fontWeight: "var(--t-label-weight)",
     color: "var(--t-text-primary)",
     lineHeight: LINE,
   };
@@ -192,7 +192,7 @@ export function CarrierPaymentScreen({
             paddingBottom: "22px",
             fontFamily: "var(--t-font-display)",
             fontSize: "var(--t-font-h1)",
-            fontWeight: "var(--t-title-weight)" as unknown as number,
+            fontWeight: "var(--t-title-weight)",
             textTransform: "uppercase",
             color: "var(--t-text-primary)",
             lineHeight: 1,
@@ -259,7 +259,7 @@ export function CarrierPaymentScreen({
                 style={{
                   margin: 0,
                   fontSize: "var(--t-font-section-title)",
-                  fontWeight: "var(--t-title-weight)" as unknown as number,
+                  fontWeight: "var(--t-title-weight)",
                   color: "var(--t-text-primary)",
                 }}
               >

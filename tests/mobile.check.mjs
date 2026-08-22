@@ -10,7 +10,7 @@ import {
   formatRgb,
   parseRgb,
   sameColor,
-} from "./png-pixels.mjs";
+} from "./lib/png-pixels.mjs";
 
 /**
  * Мобильная приёмка демо: профиль телефона, а не узкое окно десктопа.

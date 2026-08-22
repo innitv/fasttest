@@ -84,7 +84,7 @@ export function TicketCheckoutScreen({
               padding: 0,
               color: "var(--t-brand-text-on-bg)",
               fontSize: "var(--t-font-body)",
-              fontWeight: "var(--t-label-weight)" as unknown as number,
+              fontWeight: "var(--t-label-weight)",
               cursor: "pointer",
             }}
           >
@@ -108,7 +108,7 @@ export function TicketCheckoutScreen({
             style={{
               margin: 0,
               fontSize: "var(--t-font-h1)",
-              fontWeight: "var(--t-title-weight)" as unknown as number,
+              fontWeight: "var(--t-title-weight)",
               lineHeight: 1.25,
               color: "var(--t-text-primary)",
             }}
@@ -190,7 +190,7 @@ export function TicketCheckoutScreen({
                   margin: 0,
                   paddingBottom: "12px",
                   fontSize: "var(--t-font-section-title)",
-                  fontWeight: "var(--t-title-weight)" as unknown as number,
+                  fontWeight: "var(--t-title-weight)",
                   color: "var(--t-text-primary)",
                 }}
               >
@@ -221,7 +221,7 @@ export function TicketCheckoutScreen({
                   background: "var(--t-secondary-fill, var(--t-surface-card))",
                   color: "var(--t-secondary-text, var(--t-text-primary))",
                   fontSize: "var(--t-font-body)",
-                  fontWeight: "var(--t-label-weight)" as unknown as number,
+                  fontWeight: "var(--t-label-weight)",
                   border: "none",
                   cursor: "pointer",
                 }}
@@ -242,7 +242,7 @@ export function TicketCheckoutScreen({
                 paddingInline: "var(--t-page-padding)",
                 paddingBottom: "12px",
                 fontSize: "var(--t-font-section-title)",
-                fontWeight: "var(--t-title-weight)" as unknown as number,
+                fontWeight: "var(--t-title-weight)",
                 color: "var(--t-text-primary)",
               }}
             >
@@ -302,7 +302,7 @@ export function TicketCheckoutScreen({
               <span
                 style={{
                   fontSize: "var(--t-font-section-title)",
-                  fontWeight: "var(--t-title-weight)" as unknown as number,
+                  fontWeight: "var(--t-title-weight)",
                   color: "var(--t-text-primary)",
                 }}
               >

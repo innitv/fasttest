@@ -107,7 +107,7 @@ export function OzonRailScreen({
             style={{
               margin: 0,
               fontSize: "var(--t-font-h1)",
-              fontWeight: "var(--t-title-weight)" as unknown as number,
+              fontWeight: "var(--t-title-weight)",
               textAlign: "left",
               color: "var(--t-text-primary)",
               lineHeight: 1.2,

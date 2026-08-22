@@ -106,7 +106,7 @@ export function DetailRow({
       <span
         style={{
           fontSize: "var(--t-font-body)",
-          fontWeight: "var(--t-label-weight)" as unknown as number,
+          fontWeight: "var(--t-label-weight)",
           color: "var(--t-text-primary)",
           flexShrink: 0,
           whiteSpace: "nowrap",

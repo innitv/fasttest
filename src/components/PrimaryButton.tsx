@@ -74,7 +74,7 @@ export function PrimaryButton({
         // Кегль и вес — оси темы, а не константа: у минималистичных доноров
         // кнопка набрана тем же кеглем, что заголовок секции, обычным весом.
         fontSize: "var(--t-cta-font-size)",
-        fontWeight: "var(--t-cta-font-weight)" as unknown as number,
+        fontWeight: "var(--t-cta-font-weight)",
         border: "none",
         whiteSpace: "nowrap",
         overflow: "hidden",

@@ -69,7 +69,7 @@ export function SlotDeliveryScreen({
   const sectionTitle = {
     margin: 0,
     fontSize: "var(--t-font-section-title)",
-    fontWeight: "var(--t-label-weight)" as unknown as number,
+    fontWeight: "var(--t-label-weight)",
     color: "var(--t-text-primary)",
   };
 
@@ -132,7 +132,7 @@ export function SlotDeliveryScreen({
               data-testid="header-logo"
               style={{
                 fontSize: "var(--t-font-section-title)",
-                fontWeight: "var(--t-title-weight)" as unknown as number,
+                fontWeight: "var(--t-title-weight)",
                 color: "var(--t-brand-primary)",
               }}
             >
@@ -173,7 +173,7 @@ export function SlotDeliveryScreen({
             margin: 0,
             paddingTop: "12px",
             fontSize: "var(--t-font-h1)",
-            fontWeight: "var(--t-title-weight)" as unknown as number,
+            fontWeight: "var(--t-title-weight)",
             color: "var(--t-text-primary)",
             lineHeight: 1.3,
           }}
@@ -707,7 +707,7 @@ export function SlotDeliveryScreen({
               data-testid="totals-value"
               style={{
                 fontSize: "var(--t-font-h1)",
-                fontWeight: "var(--t-title-weight)" as unknown as number,
+                fontWeight: "var(--t-title-weight)",
                 color: "var(--t-text-primary)",
                 lineHeight: 1.2,
                 whiteSpace: "nowrap",

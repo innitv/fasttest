@@ -9,7 +9,7 @@
     "dev": "vite --host 127.0.0.1",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview --host 127.0.0.1 --port 4319",
-    "tenant:diff": "node tests/tenant-diff.mjs",
+    "tenant:diff": "node tools/tenant-diff.mjs",
     "motion:trace": "node tools/motion-trace.mjs",
     "donor:snap": "node tools/donor-snap.mjs",
     "verify": "node tests/verify.mjs",

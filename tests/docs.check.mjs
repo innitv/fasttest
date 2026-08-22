@@ -14,10 +14,15 @@ import { fileURLToPath } from "node:url";
  * ссылок из кода и правил. Значит её должна сторожить машина — всё, что не
  * проверяется, дрейфует.
  *
- * Проверяется два инварианта:
+ * Проверяется три инварианта:
  *   1. номера диагнозов в `FIXES.md` уникальны и идут подряд, без пропусков;
  *   2. каждая ссылка «баг N» из `CLAUDE.md` и `README.md` ведёт на
- *      существующий номер.
+ *      существующий номер;
+ *   3. оглавление покрывает все диагнозы и не содержит несуществующих.
+ *
+ * Третий инвариант — из того же урока, что и сверка перечня маршрутов в
+ * `mobile.check.mjs`: таблица, которую пополняют руками, отстаёт молча, и
+ * оглавление без половины строк хуже отсутствующего — оно выглядит полным.
  */
 
 const here = path.dirname(fileURLToPath(import.meta.url));
@@ -53,7 +58,26 @@ if (missing.length > 0) {
   );
 }
 
-// ── 2. Ссылки на диагнозы ────────────────────────────────────────────
+// ── 2. Полнота оглавления ────────────────────────────────────────────
+const tocRows = [...fixes.matchAll(/^\| (\d+) \|/gm)].map((m) => Number(m[1]));
+const tocSet = new Set(tocRows);
+
+const notInToc = numbers.filter((n) => !tocSet.has(n));
+if (notInToc.length > 0) {
+  findings.push(
+    `FIXES.md: диагноз есть, а строки в оглавлении нет — ${notInToc.join(", ")}. ` +
+      "Оглавление ищут по симптому; пропущенный диагноз в нём не найдут.",
+  );
+}
+
+const tocOnly = tocRows.filter((n) => !seen.has(n));
+if (tocOnly.length > 0) {
+  findings.push(
+    `FIXES.md: оглавление называет диагноз, которого в файле нет — ${tocOnly.join(", ")}.`,
+  );
+}
+
+// ── 3. Ссылки на диагнозы ────────────────────────────────────────────
 for (const file of ["CLAUDE.md", "README.md"]) {
   const text = readFileSync(path.join(root, file), "utf8");
   const refs = [...text.matchAll(/баг[аи]? (\d+)/gi)].map((m) => Number(m[1]));
@@ -75,4 +99,5 @@ if (findings.length > 0) {
 
 console.log("docs: порядок");
 console.log(`  - диагнозов в FIXES.md: ${numbers.length}, номера уникальны и идут подряд`);
+console.log(`  - оглавление покрывает все ${numbers.length}`);
 console.log("  - ссылки «баг N» из CLAUDE.md и README.md ведут на существующие номера");

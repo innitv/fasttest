@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from "framer-motion";
-import { useId } from "react";
+import { Fragment, useId } from "react";
 
 import { COPY, methodAccessibleName } from "@demo/content/copy";
 import { SHEET_OVERLAY_SPEC, SHEET_SCRIM_SPEC } from "@demo/views/stage-motion";
@@ -49,34 +49,42 @@ export function PaymentAmountSheet({
   return (
     <AnimatePresence>
       {open ? (
-        <motion.div
-          key="payment-amount-sheet"
-          className="absolute inset-0 z-20 flex flex-col justify-end"
-          data-testid="payment-sheet"
-          style={{ background: "rgba(0, 0, 0, 0.6)" }}
-          /*
-           * Движение — ОБЩИЙ слой демо: подложка гаснет по `SHEET_SCRIM_SPEC`,
-           * лист выезжает снизу пружиной `SHEET_OVERLAY_SPEC` в системном
-           * темпе. Тайминги донора сюда не переносятся,
-           * `prefers-reduced-motion` обрабатывает MotionConfig в `main.tsx`.
-           */
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={SHEET_SCRIM_SPEC}
-        >
-          {/* Тап по подложке закрывает лист без выбора — так ведёт себя донор. */}
-          <button
-            type="button"
-            aria-label={COPY["a11y.sheet_close"]}
-            onClick={onClose}
-            className="flex-1"
-            style={{ background: "none", border: "none", cursor: "default" }}
-          />
+        <Fragment key="payment-amount-sheet">
+          {/*
+           * 🔴 Затемнение и лист — СОСЕДИ, а не вложенные узлы. Лист внутри
+           * затемнения наследует его `opacity`, и пока оно набирает
+           * непрозрачность, сквозь лист просвечивает экран под ним: при
+           * системном темпе (0.44 с) это добрых полсекунды полупрозрачной
+           * шторки. Диагноз — `FIXES.md`, баг 17.
+           *
+           * Движение — ОБЩИЙ слой демо: затемнение гаснет по
+           * `SHEET_SCRIM_SPEC`, лист выезжает снизу по `SHEET_OVERLAY_SPEC`.
+           * Тайминги донора сюда не переносятся, `prefers-reduced-motion`
+           * обрабатывает MotionConfig в `main.tsx`.
+           */}
+          <motion.div
+            className="absolute inset-0 z-20"
+            data-testid="payment-sheet"
+            style={{ background: "rgba(0, 0, 0, 0.6)" }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={SHEET_SCRIM_SPEC}
+          >
+            {/* Тап по подложке закрывает лист без выбора — так ведёт себя донор. */}
+            <button
+              type="button"
+              aria-label={COPY["a11y.sheet_close"]}
+              onClick={onClose}
+              className="absolute inset-0 h-full w-full"
+              style={{ background: "none", border: "none", cursor: "default" }}
+            />
+          </motion.div>
           <motion.div
             role="dialog"
             aria-modal="true"
             aria-labelledby={titleId}
+            className="absolute inset-x-0 bottom-0 z-20"
             initial={{ y: "100%" }}
             animate={{ y: 0 }}
             exit={{ y: "100%" }}
@@ -247,7 +255,7 @@ export function PaymentAmountSheet({
               })}
             </div>
           </motion.div>
-        </motion.div>
+        </Fragment>
       ) : null}
     </AnimatePresence>
   );

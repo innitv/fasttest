@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from "framer-motion";
-import { useEffect, useId, useRef, useState } from "react";
+import { Fragment, useEffect, useId, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 
 import { COPY, methodAccessibleName } from "@demo/content/copy";
@@ -141,37 +141,43 @@ export function PaymentSheetRow({
         ? createPortal(
             <AnimatePresence>
               {open ? (
-        <motion.div
-          key="payment-sheet"
-          className="absolute inset-0 z-20 flex flex-col justify-end"
-          data-testid="payment-sheet"
-          style={{ background: "rgba(0, 0, 0, 0.6)" }}
-          /*
-           * Движение — ОБЩИЙ слой демо, а не тайминги донора: подложка гаснет
-           * по `SHEET_SCRIM_SPEC`, лист выезжает снизу пружиной
-           * `SHEET_OVERLAY_SPEC` в системном темпе.
-           * `prefers-reduced-motion` обрабатывает MotionConfig в main.tsx.
-           */
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={SHEET_SCRIM_SPEC}
-        >
+        <Fragment key="payment-sheet">
           {/*
-            Подложка закрывает шторку без применения черновика — так ведёт
-            себя донор: отменённый выбор не меняет строку.
-          */}
-          <button
-            type="button"
-            aria-label={COPY["a11y.sheet_close"]}
-            onClick={() => setOpen(false)}
-            className="flex-1"
-            style={{ background: "none", border: "none", cursor: "default" }}
-          />
+           * 🔴 Затемнение и лист — СОСЕДИ, а не вложенные узлы: вложенный лист
+           * наследует `opacity` затемнения и просвечивает всё время его
+           * появления. Диагноз — `FIXES.md`, баг 17.
+           *
+           * Движение — ОБЩИЙ слой демо, а не тайминги донора: затемнение
+           * гаснет по `SHEET_SCRIM_SPEC`, лист выезжает снизу по
+           * `SHEET_OVERLAY_SPEC`. `prefers-reduced-motion` обрабатывает
+           * MotionConfig в main.tsx.
+           */}
+          <motion.div
+            className="absolute inset-0 z-20"
+            data-testid="payment-sheet"
+            style={{ background: "rgba(0, 0, 0, 0.6)" }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={SHEET_SCRIM_SPEC}
+          >
+            {/*
+              Подложка закрывает шторку без применения черновика — так ведёт
+              себя донор: отменённый выбор не меняет строку.
+            */}
+            <button
+              type="button"
+              aria-label={COPY["a11y.sheet_close"]}
+              onClick={() => setOpen(false)}
+              className="absolute inset-0 h-full w-full"
+              style={{ background: "none", border: "none", cursor: "default" }}
+            />
+          </motion.div>
           <motion.div
             role="dialog"
             aria-modal="true"
             aria-labelledby={titleId}
+            className="absolute inset-x-0 bottom-0 z-20"
             initial={{ y: "100%" }}
             animate={{ y: 0 }}
             exit={{ y: "100%" }}
@@ -289,7 +295,7 @@ export function PaymentSheetRow({
               {ctaLabel}
             </button>
           </motion.div>
-        </motion.div>
+        </Fragment>
               ) : null}
             </AnimatePresence>,
             root,

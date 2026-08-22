@@ -64,7 +64,7 @@
     "block_gap": 9,
     "row_height": 44,
     "control_height": 44,
-    "method_button_height": 60,
+    "method_button_height": 63,
     "section_gap": 27
   },
   "component_width": {
@@ -109,7 +109,7 @@
       }
     },
     "body": 14,
-    "h1": 32,
+    "h1": 44,
     "section_title": 19,
     "caption": 12,
     "price": 19,

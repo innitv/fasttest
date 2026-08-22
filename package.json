@@ -13,7 +13,8 @@
     "verify": "node tests/verify.mjs",
     "check:mobile": "node tests/mobile.check.mjs",
     "check:theme": "node tests/theme-boundary.check.mjs",
-    "check:docs": "node tests/docs.check.mjs"
+    "check:docs": "node tests/docs.check.mjs",
+    "check:registry": "node tests/registry.check.mjs"
   },
   "dependencies": {
     "framer-motion": "12.40.0",

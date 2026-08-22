@@ -200,7 +200,7 @@
 | Экран | `ScreenHost.tsx` → `CONTRACTOR_SCREENS` | `tsc`: `Record` требует все значения enum |
 | Раскладка списка оплаты | `build-theme.ts` → `layoutByArchetype` | `tsc`: тот же `Record` |
 | Строки для экранов банка | `bank-payload.ts` → `ARCHETYPE_DEFAULTS` | `tsc`: тот же `Record` |
-| Путь подрядчика | `App.tsx` → `PATH_ROUTES` | никто — ссылка просто не заведётся |
+| Путь подрядчика | `App.tsx` → `PATH_ROUTES` | `yarn check:registry` (до 2026-08-21 не ловил никто) |
 
 Список архетипов для `?archetype=` производный от схемы (`tenantSchema.shape
 .archetype.options`) и руками не пишется: второй список расходился молча.
@@ -257,6 +257,7 @@ yarn tenant:diff <actual.json> <expected.json>
 ```bash
 yarn check:theme   # статическая проверка границы темы, сервер не нужен
 yarn check:docs    # нумерация диагнозов в FIXES.md и ссылки на них
+yarn check:registry # у каждой темы есть маршрут, архетипы сходятся
 yarn preview       # в отдельном окне
 yarn verify        # 24 приёмочные проверки в реальном браузере + скриншоты
 yarn check:mobile  # 9 проверок в профиле телефона + скриншоты

@@ -180,16 +180,30 @@
    Диагноз — `FIXES.md`, баг 9.
 
 10. **Движение НЕ снимается с донора.** У каждого донора свои тайминги, а
-    движение в демо одно: шкала `--k-motion-fast|medium|overlay` в
-    `styles.css` и iOS-кривая шитов в `src/views/stage-motion.ts`
-    (`IOS_EASE`, `SHEET_OVERLAY_SPEC`). Оверлей внутри экрана берёт
-    `SHEET_OVERLAY_SPEC`, смена состояния контрола — `--k-motion-fast`,
-    сдвиг внутри контрола — `--k-motion-medium`. Написанные по месту
-    «0.2s ease-in-out» — расхождение с демо, даже когда они списаны с
-    донора точно. `prefers-reduced-motion` при этом обрабатывается
+    движение в демо одно: шкала `--k-motion-fast|medium|overlay` +
+    `--k-ease-overlay` в `styles.css` и пружины экранов и листов в
+    `src/views/stage-motion.ts` (`SHEET_OVERLAY_SPEC`, `SHEET_SCRIM_SPEC`,
+    `PUSH_BANNER_*_SPEC`, `spec()`). Оверлей внутри экрана берёт
+    `SHEET_OVERLAY_SPEC`, его затемнение — `SHEET_SCRIM_SPEC`, смена
+    состояния контрола — `--k-motion-fast`, сдвиг внутри контрола —
+    `--k-motion-medium`. Написанные по месту «0.2s ease-in-out» —
+    расхождение с демо, даже когда они списаны с донора точно.
+
+    **Темп задаёт система, а не глаз.** Переходы описаны как пружины с
+    воспринимаемой длительностью (`visualDuration`) — той же величиной, что
+    Apple называет perceptual duration: у системных пресетов `smooth` /
+    `snappy` / `bouncy` она равна 0.5 с, и с iOS 17 `smooth`-пружина —
+    дефолт системной анимации ([docs SwiftUI][swiftui-spring], [WWDC23
+    «Explore SwiftUI animation»][wwdc23-anim]). Листы демо — 0.42–0.44, stack —
+    0.4, переходы внутри банка — 0.3. Ставить сюда 0.2–0.3 «чтобы бодрее»
+    уже пробовали: демо шло в 1.5–2 раза быстрее системы, и владелец
+    увидел это раньше замера. `prefers-reduced-motion` при этом обрабатывается
     централизованно (глобальное правило в `styles.css` и `MotionConfig
     reducedMotion="user"` в `main.tsx`) — по месту его обходить нечем и
     незачем.
+
+    [swiftui-spring]: https://developer.apple.com/documentation/swiftui/animation/spring(duration:bounce:blendduration:)
+    [wwdc23-anim]: https://developer.apple.com/videos/play/wwdc2023/10156/
 
 **Новый архетип** — это ещё три записи помимо экрана в `src/views/`, и две из
 них сторожит компилятор:
@@ -259,7 +273,7 @@ yarn check:theme   # статическая проверка границы те
 yarn check:docs    # нумерация диагнозов в FIXES.md и ссылки на них
 yarn check:registry # у каждой темы есть маршрут, архетипы сходятся
 yarn preview       # в отдельном окне
-yarn verify        # 24 приёмочные проверки в реальном браузере + скриншоты
+yarn verify        # 25 приёмочных проверок в реальном браузере + скриншоты
 yarn check:mobile  # 9 проверок в профиле телефона + скриншоты
 ```
 

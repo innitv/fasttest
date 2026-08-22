@@ -2,7 +2,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { useId } from "react";
 
 import { COPY, methodAccessibleName } from "@demo/content/copy";
-import { SHEET_OVERLAY_SPEC } from "@demo/views/stage-motion";
+import { SHEET_OVERLAY_SPEC, SHEET_SCRIM_SPEC } from "@demo/views/stage-motion";
 import type { PaymentMethod } from "@demo/theme/tenant.schema";
 
 interface Props {
@@ -55,16 +55,15 @@ export function PaymentAmountSheet({
           data-testid="payment-sheet"
           style={{ background: "rgba(0, 0, 0, 0.6)" }}
           /*
-           * Движение — ОБЩИЙ слой демо (`SHEET_OVERLAY_SPEC`): подложка
-           * проявляется прозрачностью, лист выезжает снизу по той же
-           * iOS-кривой и на те же 320 мс, что остальные оверлеи. Тайминги
-           * донора сюда не переносятся, `prefers-reduced-motion` обрабатывает
-           * MotionConfig в `main.tsx`.
+           * Движение — ОБЩИЙ слой демо: подложка гаснет по `SHEET_SCRIM_SPEC`,
+           * лист выезжает снизу пружиной `SHEET_OVERLAY_SPEC` в системном
+           * темпе. Тайминги донора сюда не переносятся,
+           * `prefers-reduced-motion` обрабатывает MotionConfig в `main.tsx`.
            */
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          transition={SHEET_OVERLAY_SPEC}
+          transition={SHEET_SCRIM_SPEC}
         >
           {/* Тап по подложке закрывает лист без выбора — так ведёт себя донор. */}
           <button

@@ -8,6 +8,7 @@ import { ChevronDown } from "@demo/components/primitives";
 import { COPY, formatMoney, resolveCtaLabel } from "@demo/content/copy";
 import { OZON_METHOD_ID, type TenantConfig } from "@demo/theme/tenant.schema";
 import type { ScreenProps } from "./screen-props";
+import { SHEET_OVERLAY_SPEC, SHEET_SCRIM_SPEC } from "./stage-motion";
 
 /**
  * `S-G` — архетип `order_steps`, донор RML (`radimirailubvi.ru/checkout`).
@@ -570,7 +571,7 @@ export function OrderStepsScreen({
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              transition={{ duration: 0.18 }}
+              transition={SHEET_SCRIM_SPEC}
               onClick={() => setSheetOpen(false)}
             />
             <motion.section
@@ -588,7 +589,7 @@ export function OrderStepsScreen({
               initial={{ y: "100%" }}
               animate={{ y: 0 }}
               exit={{ y: "100%" }}
-              transition={{ type: "spring", stiffness: 380, damping: 34 }}
+              transition={SHEET_OVERLAY_SPEC}
             >
               <span
                 aria-hidden

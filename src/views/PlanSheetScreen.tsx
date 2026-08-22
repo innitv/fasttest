@@ -8,6 +8,7 @@ import { ScreenHeader } from "@demo/components/ScreenHeader";
 import { COPY, formatMoney, resolveCtaLabel } from "@demo/content/copy";
 import { OZON_METHOD_ID } from "@demo/theme/tenant.schema";
 import type { ScreenProps } from "./screen-props";
+import { SHEET_OVERLAY_SPEC, SHEET_SCRIM_SPEC } from "./stage-motion";
 
 /**
  * `S-F` — архетип `plan_sheet`, пятая калибровочная крайность.
@@ -473,7 +474,7 @@ export function PlanSheetScreen({
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              transition={{ duration: 0.18 }}
+              transition={SHEET_SCRIM_SPEC}
               onClick={() => setOpenPlanId(null)}
             />
             <motion.section
@@ -492,7 +493,7 @@ export function PlanSheetScreen({
               initial={{ y: "100%" }}
               animate={{ y: 0 }}
               exit={{ y: "100%" }}
-              transition={{ type: "spring", stiffness: 380, damping: 34 }}
+              transition={SHEET_OVERLAY_SPEC}
             >
               {/* Ручка шторки — единственный намёк на то, что её можно закрыть. */}
               <span

@@ -3,6 +3,11 @@ import { motion } from "framer-motion";
 
 import { BANK_COPY, COPY } from "@demo/content/copy";
 import { focusWithoutScroll } from "@demo/lib/scroll-safety";
+import {
+  PUSH_BANNER_IN_SPEC,
+  PUSH_BANNER_OUT_MS,
+  PUSH_BANNER_OUT_SPEC,
+} from "@demo/views/stage-motion";
 import { BankAppIcon } from "./BankWordmark";
 
 interface Props {
@@ -46,7 +51,7 @@ export function PushBanner({ merchant, amount, onOpen, onDismiss }: Props) {
 
   const dismiss = () => {
     setLeaving(true);
-    window.setTimeout(onDismiss, 200);
+    window.setTimeout(onDismiss, PUSH_BANNER_OUT_MS);
   };
 
   return (
@@ -67,22 +72,16 @@ export function PushBanner({ merchant, amount, onOpen, onDismiss }: Props) {
         // Появление: слайд-даун сверху, ЧИТАЕМЫЙ глазом. История: жёсткая пружина
         // (520/34) доходила до места за ~100мс = «появление», не движение; tween с
         // overshoot-кривой фронт-грузил ход (почти весь путь за ~80мс) — та же
-        // беда. Мягкая пружина (150/16) распределяет скорость по времени: баннер
-        // заметно едет сверху вниз ~0.5с и мягко доводит с лёгким проскоком
-        // (ζ≈0.65 → ~7% overshoot). Старт заведомо выше кромки (−170% высоты
-        // баннера + верхний отступ) — виден полный ход. Свайп/дисмисс — быстрый
-        // уход вверх. Под prefers-reduced-motion `MotionConfig` гасит transform:
-        // баннер мгновенно на месте (движение убрано).
+        // беда. Мягкая пружина распределяет скорость по времени: баннер заметно
+        // едет сверху вниз ~0.5с и мягко доводит с лёгким проскоком (ζ≈0.65 →
+        // ~7% overshoot). Сами параметры — в общем слое (`PUSH_BANNER_*_SPEC` в
+        // `stage-motion.ts`): движение задаёт он, а не компонент. Старт заведомо
+        // выше кромки (−170% высоты баннера + верхний отступ) — виден полный ход.
+        // Свайп/дисмисс — быстрый уход вверх. Под prefers-reduced-motion
+        // `MotionConfig` гасит transform: баннер мгновенно на месте.
         initial={{ y: "-170%", opacity: 0 }}
         animate={{ y: leaving ? "-170%" : 0, opacity: leaving ? 0 : 1 }}
-        transition={
-          leaving
-            ? { duration: 0.2, ease: "easeIn" }
-            : {
-                y: { type: "spring", stiffness: 150, damping: 16, mass: 1 },
-                opacity: { duration: 0.16, ease: "easeOut" },
-              }
-        }
+        transition={leaving ? PUSH_BANNER_OUT_SPEC : PUSH_BANNER_IN_SPEC}
         whileTap={{ scale: 0.98 }}
         onClick={() => {
           // После свайпа браузер всё равно шлёт click — открывать банк по

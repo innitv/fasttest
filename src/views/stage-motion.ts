@@ -10,7 +10,26 @@ import type { DemoStage } from "./demo-flow";
  * задаётся здесь. Ни один токен `--t-*` / `--bank-*` сюда не попадает —
  * граница темы не нарушается.
  *
- * Паттерны сдержанные, iOS-нативные (тайминги ~220–340мс, iOS-кривая):
+ * Модель движения — та же, что у системы: ПРУЖИНА с воспринимаемой
+ * длительностью, а не кривая с длительностью. С iOS 17 дефолт системной
+ * анимации — `smooth`-пружина, и её темп задаётся параметром `duration`,
+ * который Apple определяет как «перцептивную длительность, приблизительно
+ * равную времени затухания» (docs `Animation.spring(duration:bounce:)`,
+ * WWDC23 «Explore SwiftUI animation»). У всех трёх системных пресетов
+ * (`smooth`, `snappy`, `bouncy`) он равен 0.5 с.
+ *
+ * В Motion тот же смысл несёт `visualDuration` — время, за которое анимация
+ * ВИЗУАЛЬНО достигает цели; остаточная упругость доигрывает после. Поэтому
+ * шкала ниже записана в `visualDuration`, а не в `duration` пружины.
+ *
+ * История: до 2026-08-22 переходы были tween'ами 220–340 мс по iOS-кривой
+ * `cubic-bezier(0.32, 0.72, 0, 1)`. Кривая верная, но длительность под неё
+ * занижена: демо шло в 1.5–2 раза быстрее системы (0.30–0.34 против ~0.5),
+ * и владелец увидел это глазом раньше, чем показал замер. Пружина пуш-баннера
+ * (ζ≈0.65, затухание ~0.5 с) была единственным местом в нативном темпе — из-за
+ * чего рассинхрон и читался.
+ *
+ * Паттерны сдержанные, iOS-нативные:
  *  - `sheet-up`   — вход в приложение банка (push → splash): модалка снизу вверх.
  *  - `sheet-down` — возврат в магазин (банк → подрядчик): модалка уезжает вниз.
  *  - `push-*`     — stack-навигация на отдельный экран Uchi (contractor ↔ ozon_rail).
@@ -60,31 +79,80 @@ export function transitionFor(prev: DemoStage | null, next: DemoStage): Transiti
   return "none";
 }
 
-// iOS-кривая выезда шитов и stack-переходов.
-export const IOS_EASE = [0.32, 0.72, 0, 1] as const;
-
 /**
  * Спека выезда для шитов ВНУТРИ экрана подрядчика (шторка выбора оплаты).
  *
  * Живёт здесь, а не по месту, по той же причине, что и остальной motion:
- * движение — общий механизм, тема его не задаёт. 320 мс — то же значение,
- * что у `--k-motion-overlay` в `styles.css` (им же анимируется
- * `HandoffOverlay`), кривая — общая iOS-кривая шитов. Донорские тайминги
- * сюда НЕ переносятся: у каждого донора они свои, а движение в демо одно.
+ * движение — общий механизм, тема его не задаёт. Тот же темп, что у
+ * `--k-motion-overlay` в `styles.css` (им же анимируется `HandoffOverlay`).
+ * Донорские тайминги сюда НЕ переносятся: у каждого донора они свои, а
+ * движение в демо одно.
  */
-export const SHEET_OVERLAY_SPEC: Transition = { duration: 0.32, ease: IOS_EASE };
+export const SHEET_OVERLAY_SPEC: Transition = {
+  type: "spring",
+  visualDuration: 0.42,
+  bounce: 0,
+};
+
+/**
+ * Затемнение под шитом. Единственный tween в шкале: у прозрачности нет
+ * инерции, пружинить её незачем — она лишь сопровождает лист и гаснет с ним
+ * синхронно. Раньше стояла по месту (0.18 в двух экранах и спека листа в двух
+ * других) — один и тот же элемент гас четырьмя разными способами.
+ */
+export const SHEET_SCRIM_SPEC: Transition = { duration: 0.3, ease: "easeOut" };
+
+/**
+ * Пуш-баннер банка: въезд сверху и уход по свайпу/Escape.
+ *
+ * Значения выверены на живом iPhone (см. комментарий в `PushBanner.tsx`) и
+ * перенесены сюда БЕЗ пересчёта: ζ≈0.65, затухание ~0.5 с — ровно системный
+ * темп, к которому подтянута остальная шкала. Здесь они потому, что движение
+ * задаётся общим слоем, а не компонентом.
+ */
+export const PUSH_BANNER_IN_SPEC: Transition = {
+  y: { type: "spring", stiffness: 150, damping: 16, mass: 1 },
+  opacity: { duration: 0.16, ease: "easeOut" },
+};
+export const PUSH_BANNER_OUT_SPEC: Transition = { duration: 0.2, ease: "easeIn" };
+/** Та же длительность в мс — баннер размонтируется по её истечении. */
+export const PUSH_BANNER_OUT_MS = 200;
+
+/**
+ * Длительность из CSS-шкалы `--k-motion-*` в миллисекундах.
+ *
+ * Нужна там, где CSS-переход надо дождаться в JS (`HandoffOverlay`). Читаем
+ * фактическое значение вместо того, чтобы дублировать число в TS: дубль
+ * разъезжается молча — CSS правят, таймер остаётся прежним, и оверлей
+ * отчитывается «доехал» раньше, чем доехал.
+ *
+ * `prefers-reduced-motion` здесь не учитывается: правило в `styles.css`
+ * обнуляет `transition-duration`, но не саму переменную. Место вызова решает
+ * это само (проверкой `matchMedia`) — так же, как решает, ждать ли вообще.
+ */
+export function motionMs(name: "fast" | "medium" | "overlay"): number {
+  if (typeof window === "undefined") return 0;
+  const raw = getComputedStyle(document.documentElement)
+    .getPropertyValue(`--k-motion-${name}`)
+    .trim();
+  const value = Number.parseFloat(raw);
+  if (!Number.isFinite(value)) return 0;
+  return raw.endsWith("ms") || !raw.endsWith("s") ? value : value * 1000;
+}
 
 function spec(type: TransitionType): Transition {
   switch (type) {
+    // Лист снизу — самый длинный ход шкалы, как модальная презентация системы.
     case "sheet-up":
-      return { duration: 0.34, ease: IOS_EASE };
     case "sheet-down":
-      return { duration: 0.3, ease: IOS_EASE };
+      return { type: "spring", visualDuration: 0.44, bounce: 0 };
+    // Stack-навигация: короче листа, но не мгновенно.
     case "push-forward":
     case "push-back":
-      return { duration: 0.3, ease: IOS_EASE };
+      return { type: "spring", visualDuration: 0.4, bounce: 0 };
+    // Внутри банка ход самый малый: экран меняется, рамка и подложка — нет.
     case "bank-internal":
-      return { duration: 0.22, ease: "easeOut" };
+      return { type: "spring", visualDuration: 0.3, bounce: 0 };
     default:
       // Мгновенно: уходящий экран снимается сразу, без дублей в DOM.
       return { duration: 0 };

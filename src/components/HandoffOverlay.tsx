@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 
 import { COPY } from "@demo/content/copy";
+import { motionMs } from "@demo/views/stage-motion";
 
 /**
  * ═══════════════════════════════════════════════════════════════════════
@@ -49,7 +50,13 @@ export function HandoffOverlay({ onBack, onSettled }: Props) {
     const reduced =
       typeof window !== "undefined" &&
       window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    const timer = window.setTimeout(() => settledRef.current?.(), reduced ? 0 : 320);
+    // Длительность берётся из той же переменной, что и сам переход
+    // (`--k-motion-overlay`): написанное здесь число разъезжалось бы с CSS
+    // молча — оверлей отчитывался бы «доехал» раньше, чем доехал.
+    const timer = window.setTimeout(
+      () => settledRef.current?.(),
+      reduced ? 0 : motionMs("overlay"),
+    );
     return () => window.clearTimeout(timer);
   }, [settled]);
 
@@ -67,7 +74,7 @@ export function HandoffOverlay({ onBack, onSettled }: Props) {
         fontFamily: "var(--h-font)",
         paddingInline: "24px",
         transform: settled ? "translateY(0)" : "translateY(100%)",
-        transition: "transform var(--k-motion-overlay) ease-in-out",
+        transition: "transform var(--k-motion-overlay) var(--k-ease-overlay)",
       }}
     >
       <span aria-live="assertive" className="sr-only" style={{ position: "absolute", width: 1, height: 1, overflow: "hidden", clip: "rect(0 0 0 0)" }}>

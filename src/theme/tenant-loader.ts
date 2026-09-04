@@ -11,6 +11,7 @@ import bombbar from "../../tenants/bombbar.json";
 import mybox from "../../tenants/mybox.json";
 import tripster from "../../tenants/tripster.json";
 import ewa from "../../tenants/ewa.json";
+import yandexPlus from "../../tenants/yandex-plus.json";
 
 import { buildTheme, TenantConfigError, type BuiltTheme, type Diagnostic } from "./build-theme";
 import type { TenantConfig } from "./tenant.schema";
@@ -40,6 +41,7 @@ export const BUNDLED_TENANTS: Record<string, unknown> = {
   mybox,
   tripster,
   ewa,
+  "yandex-plus": yandexPlus,
 };
 
 export const DEFAULT_TENANT_SLUG = "flowwow-like";

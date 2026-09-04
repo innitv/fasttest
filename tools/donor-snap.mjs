@@ -48,6 +48,11 @@ const context = await browser.newContext({
   deviceScaleFactor: 2,
   isMobile: WIDTH < 768,
   hasTouch: WIDTH < 768,
+  // Зонд доставляется инлайн-скриптом, а строгая CSP донора его запрещает
+  // (`script-src` с nonce у Яндекса): страница открывается, а снятие падает
+  // на вставке. Обход CSP касается ТОЛЬКО нашей вкладки инструмента —
+  // ни демо, ни приёмки он не трогает.
+  bypassCSP: true,
 });
 const page = await context.newPage();
 await page.goto(url, { waitUntil: "networkidle", timeout: 60000 });

@@ -393,7 +393,8 @@ export function CarrierDeliveryScreen({
                         border: `var(--t-selected-border-width) solid ${
                           selected ? "var(--t-brand-border-selected)" : "transparent"
                         }`,
-                        transition: "border-color var(--k-motion-fast)",
+                        transition:
+                          "border-color var(--k-motion-fast), transform var(--k-motion-fast) ease-out",
                       }}
                     >
                       {item.logo ? (

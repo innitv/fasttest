@@ -35,6 +35,7 @@ const PATH_ROUTES: Record<string, { tenant: string; archetype: TenantConfig["arc
   "/mybox": { tenant: "mybox", archetype: "pickup_checkout" },
   "/tripster": { tenant: "tripster", archetype: "order_prepay" },
   "/ewa": { tenant: "ewa", archetype: "carrier_delivery" },
+  "/plus": { tenant: "yandex-plus", archetype: "subscription_bind" },
 };
 
 /** Лаунчер — только для локальной отладки, по неугадываемому пути и только в dev. */

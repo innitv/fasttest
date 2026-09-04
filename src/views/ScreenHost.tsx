@@ -23,6 +23,7 @@ import { SlotDeliveryScreen } from "./SlotDeliveryScreen";
 import { OrderStepsScreen } from "./OrderStepsScreen";
 import { OzonRailScreen } from "./OzonRailScreen";
 import { PaidConfirmationScreen } from "./PaidConfirmationScreen";
+import { SubscriptionBindScreen } from "./SubscriptionBindScreen";
 import { SubscriptionPaymentScreen } from "./SubscriptionPaymentScreen";
 import { PlanSheetScreen } from "./PlanSheetScreen";
 import { StoreCheckoutScreen } from "./StoreCheckoutScreen";
@@ -413,6 +414,7 @@ export function ScreenHost({ theme, forcedState, showHandoff, initialStage }: Pr
     pickup_checkout: PickupCheckoutScreen,
     carrier_delivery: CarrierDeliveryScreen,
     order_prepay: OrderPrepayScreen,
+    subscription_bind: SubscriptionBindScreen,
   };
   const ContractorScreen = CONTRACTOR_SCREENS[tenant.archetype];
   const contractorScreen = <ContractorScreen {...screenProps} />;

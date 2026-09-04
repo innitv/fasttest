@@ -617,7 +617,8 @@ export function PickupCheckoutScreen({
                       color: active ? "var(--t-accent)" : "var(--t-text-primary)",
                       fontSize: "var(--t-font-body)",
                       fontWeight: "var(--t-label-weight)",
-                      transition: "border-color var(--k-motion-fast) ease-out, color var(--k-motion-fast) ease-out",
+                      transition:
+                        "border-color var(--k-motion-fast) ease-out, color var(--k-motion-fast) ease-out, transform var(--k-motion-fast) ease-out",
                       cursor: "pointer",
                     }}
                   >
@@ -797,7 +798,8 @@ function RadioRow({
           border: `var(--t-border-width) solid ${
             checked ? "var(--t-accent)" : "var(--t-text-primary)"
           }`,
-          transition: "border-color var(--k-motion-fast) ease-out",
+          transition:
+            "border-color var(--k-motion-fast) ease-out, transform var(--k-motion-fast) ease-out",
         }}
       />
       <span

@@ -281,8 +281,23 @@ function validateSemantics(tenant: TenantConfig): Diagnostic[] {
       value: methods[ozonIndex].label,
     });
   }
+  /*
+   * Проверка сторожит НАПИСАНИЕ бренда, а не обязанность его называть.
+   *
+   * До 2026-09-04 она требовала ровно «Ozon Банк» и тем самым запрещала
+   * подрядчику назвать способ нейтрально. Решение владельца 2026-09-04
+   * (тема Яндекс Плюс, сценарий А3): на стороне подрядчика банк может не
+   * называться вовсе — «Банковское приложение», — потому что демо там
+   * показывает МЕХАНИКУ списания, а не выбор конкретного банка; айдентика
+   * банка наступает на пуше и дальше, где написание по-прежнему константа.
+   *
+   * Поэтому ошибка теперь ровно одна и та же по сути: метка УПОМИНАЕТ банк
+   * и упоминает его неверно. Метка, банк не называющая, проходит; строка с
+   * «озон»/«ozon» в любом виде обязана совпадать с константой посимвольно.
+   */
+  const mentionsBrand = (value: string) => /ozon|озон/i.test(value);
   for (const { where, value } of labelsToCheck) {
-    if (value !== OZON_LABEL) {
+    if (mentionsBrand(value) && value !== OZON_LABEL) {
       const looksLikeForbidden = FORBIDDEN_OZON_SPELLINGS.includes(value);
       diagnostics.push({
         code: "E_OZON_LABEL",
@@ -405,6 +420,10 @@ function validateSemantics(tenant: TenantConfig): Diagnostic[] {
     // способов у Tripster тоже уезжает в лист поверх страницы, поэтому
     // «Ozon Банк» встаёт в готовый список подрядчика, а не в достроенный.
     order_prepay: "sheet_select",
+    // У формы Пэй список способов лежит СТРОКАМИ прямо на экране: третий
+    // донор со своим выбором оплаты, и единственный, где список смешанный —
+    // привязанные карты и строки-действия рядом.
+    subscription_bind: "method_rows",
   };
   const expectedLayout = layoutByArchetype[tenant.archetype];
   if (tenant.payment_list.layout !== expectedLayout) {

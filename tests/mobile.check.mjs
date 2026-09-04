@@ -852,6 +852,10 @@ const DESK_GREY = [230, 231, 234];
     // У Bombbar под правило попадает не только телефон: в карточке
     // комментария стоит textarea, и её кегль задаётся отдельно от полей.
     ["/bombbar", "ozon", true],
+    // Тема Яндекс Плюс: поле телефона раскрывается выбором строки способа
+    // прямо на форме (инлайн, как у архетипа A), поэтому состояние адресом
+    // задавать не нужно — ожидание «поле есть».
+    ["/plus", "ozon", true],
     // У MYBOX выбор оплаты двухшаговый: строка открывает нижнюю шторку, и
     // «Ozon Банк» выбирается уже в ней. Кликать по строке метода до этого
     // нечем — состояние задаётся адресом, как у RML и «Хваловских вод».
@@ -915,8 +919,29 @@ const DESK_GREY = [230, 231, 234];
       }
       await page.waitForTimeout(250);
     }
-    const fields = await page.evaluate(() =>
-      [...document.querySelectorAll("input, textarea, select")]
+    const fields = await page.evaluate(() => {
+      /*
+       * Правило про 16 px касается полей, при фокусе на которые Safari на iOS
+       * ЗУМИТ страницу, — то есть полей ВВОДА ТЕКСТА. Флажки и переключатели
+       * зума не вызывают: вводить в них нечего, и кегль наследуется от их
+       * подписи (у темы Яндекс Плюс подпись согласия набрана 13 px, как у
+       * донора). До этого уточнения проверка валила такую тему, требуя 16 px
+       * от `<input type="checkbox">`.
+       */
+      const NON_TEXT = new Set([
+        "checkbox",
+        "radio",
+        "button",
+        "submit",
+        "reset",
+        "range",
+        "color",
+        "file",
+        "image",
+        "hidden",
+      ]);
+      return [...document.querySelectorAll("input, textarea, select")]
+        .filter((el) => !(el.tagName === "INPUT" && NON_TEXT.has(el.type)))
         .filter((el) => {
           const r = el.getBoundingClientRect();
           return r.width > 8 && r.height > 8;
@@ -924,8 +949,8 @@ const DESK_GREY = [230, 231, 234];
         .map((el) => ({
           id: el.dataset.testid ?? el.getAttribute("name") ?? el.type,
           size: Math.round(parseFloat(getComputedStyle(el).fontSize) * 100) / 100,
-        })),
-    );
+        }));
+    });
     const small = fields.filter((item) => item.size < 16);
     await context.close();
 
@@ -954,6 +979,72 @@ const DESK_GREY = [230, 231, 234];
     ok,
     rows.join(" | "),
   );
+}
+
+/*
+ * ── 10. Нажимаемое отвечает на касание ────────────────────────────────
+ *
+ * `check:motion` сторожит, чтобы движение не задавалось ПО МЕСТУ, и молчит в
+ * обратном случае — когда движения нет вовсе. Так и вышло: замер живых
+ * страниц нашёл около шестидесяти нажимаемых элементов без всякой реакции на
+ * касание в двенадцати темах из тринадцати — чипы способа получения,
+ * счётчики «− +», строки адреса и правки, карточки перевозчиков, кнопки
+ * тарифов, строки способов нового архетипа. На устройстве это читается как
+ * «экран не нажался», и находил это только владелец, глядя на экран.
+ *
+ * Проверка читает ВЫЧИСЛЕННЫЙ стиль, а не имена классов в коде: правило
+ * общего слоя перекрывается любым inline-переходом элемента, и такой элемент
+ * с виду «покрыт», а на деле нет — именно так выпали карточки перевозчиков
+ * EWA и чипы сдачи MYBOX.
+ *
+ * Негативный контроль (фактический вывод до правки): `/flowwow` — 8
+ * элементов, `/mybox` — 30, `/ewa` — 11, `/plus` — строки способов; зелено
+ * было только `/plus` после подключения отклика.
+ */
+{
+  let ok = true;
+  const rows = [];
+  /*
+   * Маршруты читаются из `PATH_ROUTES` (`src/App.tsx`), а не из списка рядом:
+   * своего ожидания у этой проверки нет — отклик обязателен везде, — и
+   * производный список нельзя забыть пополнить новой темой.
+   */
+  const tapRoutes = [
+    ...readFileSync(path.join(here, "..", "src", "App.tsx"), "utf8").matchAll(
+      /"(\/[a-z0-9-]+)":\s*\{\s*tenant:/g,
+    ),
+  ].map((m) => m[1]);
+  for (const route of tapRoutes) {
+    const context = await browser.newContext({ ...PHONE });
+    const page = await context.newPage();
+    await page.goto(`${BASE}${route}`, { waitUntil: "networkidle" });
+    await page.waitForTimeout(200);
+    const mute = await page.evaluate(() =>
+      [...document.querySelectorAll('button, [role="button"], [role="radio"], [role="switch"]')]
+        .filter((el) => {
+          const r = el.getBoundingClientRect();
+          return r.width >= 24 && r.height >= 24;
+        })
+        .filter((el) => {
+          const s = getComputedStyle(el);
+          const animatesTransform =
+            s.transitionProperty.includes("transform") || s.transitionProperty === "all";
+          const hasDuration = s.transitionDuration
+            .split(",")
+            .some((d) => Number.parseFloat(d) > 0);
+          return !(animatesTransform && hasDuration);
+        })
+        .map((el) => el.dataset.testid ?? (el.textContent ?? "").trim().slice(0, 20) ?? el.tagName),
+    );
+    await context.close();
+
+    if (mute.length > 0) ok = false;
+    rows.push(
+      `${route}: ${mute.length === 0 ? "все нажимаемые отвечают" : `БЕЗ ОТКЛИКА — ${mute.join(", ")}`}`,
+    );
+  }
+
+  record("10. Нажимаемые элементы отвечают на касание просадкой", ok, rows.join(" | "));
 }
 
 await browser.close();

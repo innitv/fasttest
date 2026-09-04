@@ -1,0 +1,162 @@
+{
+  "tenant_id": "yandex-plus",
+  "display_name": "Яндекс Плюс",
+  "archetype": "subscription_bind",
+
+  "header": { "style": "centered_logo", "back_label": null },
+
+  "brand": {
+    "primary": "#3E68FF",
+    "on_primary": "#FFFFFF",
+    "accent": null,
+    "tonal": "#EEF2FA",
+    "logo": { "kind": "text", "text": "Яндекс Плюс", "slot_ratio": null }
+  },
+
+  "surface": {
+    "background": "#EEF2FA",
+    "card": "#FFFFFF",
+    "form": "#F2F5FC",
+    "border": "#E3E4EA",
+    "divider": "#EBECEF",
+    "text_primary": "#171A24",
+    "text_secondary": "#6A6D75",
+    "danger": "#E5352B",
+    "field_error": "#E5352B",
+    "track": "#C9CBD4",
+    "link": "#3E68FF"
+  },
+
+  "elevation": {
+    "model": "tonal_fill",
+    "border_width": 1,
+    "selected_border_width": 2,
+    "shadow": null
+  },
+
+  "radius": {
+    "card": 16,
+    "control": "pill",
+    "field": 12,
+    "chip": 8,
+    "sheet": 24,
+    "allow_inversion": true
+  },
+
+  "density": {
+    "page_padding": 16,
+    "block_gap": 12,
+    "row_height": 60,
+    "control_height": 52,
+    "method_button_height": 60,
+    "section_gap": 20
+  },
+
+  "component_width": { "choice_card_pct": 42, "payment_card_pct": 32 },
+
+  "typography": {
+    "family": "grotesk",
+    "body": 16,
+    "h1": 24,
+    "section_title": 18,
+    "caption": 13,
+    "price": 24,
+    "label_weight": 500,
+    "title_weight": 700,
+    "emphasis_weight": 500
+  },
+
+  "cta": {
+    "placement": "sticky",
+    "label": "Подключить",
+    "include_amount": false,
+    "requires_selection": false,
+    "font_size": 17,
+    "font_weight": 500
+  },
+
+  "payment_list": {
+    "layout": "method_rows",
+    "section_title": "Банковская карта",
+    "selection": "row_press",
+    "methods": [
+      {
+        "id": "ozon",
+        "label": "Банковское приложение",
+        "caption": "Спишется через А3",
+        "logo": "none",
+        "row_action": "select"
+      },
+      { "id": "pay-card", "label": "Карта Пэй", "caption": null, "logo": "none", "row_action": "chevron" },
+      { "id": "card-4203", "label": "•••• 4203", "caption": null, "logo": "none", "row_action": "select" },
+      { "id": "add-card", "label": "Добавить новую карту", "caption": null, "logo": "none", "row_action": "add" },
+      { "id": "add-sbp", "label": "Добавить счёт СБП", "caption": null, "logo": "none", "row_action": "add" }
+    ],
+    "default_selected": "card-4203"
+  },
+
+  "ozon": {
+    "label": "Банковское приложение",
+    "position": 1,
+    "adopts_tenant_theme": true,
+    "handoff": "overlay"
+  },
+
+  "content": {
+    "title": "Подключение подписки",
+    "account_email": "demo@a-3.ru",
+
+    "bind": {
+      "title": "Вы подключаете",
+      "plans": [
+        {
+          "id": "monthly",
+          "title": "Яндекс Плюс",
+          "price_accent": "30 дней за 1 ₽",
+          "price_rest": ", далее 449 ₽ в месяц",
+          "features": [],
+          "toggle": false
+        },
+        {
+          "id": "yearly",
+          "title": "Яндекс Плюс",
+          "price_accent": "30 дней за 1 ₽",
+          "price_rest": ", далее 2 990 ₽ за первый год",
+          "features": [
+            "Те же возможности, но со скидкой",
+            "249 ₽ вместо 449 ₽ в пересчёте на месяц",
+            "Оплата раз в год"
+          ],
+          "toggle": true,
+          "default_on": false,
+          "next_charge_note": "Следующее списание 2 990 ₽ — 3 октября. Мы напомним об этом за 3 дня."
+        }
+      ],
+      "methods_title": "Банковская карта",
+      "charge_now_label": "Сейчас спишется",
+      "next_charge_note": "Следующее списание 449 ₽ — 3 октября. Мы напомним об этом за 3 дня — никаких неожиданностей.",
+      "consent": {
+        "text": "Я хочу получать рекламу, иные предложения сервиса, партнёров по программе привилегий и программе лояльности по email и номеру телефона",
+        "default_checked": true
+      },
+      "rail": "Оплата через Пэй"
+    },
+
+    "legal_note": "Нажимая кнопку, вы принимаете Условия мультиподписки",
+
+    "totals": { "sum": 100, "discount": 0, "currency": "RUB" },
+
+    "return_label": "Вернуться к подписке",
+    "paid_title": "Подписка подключена",
+    "payment_purpose": "Подключение подписки",
+    "payment_category": "Подписки",
+    "summary_detail": "Яндекс Плюс, 30 дней за 1 ₽"
+  },
+
+  "demo": {
+    "balance": "34 190,50 ₽",
+    "timings": { "push_delay_ms": 600, "splash_ms": 1200, "pay_loading_ms": 900, "dots_cycle_ms": 900 }
+  },
+
+  "a11y_mode": "enforced"
+}

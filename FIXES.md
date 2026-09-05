@@ -1016,8 +1016,8 @@ inline-переходами дописан `transform` в их собствен�
 yarn build          # tsc --noEmit + vite build
 yarn check:theme    # граница темы, сервер не нужен
 yarn preview        # в отдельном окне
-yarn verify         # 24 приёмочные проверки (десктопный контекст)
-yarn check:mobile   # 9 проверок в профиле iPhone + 16 скриншотов
+yarn verify         # приёмочные проверки (десктопный контекст)
+yarn check:mobile   # проверки в профиле iPhone + скриншоты
 ```
 
 Результат последнего прогона (2026-08-19, тема Tripster, баги 13-15):

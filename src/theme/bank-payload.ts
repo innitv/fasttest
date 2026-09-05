@@ -29,12 +29,15 @@ export interface BankPayload {
   paidTitle: string;
   /** Значение чипа назначения платежа на `O-2`. */
   paymentPurpose: string;
-  /** Значение чипа категории операции на `O-3`. */
-  paymentCategory: string;
   /** Строка сводки на `O-4`. */
   summaryDetail: string;
   /** Остаток на счёте пользователя. Один для всех тенантов. */
   balance: string;
+  /**
+   * Правовая сноска под кнопкой: на что человек соглашается нажатием и где
+   * согласие отозвать. `null` — платёж разовый, сноски нет.
+   */
+  consentNote: string | null;
 }
 
 /**
@@ -46,77 +49,67 @@ const ARCHETYPE_DEFAULTS: Record<
   TenantConfig["archetype"],
   Pick<
     BankPayload,
-    "returnLabel" | "paidTitle" | "paymentPurpose" | "paymentCategory" | "summaryDetail"
+    "returnLabel" | "paidTitle" | "paymentPurpose" | "summaryDetail"
   >
 > = {
   cart_checkout: {
     returnLabel: "Вернуться в магазин",
     paidTitle: "Заказ оплачен",
     paymentPurpose: "Оплата заказа",
-    paymentCategory: "Покупки",
     summaryDetail: "Заказ № 1042",
   },
   subscription_payment: {
     returnLabel: "Вернуться в приложение",
     paidTitle: "Подписка оплачена",
     paymentPurpose: "Оплата подписки",
-    paymentCategory: "Подписки",
     summaryDetail: "Подписка на год",
   },
   plan_sheet: {
     returnLabel: "Вернуться в приложение",
     paidTitle: "Абонемент оплачен",
     paymentPurpose: "Оплата абонемента",
-    paymentCategory: "Спорт",
     summaryDetail: "Абонемент",
   },
   store_checkout: {
     returnLabel: "Вернуться в магазин",
     paidTitle: "Заказ оплачен",
     paymentPurpose: "Оплата заказа",
-    paymentCategory: "Покупки",
     summaryDetail: "Заказ № 4821",
   },
   order_steps: {
     returnLabel: "Вернуться в магазин",
     paidTitle: "Заказ оплачен",
     paymentPurpose: "Оплата заказа",
-    paymentCategory: "Покупки",
     summaryDetail: "Заказ № 10482",
   },
   slot_delivery: {
     returnLabel: "Вернуться в магазин",
     paidTitle: "Заказ оплачен",
     paymentPurpose: "Оплата заказа",
-    paymentCategory: "Продукты",
     summaryDetail: "Доставка воды",
   },
   bonus_checkout: {
     returnLabel: "Вернуться в магазин",
     paidTitle: "Заказ оплачен",
     paymentPurpose: "Оплата заказа",
-    paymentCategory: "Покупки",
     summaryDetail: "Заказ № 3536",
   },
   ticket_checkout: {
     returnLabel: "Вернуться к событию",
     paidTitle: "Билет оплачен",
     paymentPurpose: "Оплата билета",
-    paymentCategory: "Развлечения",
     summaryDetail: "Билет на событие",
   },
   carrier_delivery: {
     returnLabel: "Вернуться к заказу",
     paidTitle: "Заказ оплачен",
     paymentPurpose: "Оплата заказа",
-    paymentCategory: "Покупки",
     summaryDetail: "Пункт выдачи, 4 позиции",
   },
   pickup_checkout: {
     returnLabel: "Вернуться к заказу",
     paidTitle: "Заказ оплачен",
     paymentPurpose: "Оплата заказа",
-    paymentCategory: "Кафе и рестораны",
     summaryDetail: "Самовывоз, 4 позиции",
   },
   order_prepay: {
@@ -126,7 +119,6 @@ const ARCHETYPE_DEFAULTS: Record<
     returnLabel: "Вернуться к заказу",
     paidTitle: "Заказ оплачен",
     paymentPurpose: "Предоплата заказа",
-    paymentCategory: "Путешествия",
     summaryDetail: "Предоплата по заказу",
   },
   /*
@@ -143,7 +135,6 @@ const ARCHETYPE_DEFAULTS: Record<
     // «Оплата подписки» здесь врала бы: платёж один, а согласие даётся на
     // все будущие списания — назначение именно подключение.
     paymentPurpose: "Подключение подписки",
-    paymentCategory: "Подписки",
     summaryDetail: "Первое списание по подписке",
   },
 };
@@ -198,9 +189,9 @@ export function buildBankPayload(tenant: TenantConfig): BankPayloadResult {
       returnLabel: pick(tenant.content.return_label, defaults.returnLabel),
       paidTitle: pick(tenant.content.paid_title, defaults.paidTitle),
       paymentPurpose: pick(tenant.content.payment_purpose, defaults.paymentPurpose),
-      paymentCategory: pick(tenant.content.payment_category, defaults.paymentCategory),
       summaryDetail: pick(tenant.content.summary_detail, defaults.summaryDetail),
       balance: tenant.demo.balance,
+      consentNote: tenant.content.bank_consent_note,
     },
     diagnostics,
   };

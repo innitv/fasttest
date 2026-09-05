@@ -1088,6 +1088,10 @@ const DESK_GREY = [230, 231, 234];
     ...shipped,
     "/flowwow?stage=bank_payment",
     "/flowwow?stage=bank_success",
+    // Тема с подпиской: только на ней есть сноска про автосписания под
+    // кнопкой и баннер под чеком — на разовом платеже их нет вовсе.
+    "/plus?stage=bank_payment",
+    "/plus?stage=bank_success",
   ];
   const KNOWN = [
     // Логотип бренда: WCAG 1.4.3 исключает логотипы из требований контраста.

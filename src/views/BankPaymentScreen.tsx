@@ -192,6 +192,57 @@ export function BankPaymentScreen({
         {/* ── Зона 7: гибкий разделитель. Инвариант кнопки ────────── */}
         <div data-testid="flexible-spacer" style={{ flex: "1 1 0", minHeight: "24px" }} />
 
+        {/*
+          ── Зона 7a: условия подписки ────────────────────────────────
+          Сноска стоит НАД счётом, а не под кнопкой: человек читает экран
+          сверху вниз и к моменту выбора средства уже знает, на что
+          соглашается. Под кнопкой она превращается в примечание после
+          решения — то есть приходит поздно.
+
+          Механики списания здесь нет: суммы, период и платёжный сервис
+          живут на форме подрядчика (решение владельца 2026-09-04). Здесь —
+          только предмет согласия и способ его отозвать.
+        */}
+        {payload.consentNote && (
+          <div
+            data-testid="bank-consent-note"
+            className="flex shrink-0 flex-col"
+            style={{
+              /*
+                Формат карточки счёта: та же заливка, тот же радиус, те же
+                поля. Голый абзац на его месте читался как примечание к
+                вёрстке; карточка ставит согласие в один ряд со средством
+                оплаты — двумя блоками, между которыми человек и выбирает.
+              */
+              borderRadius: "var(--bank-radius-account-card)",
+              background: "var(--bank-surface-muted)",
+              padding: "13px 15px",
+              marginBottom: "10px",
+              gap: "3px",
+            }}
+          >
+            <span
+              style={{
+                fontSize: "13px",
+                fontWeight: 400,
+                color: "var(--bank-text-secondary)",
+              }}
+            >
+              {COPY["bank.consent_title"]}
+            </span>
+            <span
+              style={{
+                fontSize: "14px",
+                fontWeight: 400,
+                lineHeight: 1.35,
+                color: "var(--bank-text-primary)",
+              }}
+            >
+              {payload.consentNote}
+            </span>
+          </div>
+        )}
+
         {/* ── Зона 8: карточка счёта. Не интерактивна: счёт один ──── */}
         <div
           data-testid="account-card"
@@ -255,20 +306,13 @@ export function BankPaymentScreen({
             testId="bank-pay-cta"
           />
 
-          {/* Строка про СБП заменена: чужой товарный знак + решение №2.
-              Левый вордмарк-начертание убран (правка O-2): осталась одна
-              подпись «Оплата через Ozon Банк», отцентрированная по колонке. */}
-          <div className="flex items-center justify-center" style={{ marginTop: "18px" }}>
-            <span
-              style={{
-                fontSize: "14px",
-                fontWeight: 400,
-                color: "var(--bank-text-secondary)",
-              }}
-            >
-              {COPY["bank.rail"]}
-            </span>
-          </div>
+        {/*
+          Подписи «Оплата через Ozon Банк» под кнопкой больше нет: экран и так
+          принадлежит банку — вордмарк в шапке, его синий, его шрифт. Строка
+          повторяла то, что человек уже видит, и занимала место у кнопки.
+          На экране подрядчика (`OzonRailScreen`) та же строка остаётся: там
+          она сообщает выбранный способ, а не место, где человек находится.
+        */}
         </div>
 
         <div

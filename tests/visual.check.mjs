@@ -86,6 +86,14 @@ const FRAMES = [
   ["bank-payment", "/?tenant=flowwow-like&stage=bank_payment"],
   ["bank-success", "/?tenant=flowwow-like&stage=bank_success"],
   ["bank-push", "/?tenant=flowwow-like&stage=push"],
+  /*
+   * Экраны банка у темы с подпиской: только там появляются сноска про
+   * условия автосписаний под кнопкой и баннер под чеком. У flowwow этих
+   * блоков нет вовсе (платёж разовый), поэтому кадрами выше они не
+   * сторожатся.
+   */
+  ["bank-payment-plus", "/?tenant=yandex-plus&stage=bank_payment"],
+  ["bank-success-plus", "/?tenant=yandex-plus&stage=bank_success"],
 ];
 
 const browser = await chromium.launch();

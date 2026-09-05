@@ -1852,8 +1852,19 @@ export const tenantSchema = z.object({
     return_label: z.string().nullable().default(null),
     paid_title: z.string().nullable().default(null),
     payment_purpose: z.string().nullable().default(null),
-    payment_category: z.string().nullable().default(null),
     summary_detail: z.string().nullable().default(null),
+    /**
+     * Строка согласия под кнопкой на экране банка.
+     *
+     * Это НЕ рассказ о том, как списывается подписка (условия, суммы, даты и
+     * платёжный сервис живут на форме подрядчика — решение владельца
+     * 2026-09-04). Это правовая сноска рядом с действием: на что человек
+     * соглашается, нажимая кнопку, и где согласие отозвать. Текст называет
+     * сервис подрядчика, поэтому он ДАННЫЕ тенанта, а не константа банка.
+     *
+     * `null` — платёж разовый, сноски нет.
+     */
+    bank_consent_note: z.string().nullable().default(null),
   }),
 
   /** Параметры демонстрации: правятся без пересборки. */

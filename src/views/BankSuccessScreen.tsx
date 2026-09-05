@@ -3,7 +3,6 @@ import {
   AvatarBadge,
   BankPrimaryButton,
   CloseCircleButton,
-  StaticChip,
 } from "@demo/components/bank/bank-primitives";
 import { BANK_COPY, COPY } from "@demo/content/copy";
 import type { BankPayload } from "@demo/theme/bank-payload";
@@ -104,6 +103,14 @@ export function BankSuccessScreen({ payload, onReturn }: Props) {
       <div
         data-testid="success-stack"
         className="no-scrollbar absolute inset-x-0 flex flex-col overflow-y-auto"
+        /*
+         * Прокручиваемая область обязана быть достижима с клавиатуры: внутри
+         * чека нет ни одного фокусируемого элемента, поэтому без `tabIndex`
+         * до её содержимого нельзя долистать ничем, кроме мыши или пальца
+         * (axe: `scrollable-region-focusable`). Всплыло, когда баннер про
+         * условия подписки сделал стопку выше экрана.
+         */
+        tabIndex={0}
         style={{
           top: "var(--bank-header-h)",
           bottom: "calc(111px + env(safe-area-inset-bottom, 0px))",
@@ -184,29 +191,44 @@ export function BankSuccessScreen({ payload, onReturn }: Props) {
               marginTop: "20px",
               marginBottom: "18px",
               height: "1px",
+              /*
+                Точки, а не штрихи: у чека в самом банке линия отрыва — мелкий
+                плотный пунктир, штрих 4 через 4 читается грубее и делает
+                карточку похожей на форму с разделителем, а не на чек.
+              */
               backgroundImage:
-                "repeating-linear-gradient(90deg, color-mix(in srgb, var(--bank-text-secondary) 40%, transparent) 0 4px, transparent 4px 8px)",
+                "repeating-linear-gradient(90deg, color-mix(in srgb, var(--bank-text-secondary) 45%, transparent) 0 1.5px, transparent 1.5px 4px)",
             }}
           />
 
-          {/* Чип категории: карандаш донора снят, редактирования нет */}
-          <StaticChip fontSize="15px" testId="bank-category-chip">
-            {payload.paymentCategory}
-          </StaticChip>
-
+          {/*
+            Нижняя половина чека повторяет чек банка: сверху РЕКВИЗИТ платежа
+            серым (что оплачено), под ним ЖИРНЫМ — получатель. Чипа категории
+            и строки «Оплата через Ozon Банк» здесь нет намеренно: первый
+            добавляет служебную строку, которой в чеке нет, вторая — тавтология
+            (вы и так в банке), и обе оттягивают внимание от получателя.
+          */}
           <span
+            data-testid="bank-success-detail"
             style={{
-              marginTop: "16px",
               fontSize: "14px",
               fontWeight: 400,
               color: "var(--bank-text-secondary)",
               textAlign: "center",
             }}
           >
-            {payload.merchant}
+            {payload.summaryDetail}
           </span>
-          <span style={{ marginTop: "8px", fontSize: "17px", fontWeight: 700 }}>
-            {COPY["bank.paid_via"]}
+          <span
+            data-testid="bank-success-merchant"
+            style={{
+              marginTop: "6px",
+              fontSize: "17px",
+              fontWeight: 700,
+              textAlign: "center",
+            }}
+          >
+            {payload.merchant}
           </span>
           <span
             data-testid="bank-demo-note-success"

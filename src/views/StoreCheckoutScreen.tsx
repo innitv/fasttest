@@ -128,6 +128,7 @@ export function StoreCheckoutScreen({
               {section.done && (
                 <span
                   data-testid={`section-done-${index + 1}`}
+                  role="img"
                   aria-label={COPY["section.done"]}
                   style={{ display: "flex", color: "var(--t-text-primary)" }}
                 >

@@ -1047,6 +1047,104 @@ const DESK_GREY = [230, 231, 234];
   record("10. Нажимаемые элементы отвечают на касание просадкой", ok, rows.join(" | "));
 }
 
+/*
+ * ── 11. Аудит доступности на каждом маршруте ──────────────────────────
+ *
+ * В теме есть `a11y_mode`, сборка печатает коррекции контраста, пороги 44 px
+ * и 16 px перебивают донора намеренно — а САМ результат аудитом не
+ * проверялся ни разу: единственная проверка контраста в `verify` считала
+ * один градиент. Первый же прогон axe нашёл два дефекта, которые не видел
+ * никто: у EWA кнопки сегмента остались без доступного имени (текст был
+ * спрятан под `aria-hidden`), у MONOCHROME и RML `aria-label` висел на
+ * `<span>` без роли — запрещённый атрибут, имя не читается.
+ *
+ * Что проверяется: правила axe уровней wcag2a/2aa/21a/21aa на первом экране
+ * каждой поставляемой ссылки, на экране банка и на экране возврата.
+ *
+ * ── Известные отступления ─────────────────────────────────────────────
+ *
+ * Contrast-нарушения ниже — ДОНОРСКИЕ цвета, а не наша небрежность.
+ * Правило проекта: пороги зоны нажатия и кегля поля перебивают донора
+ * намеренно, цвета — нет (решение владельца 2026-07-29; закреплённый
+ * `on_primary` — `FIXES.md`, баг 13). Каждая запись названа маршрутом,
+ * правилом и селектором: новое нарушение в том же месте всё равно
+ * выявится — совпасть должны все три.
+ *
+ * Замеренные значения (2026-09-05): логотип UCHi.RU 2.92:1 (логотипы
+ * исключены самим WCAG 1.4.3), «Применить» ВОРОХа 3.37:1, подпись RML
+ * 4.47:1, единица «бут.» у ХВАЛа 4.23:1, ссылка промокода Tripster 3.99:1,
+ * кнопка возврата Tripster 2.40:1.
+ */
+{
+  const axeSource = readFileSync(
+    path.join(here, "..", "node_modules", "axe-core", "axe.min.js"),
+    "utf8",
+  );
+  const appSource = readFileSync(path.join(here, "..", "src", "App.tsx"), "utf8");
+  const shipped = [...appSource.matchAll(/"(\/[a-z0-9-]+)":\s*\{\s*tenant:/g)].map(
+    (m) => m[1],
+  );
+  const AXE_ROUTES = [
+    ...shipped,
+    "/flowwow?stage=bank_payment",
+    "/flowwow?stage=bank_success",
+  ];
+  const KNOWN = [
+    // Логотип бренда: WCAG 1.4.3 исключает логотипы из требований контраста.
+    ["/uchi", "color-contrast", ".inline-flex"],
+    // Донорские цвета: серая вторичная подпись на серой плашке и синяя ссылка
+    // на сером фоне — измерены у доноров, менять их значит терять их вид.
+    ["/voroh", "color-contrast", 'button[data-testid="promo-apply"]'],
+    ["/rml", "color-contrast", ".shrink-0"],
+    ["/hval", "color-contrast", "item-counter-"],
+    ["/hval", "color-contrast", 'span[data-testid="door-toggle-tag"]'],
+    ["/tripster", "color-contrast", 'p[data-testid="promo-link"]'],
+    // Закреплённый `brand.on_primary` — решение владельца, цена названа в
+    // консоли кодом W_CTA_CONTRAST_PINNED (`FIXES.md`, баг 13).
+    ["/tripster", "color-contrast", 'button[data-testid="primary-cta"]'],
+  ];
+  const isKnown = (route, ruleId, target) =>
+    KNOWN.some(
+      ([r, rule, sel]) => route.startsWith(r) && rule === ruleId && target.includes(sel),
+    );
+
+  let ok = true;
+  const rows = [];
+  for (const route of AXE_ROUTES) {
+    const found = await withPhone(route, async (page) => {
+      await page.addScriptTag({ content: axeSource });
+      return page.evaluate(async () => {
+        const result = await window.axe.run(document, {
+          runOnly: { type: "tag", values: ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"] },
+          resultTypes: ["violations"],
+        });
+        return result.violations.flatMap((v) =>
+          v.nodes.map((n) => ({
+            id: v.id,
+            impact: v.impact,
+            target: n.target.join(" "),
+          })),
+        );
+      });
+    });
+
+    const fresh = found.filter((v) => !isKnown(route, v.id, v.target));
+    const knownCount = found.length - fresh.length;
+    if (fresh.length > 0) ok = false;
+    rows.push(
+      `${route}: ${
+        fresh.length === 0
+          ? `чисто${knownCount ? ` (известных ${knownCount})` : ""}`
+          : fresh
+              .map((v) => `${v.impact} ${v.id} → ${v.target.slice(0, 40)}`)
+              .join("; ")
+      }`,
+    );
+  }
+
+  record("11. Аудит доступности (axe, wcag2a/2aa/21a/21aa)", ok, rows.join(" | "));
+}
+
 await browser.close();
 
 const failed = results.filter((item) => !item.passed);

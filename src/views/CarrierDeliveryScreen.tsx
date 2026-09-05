@@ -332,8 +332,14 @@ export function CarrierDeliveryScreen({
                           height: "var(--k-tap-min)",
                         }}
                       >
+                        {/*
+                          Текст плашки — ЕДИНСТВЕННОЕ имя этой кнопки, поэтому
+                          прятать его `aria-hidden` нельзя: axe помечает такую
+                          кнопку critical `button-name`, а скринридер называет
+                          её «кнопка». Плашка остаётся оформлением, имя берётся
+                          из её текста.
+                        */}
                         <span
-                          aria-hidden
                           className="flex w-full items-center justify-center"
                           style={{
                             height: "33px",

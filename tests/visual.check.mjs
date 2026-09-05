@@ -65,20 +65,27 @@ const WIDTH = 390;
 const HEIGHT = 844;
 
 /**
- * Кадры регресса. Каждая тема — своим первым экраном (там живёт её айдентика),
- * плюс общие экраны демо, которые тема не красит, но задеть может любой
- * правкой общего кода.
+ * Кадры регресса. У каждой темы ДВА кадра, и это не избыточность:
+ *
+ *   1. первый экран — там живёт айдентика подрядчика;
+ *   2. `stage=paid` — экран возврата. Он рисуется В ТЕМЕ ПОДРЯДЧИКА и потому
+ *      у каждой выглядит по-своему, а снят был только у одной: правка общего
+ *      кода возврата меняла вид у тринадцати тем, и регресс этого не видел.
+ *
+ * Плюс общие экраны демо (банк и пуш) — их тема не красит, но задеть может
+ * любая правка общего кода.
  */
+const TENANT_SLUGS = readdirSync(path.join(projectRoot, "tenants"))
+  .filter((f) => f.endsWith(".json"))
+  .map((f) => f.replace(/\.json$/, ""));
+
 const FRAMES = [
-  ...readdirSync(path.join(projectRoot, "tenants"))
-    .filter((f) => f.endsWith(".json"))
-    .map((f) => f.replace(/\.json$/, ""))
-    .map((slug) => [`tenant-${slug}`, `/?tenant=${slug}`]),
+  ...TENANT_SLUGS.map((slug) => [`tenant-${slug}`, `/?tenant=${slug}`]),
+  ...TENANT_SLUGS.map((slug) => [`paid-${slug}`, `/?tenant=${slug}&stage=paid`]),
   ["bank-splash", "/?tenant=flowwow-like&stage=splash"],
   ["bank-payment", "/?tenant=flowwow-like&stage=bank_payment"],
   ["bank-success", "/?tenant=flowwow-like&stage=bank_success"],
   ["bank-push", "/?tenant=flowwow-like&stage=push"],
-  ["paid-return", "/?tenant=uchi-like&stage=paid"],
 ];
 
 const browser = await chromium.launch();

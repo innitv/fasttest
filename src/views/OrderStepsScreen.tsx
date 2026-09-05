@@ -125,6 +125,7 @@ export function OrderStepsScreen({
               {section.done && (
                 <span
                   data-testid={`section-done-${index + 1}`}
+                  role="img"
                   aria-label={COPY["section.done"]}
                   className="flex shrink-0 items-center justify-center"
                   style={{

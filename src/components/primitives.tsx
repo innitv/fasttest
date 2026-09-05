@@ -115,6 +115,12 @@ export function NeutralPlate({
   return (
     <span
       aria-hidden={label ? undefined : "true"}
+      /*
+       * Плашка с подписью — это КАРТИНКА для скринридера, и роль обязана быть
+       * названа: `aria-label` на безролевом `<span>` запрещён спецификацией
+       * (axe: `aria-prohibited-attr`), имя такого узла просто не читается.
+       */
+      role={label ? "img" : undefined}
       aria-label={label}
       style={{
         display: "block",

@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "permissions": {
+    "allow": [
+      "Bash(yarn build)",
+      "Bash(yarn check:*)",
+      "Bash(yarn verify)",
+      "Bash(yarn verify --base=*)",
+      "Bash(yarn preview)",
+      "Bash(yarn donor:*)",
+      "Bash(yarn motion:trace*)",
+      "Bash(yarn tenant:diff*)",
+      "Bash(node tests/*)",
+      "Bash(node tools/*)",
+      "Bash(git status*)",
+      "Bash(git diff*)",
+      "Bash(git log*)",
+      "Bash(git show*)",
+      "Bash(git fetch*)",
+      "Bash(git branch*)",
+      "Bash(curl -s -o /dev/null*)"
+    ]
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node .claude/hooks/after-edit.mjs",
+            "timeout": 30,
+            "statusMessage": "Сторожа документации и реестра тем"
+          }
+        ]
+      }
+    ]
+  }
+}

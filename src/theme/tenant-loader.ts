@@ -1,18 +1,3 @@
-import flowwowLike from "../../tenants/flowwow-like.json";
-import uchiLike from "../../tenants/uchi-like.json";
-import monochrome from "../../tenants/monochrome.json";
-import padlhub from "../../tenants/padlhub.json";
-import voroh from "../../tenants/voroh.json";
-import yesAtlas from "../../tenants/yes-atlas.json";
-import vorohLight from "../../tenants/voroh-light.json";
-import rml from "../../tenants/rml.json";
-import hval from "../../tenants/hval.json";
-import bombbar from "../../tenants/bombbar.json";
-import mybox from "../../tenants/mybox.json";
-import tripster from "../../tenants/tripster.json";
-import ewa from "../../tenants/ewa.json";
-import yandexPlus from "../../tenants/yandex-plus.json";
-
 import { buildTheme, TenantConfigError, type BuiltTheme, type Diagnostic } from "./build-theme";
 import type { TenantConfig } from "./tenant.schema";
 
@@ -25,23 +10,35 @@ import type { TenantConfig } from "./tenant.schema";
  *
  * Некорректный конфиг в URL — внятная ошибка на экране. Ни белого экрана,
  * ни молчаливого отката к дефолту.
+ *
+ * Тема из URL разбирается синхронно, поставляемая приезжает отдельным
+ * чанком: она нужна ровно одна, а лежало в бандле четырнадцать.
  */
 
-export const BUNDLED_TENANTS: Record<string, unknown> = {
-  "flowwow-like": flowwowLike,
-  "uchi-like": uchiLike,
-  padlhub,
-  voroh,
-  "yes-atlas": yesAtlas,
-  "voroh-light": vorohLight,
-  monochrome,
-  rml,
-  hval,
-  bombbar,
-  mybox,
-  tripster,
-  ewa,
-  "yandex-plus": yandexPlus,
+/*
+ * Тема грузится ПО ТРЕБОВАНИЮ, а не все четырнадцать разом.
+ *
+ * Подрядчик открывает свою ссылку и получает одну тему; статический импорт
+ * вёз в общем чанке все — 83 КБ JSON, которые растут с каждой новой темой и
+ * которые он никогда не увидит. Ключи остаются ЛИТЕРАЛАМИ намеренно:
+ * `check:registry` читает этот список разбором исходника, и glob-выражение
+ * оставило бы его без имён.
+ */
+export const BUNDLED_TENANTS: Record<string, () => Promise<{ default: unknown }>> = {
+  "flowwow-like": () => import("../../tenants/flowwow-like.json"),
+  "uchi-like": () => import("../../tenants/uchi-like.json"),
+  "padlhub": () => import("../../tenants/padlhub.json"),
+  "voroh": () => import("../../tenants/voroh.json"),
+  "yes-atlas": () => import("../../tenants/yes-atlas.json"),
+  "voroh-light": () => import("../../tenants/voroh-light.json"),
+  "monochrome": () => import("../../tenants/monochrome.json"),
+  "rml": () => import("../../tenants/rml.json"),
+  "hval": () => import("../../tenants/hval.json"),
+  "bombbar": () => import("../../tenants/bombbar.json"),
+  "mybox": () => import("../../tenants/mybox.json"),
+  "tripster": () => import("../../tenants/tripster.json"),
+  "ewa": () => import("../../tenants/ewa.json"),
+  "yandex-plus": () => import("../../tenants/yandex-plus.json"),
 };
 
 export const DEFAULT_TENANT_SLUG = "flowwow-like";
@@ -145,10 +142,10 @@ function applyOverrides(raw: unknown, options: LoadOptions): unknown {
   return copy;
 }
 
-export function loadTenant(
+export async function loadTenant(
   search: string,
   options: LoadOptions = {},
-): LoadedTenant {
+): Promise<LoadedTenant> {
   const params = new URLSearchParams(search);
   const urlConfig = params.get("t");
 
@@ -170,8 +167,8 @@ export function loadTenant(
   }
 
   const slug = params.get("tenant") ?? DEFAULT_TENANT_SLUG;
-  const bundled = BUNDLED_TENANTS[slug];
-  if (!bundled) {
+  const load = BUNDLED_TENANTS[slug];
+  if (!load) {
     throw new TenantLoadError({
       source: "bundled",
       slug,
@@ -185,6 +182,8 @@ export function loadTenant(
       ],
     });
   }
+
+  const bundled = (await load()).default;
 
   try {
     const theme = buildTheme(applyOverrides(bundled, options));

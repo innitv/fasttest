@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 
 import { BANK_COPY, COPY } from "@demo/content/copy";
 import { focusWithoutScroll } from "@demo/lib/scroll-safety";
@@ -65,7 +65,7 @@ export function PushBanner({ merchant, amount, onOpen, onDismiss }: Props) {
         {BANK_COPY.livePush(amount)}
       </span>
 
-      <motion.button
+      <m.button
         ref={ref}
         type="button"
         data-testid="push-banner"
@@ -76,7 +76,7 @@ export function PushBanner({ merchant, amount, onOpen, onDismiss }: Props) {
         // беда. Мягкая пружина распределяет скорость по времени: баннер заметно
         // едет сверху вниз ~0.5с и мягко доводит с лёгким проскоком (ζ≈0.65 →
         // ~7% overshoot). Сами параметры — в общем слое (`PUSH_BANNER_*_SPEC` в
-        // `stage-motion.ts`): движение задаёт он, а не компонент. Старт заведомо
+        // `stage-m.ts`): движение задаёт он, а не компонент. Старт заведомо
         // выше кромки (−170% высоты баннера + верхний отступ) — виден полный ход.
         // Свайп/дисмисс — быстрый уход вверх. Под prefers-reduced-motion
         // `MotionConfig` гасит transform: баннер мгновенно на месте.
@@ -196,7 +196,7 @@ export function PushBanner({ merchant, amount, onOpen, onDismiss }: Props) {
             {BANK_COPY.pushBody(merchant)}
           </span>
         </span>
-      </motion.button>
+      </m.button>
     </div>
   );
 }

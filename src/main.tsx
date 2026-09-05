@@ -1,6 +1,6 @@
 import React from "react";
 import { createRoot } from "react-dom/client";
-import { MotionConfig } from "framer-motion";
+import { domAnimation, LazyMotion, MotionConfig } from "framer-motion";
 
 import { App } from "./App";
 import "./styles.css";
@@ -20,7 +20,16 @@ createRoot(rootElement).render(
       splash задаётся отдельным таймером и не зависит от motion.
     */}
     <MotionConfig reducedMotion="user">
-      <App />
+      {/*
+        Возможности движения грузятся отдельным куском, а не целой
+        библиотекой: демо использует анимации, exit-переходы и tap-жест —
+        это `domAnimation`; drag и layout-анимаций в нём нет. `strict`
+        запрещает `motion.*` и тем самым не даёт вернуть полный пакет
+        случайной правкой: узлы объявляются через `m.*`.
+      */}
+      <LazyMotion features={domAnimation} strict>
+        <App />
+      </LazyMotion>
     </MotionConfig>
   </React.StrictMode>,
 );

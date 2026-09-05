@@ -1,5 +1,13 @@
-import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import {
+  lazy,
+  Suspense,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type ComponentType,
+} from "react";
+import { AnimatePresence, m } from "framer-motion";
 
 import { HandoffOverlay } from "@demo/components/HandoffOverlay";
 import { PhoneFrame } from "@demo/components/PhoneFrame";
@@ -13,24 +21,70 @@ import { OZON_METHOD_ID, type TenantConfig } from "@demo/theme/tenant.schema";
 import { BankPaymentScreen } from "./BankPaymentScreen";
 import { BankSplashScreen } from "./BankSplashScreen";
 import { BankSuccessScreen } from "./BankSuccessScreen";
-import { BonusCheckoutScreen } from "./BonusCheckoutScreen";
-import { CarrierDeliveryScreen } from "./CarrierDeliveryScreen";
 import { CarrierPaymentScreen } from "./CarrierPaymentScreen";
-import { PickupCheckoutScreen } from "./PickupCheckoutScreen";
-import { OrderPrepayScreen } from "./OrderPrepayScreen";
-import { CartCheckoutScreen } from "./CartCheckoutScreen";
-import { SlotDeliveryScreen } from "./SlotDeliveryScreen";
-import { OrderStepsScreen } from "./OrderStepsScreen";
 import { OzonRailScreen } from "./OzonRailScreen";
 import { PaidConfirmationScreen } from "./PaidConfirmationScreen";
-import { SubscriptionBindScreen } from "./SubscriptionBindScreen";
-import { SubscriptionPaymentScreen } from "./SubscriptionPaymentScreen";
-import { PlanSheetScreen } from "./PlanSheetScreen";
-import { StoreCheckoutScreen } from "./StoreCheckoutScreen";
-import { TicketCheckoutScreen } from "./TicketCheckoutScreen";
 import type { DemoStage } from "./demo-flow";
 import { stageVariants, transitionFor } from "./stage-motion";
-import type { ForcedState, PhoneGateSlot } from "./screen-props";
+import type { ForcedState, PhoneGateSlot, ScreenProps } from "./screen-props";
+
+/*
+ * Экраны подрядчика грузятся ПО ТРЕБОВАНИЮ, а не все разом.
+ *
+ * Подрядчик открывает ОДНУ свою ссылку и видит ОДИН экран, чаще всего с
+ * телефона по мобильной сети, — а до этой правки бандл вёз все двенадцать:
+ * 375 КБ из 695 приходились на `src/views/`. Тринадцать доноров означают
+ * тринадцать самостоятельных вёрсток, и дальше их будет больше, поэтому
+ * цена статического импорта растёт с каждой темой.
+ *
+ * Таблица остаётся ТАБЛИЦЕЙ (`Record<archetype, …>`): компилятор по-прежнему
+ * требует экран для каждого значения enum, забыть новый архетип нельзя.
+ * Экраны банка, пуш и подтверждение статичны намеренно — они общие для всех
+ * тем, идут сразу за экраном подрядчика и в сумме много меньше.
+ */
+const CONTRACTOR_SCREENS: Record<
+  TenantConfig["archetype"],
+  ComponentType<ScreenProps>
+> = {
+  cart_checkout: lazy(() =>
+    import("./CartCheckoutScreen").then((m) => ({ default: m.CartCheckoutScreen })),
+  ),
+  subscription_payment: lazy(() =>
+    import("./SubscriptionPaymentScreen").then((m) => ({
+      default: m.SubscriptionPaymentScreen,
+    })),
+  ),
+  ticket_checkout: lazy(() =>
+    import("./TicketCheckoutScreen").then((m) => ({ default: m.TicketCheckoutScreen })),
+  ),
+  store_checkout: lazy(() =>
+    import("./StoreCheckoutScreen").then((m) => ({ default: m.StoreCheckoutScreen })),
+  ),
+  plan_sheet: lazy(() =>
+    import("./PlanSheetScreen").then((m) => ({ default: m.PlanSheetScreen })),
+  ),
+  order_steps: lazy(() =>
+    import("./OrderStepsScreen").then((m) => ({ default: m.OrderStepsScreen })),
+  ),
+  slot_delivery: lazy(() =>
+    import("./SlotDeliveryScreen").then((m) => ({ default: m.SlotDeliveryScreen })),
+  ),
+  bonus_checkout: lazy(() =>
+    import("./BonusCheckoutScreen").then((m) => ({ default: m.BonusCheckoutScreen })),
+  ),
+  pickup_checkout: lazy(() =>
+    import("./PickupCheckoutScreen").then((m) => ({ default: m.PickupCheckoutScreen })),
+  ),
+  carrier_delivery: lazy(() =>
+    import("./CarrierDeliveryScreen").then((m) => ({ default: m.CarrierDeliveryScreen })),
+  ),
+  order_prepay: lazy(() =>
+    import("./OrderPrepayScreen").then((m) => ({ default: m.OrderPrepayScreen })),
+  ),
+  subscription_bind: lazy(() =>
+    import("./SubscriptionBindScreen").then((m) => ({ default: m.SubscriptionBindScreen })),
+  ),
+};
 
 interface Props {
   theme: BuiltTheme;
@@ -399,23 +453,6 @@ export function ScreenHost({ theme, forcedState, showHandoff, initialStage }: Pr
    * проверка телефона под рядом методов) и расходится с ним только раскладкой
    * экрана — поэтому ветвление по поведению выше таблицы не касается.
    */
-  const CONTRACTOR_SCREENS: Record<
-    TenantConfig["archetype"],
-    (props: typeof screenProps) => ReactNode
-  > = {
-    cart_checkout: CartCheckoutScreen,
-    subscription_payment: SubscriptionPaymentScreen,
-    ticket_checkout: TicketCheckoutScreen,
-    store_checkout: StoreCheckoutScreen,
-    plan_sheet: PlanSheetScreen,
-    order_steps: OrderStepsScreen,
-    slot_delivery: SlotDeliveryScreen,
-    bonus_checkout: BonusCheckoutScreen,
-    pickup_checkout: PickupCheckoutScreen,
-    carrier_delivery: CarrierDeliveryScreen,
-    order_prepay: OrderPrepayScreen,
-    subscription_bind: SubscriptionBindScreen,
-  };
   const ContractorScreen = CONTRACTOR_SCREENS[tenant.archetype];
   const contractorScreen = <ContractorScreen {...screenProps} />;
 
@@ -472,7 +509,7 @@ export function ScreenHost({ theme, forcedState, showHandoff, initialStage }: Pr
   const pushOpen = stage === "push";
   const visualStage: DemoStage = pushOpen ? backdropStage : stage;
 
-  // Содержимое одной стадии. Обёртывается в motion.div снаружи, поэтому сама
+  // Содержимое одной стадии. Обёртывается в m.div снаружи, поэтому сама
   // возвращает готовый экран. Стадии `push` здесь нет намеренно: баннер живёт
   // отдельным слоем и анимируется собственным spring-выездом.
   const renderStage = (current: DemoStage) => {
@@ -516,7 +553,7 @@ export function ScreenHost({ theme, forcedState, showHandoff, initialStage }: Pr
       stage={stage}
     >
       {/*
-        Межэкранный motion. `initial={false}` — при прямом заходе на любую
+        Межэкранный m. `initial={false}` — при прямом заходе на любую
         стадию (deep-link для съёмки и тестов) экран появляется БЕЗ анимации,
         поэтому метрики раскладки, снятые сразу после загрузки, не искажены
         transform'ом. Анимируются только переходы ВНУТРИ сессии.
@@ -524,12 +561,12 @@ export function ScreenHost({ theme, forcedState, showHandoff, initialStage }: Pr
       {/*
         `sync` для всех переходов: банк-шиты обязаны выезжать ПОВЕРХ подложки
         (наложение нужно), а stack-переход подрядчика решает конфликт testid
-        мгновенным уходом старого экрана (см. exit в stage-motion.ts). `wait`
+        мгновенным уходом старого экрана (см. exit в stage-m.ts). `wait`
         не используется намеренно: он залипает под prefers-reduced-motion, когда
         exit-анимация нечего анимировать и не завершается.
       */}
       <AnimatePresence initial={false} mode="sync" custom={transitionType}>
-        <motion.div
+        <m.div
           key={visualStage}
           custom={transitionType}
           variants={stageVariants}
@@ -543,13 +580,28 @@ export function ScreenHost({ theme, forcedState, showHandoff, initialStage }: Pr
           className="absolute inset-0"
           style={{ willChange: "transform" }}
         >
-          {renderStage(visualStage)}
-        </motion.div>
+          {/*
+            Экран подрядчика приезжает отдельным чанком, поэтому первый кадр
+            ждёт его загрузки. Заглушка ПУСТАЯ и в цвет фона темы: спиннер на
+            десяток миллисекунд читался бы как «демо тормозит», а белая
+            вспышка — как мигание при переходе.
+          */}
+          <Suspense
+            fallback={
+              <div
+                className="absolute inset-0"
+                style={{ background: "var(--t-surface-background)" }}
+              />
+            }
+          >
+            {renderStage(visualStage)}
+          </Suspense>
+        </m.div>
       </AnimatePresence>
 
       {/*
         Слой пуша — сосед стадийного слоя, а не его содержимое: он переживает
-        смену подложки и не участвует в межэкранном motion.
+        смену подложки и не участвует в межэкранном m.
       */}
       {pushOpen && (
         <PushBanner

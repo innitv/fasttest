@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, m } from "framer-motion";
 
 import { PaymentMethodList } from "@demo/components/PaymentMethodList";
 import { PhoneGateBlock } from "@demo/components/PhoneGateBlock";
@@ -467,7 +467,7 @@ export function PlanSheetScreen({
       <AnimatePresence>
         {openPlan && (
           <>
-            <motion.div
+            <m.div
               data-testid="sheet-scrim"
               className="absolute inset-0"
               style={{ background: "rgba(10, 12, 16, 0.56)" }}
@@ -477,7 +477,7 @@ export function PlanSheetScreen({
               transition={SHEET_SCRIM_SPEC}
               onClick={() => setOpenPlanId(null)}
             />
-            <motion.section
+            <m.section
               data-testid="payment-sheet"
               role="dialog"
               aria-label={content.sheet_title ?? COPY["payment.section_title"]}
@@ -567,7 +567,7 @@ export function PlanSheetScreen({
                 state={disabled ? "disabled" : ctaState}
                 onClick={onCta}
               />
-            </motion.section>
+            </m.section>
           </>
         )}
       </AnimatePresence>

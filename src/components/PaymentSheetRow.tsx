@@ -1,4 +1,4 @@
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, m } from "framer-motion";
 import { Fragment, useEffect, useId, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 
@@ -152,7 +152,7 @@ export function PaymentSheetRow({
            * `SHEET_OVERLAY_SPEC`. `prefers-reduced-motion` обрабатывает
            * MotionConfig в main.tsx.
            */}
-          <motion.div
+          <m.div
             className="absolute inset-0 z-20"
             data-testid="payment-sheet"
             style={{ background: "rgba(0, 0, 0, 0.6)" }}
@@ -172,8 +172,8 @@ export function PaymentSheetRow({
               className="absolute inset-0 h-full w-full"
               style={{ background: "none", border: "none", cursor: "default" }}
             />
-          </motion.div>
-          <motion.div
+          </m.div>
+          <m.div
             role="dialog"
             aria-modal="true"
             aria-labelledby={titleId}
@@ -294,7 +294,7 @@ export function PaymentSheetRow({
             >
               {ctaLabel}
             </button>
-          </motion.div>
+          </m.div>
         </Fragment>
               ) : null}
             </AnimatePresence>,

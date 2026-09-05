@@ -1,7 +1,12 @@
-import { useEffect, useMemo } from "react";
+import { useEffect, useState } from "react";
 
 import { logDiagnostics } from "@demo/theme/build-theme";
-import { loadTenant, TenantLoadError, type LoadFailure } from "@demo/theme/tenant-loader";
+import {
+  loadTenant,
+  TenantLoadError,
+  type LoadedTenant,
+  type LoadFailure,
+} from "@demo/theme/tenant-loader";
 import { tenantSchema, type TenantConfig } from "@demo/theme/tenant.schema";
 import { ConfigErrorView } from "@demo/views/ConfigErrorView";
 import { LauncherView } from "@demo/views/LauncherView";
@@ -45,7 +50,22 @@ export function App() {
   const search = typeof window === "undefined" ? "" : window.location.search;
   const pathname = typeof window === "undefined" ? "/" : window.location.pathname;
 
-  const route = useMemo(() => resolveRoute(pathname, search), [pathname, search]);
+  /*
+   * Разбор адреса синхронен, а вот тема приезжает отдельным чанком: в бандле
+   * лежала одна общая пачка из четырнадцати, из которых подрядчику нужна
+   * ровно одна. Отсюда состояние: до первого ответа — `loading`, и это
+   * ПУСТОЙ экран, а не спиннер (см. рендер ниже).
+   */
+  const [route, setRoute] = useState<Route>({ kind: "loading" });
+  useEffect(() => {
+    let cancelled = false;
+    resolveRoute(pathname, search).then((next) => {
+      if (!cancelled) setRoute(next);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [pathname, search]);
 
   // Диагностика печатается вне рендера: каждая коррекция обязана быть
   // записана ровно один раз, а не по разу на проход рендера.
@@ -75,6 +95,14 @@ export function App() {
     };
   }, [fontFaceCss]);
 
+  /*
+   * Пока тема не приехала — пустая поверхность в цвет страницы. Спиннер на
+   * десяток миллисекунд читался бы как «демо тормозит», а белая вспышка — как
+   * мигание; заглушка демо (`StubView`) здесь тоже неверна, она сообщает
+   * «такой ссылки нет».
+   */
+  if (route.kind === "loading") return <div style={{ minHeight: "100vh" }} />;
+
   if (route.kind === "launcher") {
     // Вторая, compile-time защита поверх маршрутизации: `import.meta.env.DEV`
     // сворачивается при сборке, поэтому в прод-бандл разметка лаунчера со
@@ -103,12 +131,13 @@ export function App() {
 }
 
 type Route =
+  | { kind: "loading" }
   | { kind: "launcher" }
   | { kind: "stub" }
   | { kind: "error"; failure: LoadFailure }
   | {
       kind: "screen";
-      theme: ReturnType<typeof loadTenant>["theme"];
+      theme: LoadedTenant["theme"];
       forcedState: ForcedState;
       showHandoff: boolean;
       initialStage: DemoStage | null;
@@ -120,7 +149,7 @@ function normalizePath(pathname: string): string {
   return (trimmed === "" ? "/" : trimmed).toLowerCase();
 }
 
-function resolveRoute(pathname: string, search: string): Route {
+async function resolveRoute(pathname: string, search: string): Promise<Route> {
   const path = normalizePath(pathname);
 
   // Лаунчер доступен только в dev по служебному пути; в проде — заглушка.
@@ -167,7 +196,7 @@ function buildContentSearch(
   return `?${params.toString()}`;
 }
 
-function resolveScreen(search: string): Route {
+async function resolveScreen(search: string): Promise<Route> {
   const params = new URLSearchParams(search);
 
   const stateParam = params.get("state");
@@ -178,7 +207,7 @@ function resolveScreen(search: string): Route {
   const initialStage = parseStage(params.get("stage"));
 
   try {
-    const loaded = loadTenant(search, {
+    const loaded = await loadTenant(search, {
       archetype: parseArchetype(params.get("archetype")),
       a11yMode: parseA11yMode(params.get("a11y")),
     });

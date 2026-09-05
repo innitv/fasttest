@@ -26,5 +26,22 @@ export default defineConfig({
   build: {
     outDir: "dist",
     emptyOutDir: true,
+    rollupOptions: {
+      output: {
+        /*
+         * Вендоры — отдельными чанками, чтобы правка демо не сбрасывала их
+         * кеш у подрядчика: React и Motion между релизами не меняются.
+         *
+         * Экраны здесь НЕ перечисляются намеренно: они приезжают по
+         * требованию через `lazy()` в `ScreenHost`, и любое правило,
+         * собирающее `src/views/` в общий чанк, отменяет это разделение —
+         * первая же попытка так и сделала.
+         */
+        manualChunks(id) {
+          if (id.includes("node_modules/framer-motion")) return "motion";
+          if (id.includes("node_modules/react")) return "react";
+        },
+      },
+    },
   },
 });

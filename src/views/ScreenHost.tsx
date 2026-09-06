@@ -208,9 +208,12 @@ export function ScreenHost({ theme, forcedState, showHandoff, initialStage }: Pr
    * нет.
    */
   /*
-   * Домашний экран стоит ровно столько, чтобы его успели прочитать, и сам
-   * отдаёт кадр уведомлению. Длительность — та же, что у splash: обе паузы
-   * отмеряют «экран показан», и разводить их двумя числами нечем.
+   * Домашний экран стоит ровно столько, чтобы его успели заметить, и сам
+   * отдаёт кадр уведомлению. Пауза — `push_delay_ms`, та же, что перед
+   * пушем платежа: это одно и то же ожидание «сейчас придёт уведомление».
+   * Раньше здесь стояла длительность splash — и когда splash удлинили ради
+   * сборки знака, вместе с ним удлинилось ожидание первого пуша, хотя к
+   * нему это отношения не имеет.
    */
   const [homePushSeen, setHomePushSeen] = useState(false);
   useEffect(() => {
@@ -218,9 +221,9 @@ export function ScreenHost({ theme, forcedState, showHandoff, initialStage }: Pr
     const id = window.setTimeout(() => {
       setHomePushSeen(true);
       setStage("home_push");
-    }, timings.splash_ms);
+    }, timings.push_delay_ms);
     return () => window.clearTimeout(id);
-  }, [stage, homePushSeen, timings.splash_ms]);
+  }, [stage, homePushSeen, timings.push_delay_ms]);
 
   /*
    * Кадры до формы — время, за которое её чанк обязан приехать. Иначе
@@ -231,6 +234,20 @@ export function ScreenHost({ theme, forcedState, showHandoff, initialStage }: Pr
     if (stage !== "home" && stage !== "home_push" && stage !== "app_splash") return;
     void CONTRACTOR_LOADERS[tenant.archetype]();
   }, [stage, tenant.archetype]);
+
+  /*
+   * Готовность экрана под заставкой: включается к концу сборки знака, когда
+   * на кадре уже ничего не движется.
+   */
+  const [splashWarm, setSplashWarm] = useState(false);
+  useEffect(() => {
+    if (stage !== "app_splash") {
+      setSplashWarm(false);
+      return;
+    }
+    const id = window.setTimeout(() => setSplashWarm(true), 1150);
+    return () => window.clearTimeout(id);
+  }, [stage]);
 
   /** Splash приложения живёт столько же, сколько splash банка. */
   useEffect(() => {
@@ -592,12 +609,38 @@ export function ScreenHost({ theme, forcedState, showHandoff, initialStage }: Pr
     switch (current) {
       case "home":
         return (
+          <>
+            {/*
+             * Экран приложения монтируется ЗДЕСЬ — на кадре с уведомлением,
+             * пока ничего не движется. Раньше он монтировался вместе с
+             * выездом заставки, и первый рендер тяжёлого экрана съедал кадры
+             * ровно во время движения. Скрытый слой не виден, не читается
+             * диктором и не ловит касания.
+             */}
+            {stage === "home_push" && homePush?.app_icon ? (
+              /*
+               * СВОЙ Suspense с пустой заглушкой. Без него ленивый экран
+               * подвешивал ВЕСЬ стадийный слой, и общая заглушка (заставка
+               * приложения) на секунду накрывала домашний экран — кадр
+               * регресса поймал это раньше человека.
+               */
+              <Suspense fallback={null}>
+                <div
+                  aria-hidden
+                  className="absolute inset-0"
+                  style={{ visibility: "hidden", pointerEvents: "none" }}
+                >
+                  {contractorScreen}
+                </div>
+              </Suspense>
+            ) : null}
           <HomeScreen
             appName={homePush?.app_name ?? tenant.display_name}
             appMark={tenant.display_name.slice(0, 1)}
             appIcon={homePush?.app_icon ?? null}
             bankName={OZON_LABEL}
           />
+          </>
         );
       case "contractor":
         return contractorScreen;
@@ -620,13 +663,23 @@ export function ScreenHost({ theme, forcedState, showHandoff, initialStage }: Pr
          */
         return (
           <>
-            <div
-              aria-hidden
-              className="absolute inset-0"
-              style={{ visibility: "hidden", pointerEvents: "none" }}
-            >
-              {contractorScreen}
-            </div>
+            {/*
+             * Экран под заставкой монтируется НЕ сразу: на выезде заставки и
+             * во время сборки знака кадры заняты, и маунт тяжёлого экрана
+             * ровно там давал рывок на живом телефоне. К 1.15 с движение
+             * закончилось, до перехода остаётся запас.
+             */}
+            {splashWarm ? (
+              <Suspense fallback={null}>
+                <div
+                  aria-hidden
+                  className="absolute inset-0"
+                  style={{ visibility: "hidden", pointerEvents: "none" }}
+                >
+                  {contractorScreen}
+                </div>
+              </Suspense>
+            ) : null}
             <AppSplashScreen name={homePush.app_name} />
           </>
         );

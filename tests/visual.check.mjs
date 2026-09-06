@@ -79,8 +79,18 @@ const TENANT_SLUGS = readdirSync(path.join(projectRoot, "tenants"))
   .filter((f) => f.endsWith(".json"))
   .map((f) => f.replace(/\.json$/, ""));
 
+/*
+ * Первый кадр темы снимается по её обычному адресу — кроме тем, которые
+ * начинаются раньше формы: у них через `push_delay_ms` приходит
+ * уведомление, и кадр без стадии ловил бы гонку с ним.
+ */
+const FIRST_FRAME = { a3pay: "&stage=home" };
+
 const FRAMES = [
-  ...TENANT_SLUGS.map((slug) => [`tenant-${slug}`, `/?tenant=${slug}`]),
+  ...TENANT_SLUGS.map((slug) => [
+    `tenant-${slug}`,
+    `/?tenant=${slug}${FIRST_FRAME[slug] ?? ""}`,
+  ]),
   ...TENANT_SLUGS.map((slug) => [`paid-${slug}`, `/?tenant=${slug}&stage=paid`]),
   ["bank-splash", "/?tenant=flowwow-like&stage=splash"],
   ["bank-payment", "/?tenant=flowwow-like&stage=bank_payment"],
@@ -95,13 +105,12 @@ const FRAMES = [
   ["bank-payment-plus", "/?tenant=yandex-plus&stage=bank_payment"],
   ["bank-success-plus", "/?tenant=yandex-plus&stage=bank_success"],
   /*
-   * A3 Pay начинается на две стадии раньше остальных тем, и первый кадр
-   * (`tenant-a3pay`) снимает домашний экран устройства, а не форму. Поэтому
-   * два кадра сверх общего правила: уведомление о счёте на домашнем экране
-   * и сама карточка подписки — без них регресс не видел бы ни системного
-   * слоя, ни экрана, ради которого тема заведена.
+   * A3 Pay начинается на две стадии раньше остальных тем. Первый кадр
+   * (`tenant-a3pay`) снимает домашний экран с уведомлением о счёте: за
+   * `push_delay_ms` оно успевает прийти, и отдельный кадр только для него
+   * был бы тем же самым. Карточка подписки — кадром ниже: без неё регресс
+   * не видел бы экрана, ради которого тема заведена.
    */
-  ["a3pay-home-push", "/?tenant=a3pay&stage=home_push"],
   ["a3pay-card", "/?tenant=a3pay&stage=contractor"],
   // Splash приложения сервиса: пара к splash банка, и такой же кадр
   // смены айдентики — только в обратную сторону.

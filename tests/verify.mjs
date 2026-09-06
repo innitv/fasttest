@@ -1229,11 +1229,14 @@ for (const width of WIDTHS) {
        * уведомления и открыть по нему форму: иначе проверка сообщала бы
        * «кнопки нет» там, где кнопка появляется шагом позже.
        */
-      const startedAtHome =
-        (await page
-          .locator('[data-testid="phone-frame"]')
-          .getAttribute("data-stage")
-          .catch(() => null)) === "home";
+      const stageNow = await page
+        .locator('[data-testid="phone-frame"]')
+        .getAttribute("data-stage")
+        .catch(() => null);
+      // Уведомление приходит быстро (`push_delay_ms`), и к первому чтению
+      // стадия может быть уже `home_push`. Обе — «сценарий начался на
+      // домашнем экране»; ждать конкретную из них значит ловить гонку.
+      const startedAtHome = stageNow === "home" || stageNow === "home_push";
       if (startedAtHome) {
         await page
           .waitForSelector('[data-testid="push-banner"]', { timeout: 4000 })

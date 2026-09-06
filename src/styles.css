@@ -564,8 +564,12 @@ button:active,
  * a3brand, `src/case/Case.tsx` → MARK_PIECES): левая опора идёт снизу
  * вверх, правая — сверху вниз, за ней перекладина справа налево, и
  * следом по очереди три луча. Там это фрагмент семисекундного цикла;
- * здесь окно сжато до 0.91 с: splash живёт 1.2 с, и собранный знак должен
- * успеть постоять, а не смениться в момент последнего луча.
+ * здесь окно 0.47→1.11 с внутри splash: он живёт 1.2 с. Старт отложен
+ * до конца ВЫЕЗДА заставки (0.36 с): `clip-path` не уходит в композитор,
+ * и шесть перерисовываемых слоёв поверх едущего экрана давали на живом
+ * телефоне рывок — снято с видео владельца 2026-09-06. Пока экран
+ * движется, знак стоит; собирается он на неподвижном кадре и успевает
+ * постоять до перехода.
  *
  * Живёт в ОБЩЕМ слое движения, а не в компоненте: длительности и кривая
  * задаются здесь, экран только вешает классы (правило проекта, сторожит
@@ -637,33 +641,33 @@ button:active,
 /* Стойки и перекладина: порядок и паузы — из брендового кейса. */
 .a3-mark-left {
   animation-name: a3-mark-up;
-  animation-duration: 260ms;
-  animation-delay: 0ms;
+  animation-duration: 190ms;
+  animation-delay: 470ms;
 }
 .a3-mark-right {
   animation-name: a3-mark-down;
-  animation-duration: 300ms;
-  animation-delay: 260ms;
+  animation-duration: 210ms;
+  animation-delay: 660ms;
 }
 .a3-mark-bar {
   animation-name: a3-mark-bar;
-  animation-duration: 260ms;
-  animation-delay: 500ms;
+  animation-duration: 180ms;
+  animation-delay: 810ms;
 }
 .a3-mark-beam-1 {
   animation-name: a3-mark-beam-long;
-  animation-duration: 170ms;
-  animation-delay: 560ms;
+  animation-duration: 120ms;
+  animation-delay: 850ms;
 }
 .a3-mark-beam-2 {
   animation-name: a3-mark-beam-mid;
-  animation-duration: 170ms;
-  animation-delay: 650ms;
+  animation-duration: 120ms;
+  animation-delay: 920ms;
 }
 .a3-mark-beam-3 {
   animation-name: a3-mark-beam-short;
-  animation-duration: 170ms;
-  animation-delay: 740ms;
+  animation-duration: 120ms;
+  animation-delay: 990ms;
 }
 
 @media (prefers-reduced-motion: reduce) {

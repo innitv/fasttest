@@ -92,7 +92,13 @@ export function LauncherView({ routes }: { routes: LauncherRoute[] }) {
         background: "var(--l-ground)",
         color: "var(--l-ink)",
         fontFamily: "var(--l-font)",
-        minHeight: "100vh",
+        /*
+         * Высота — В РАЗМЕР корня, а не 100vh. Документ в этом демо не
+         * листается вовсе (`html, body { overflow: hidden }`), и вся
+         * прокрутка живёт во внутренних контейнерах: узел выше корня просто
+         * обрезался бы, а страница со списком не скроллилась.
+         */
+        height: "100%",
       }}
     >
       <div

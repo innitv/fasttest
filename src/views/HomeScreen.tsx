@@ -31,15 +31,103 @@ import { COPY } from "@demo/content/copy";
  * стекла выглядело бы обрубком.
  */
 const IDENTITY = {
-  "--os-wallpaper-top": "#3B2E63",
-  "--os-wallpaper-mid": "#23305C",
-  "--os-wallpaper-bottom": "#101425",
-  "--os-tile-border": "rgba(255,255,255,0.10)",
+  /*
+   * Обои. Замер снят с системных обоев iOS 26 «Dusk» (тёмный вариант,
+   * 1290×2796) — по сетке точек: тёмный сине-фиолетовый верх справа
+   * (#05021F), сиреневое поле слева (#907EBA…#AE9DD1), синие линзы в
+   * середине (#646AB4…#7C80C7) и почти чёрный низ слева (#000232).
+   *
+   * Сам файл Apple в репозиторий не кладётся: обои — их работа. Здесь
+   * ВОСПРОИЗВЕДЕНА структура кадра — две стеклянные линзы поверх
+   * диагонального перехода, со светящимися кромками и тёплым бликом в
+   * стыке, — потому что именно она делает экран похожим на телефон, а не
+   * плоская заливка.
+   */
+  "--os-bg-top": "#241D4A",
+  "--os-bg-deep": "#0A0722",
+  "--os-bg-night": "#02001A",
+  "--os-lilac": "#AE9DD1",
+  "--os-lens-cool": "#7C80C7",
+  "--os-lens-cool-deep": "#43478C",
+  "--os-lens-dark": "#3E3176",
+  "--os-lens-dark-deep": "#221A4A",
+  "--os-edge": "rgba(255,255,255,0.42)",
   "--os-glyph": "#FFFFFF",
   "--os-label": "#FFFFFF",
-  "--os-dock": "rgba(255,255,255,0.18)",
   "--os-font": '-apple-system, "SF Pro Text", "Segoe UI", system-ui, sans-serif',
 } as const;
+
+/**
+ * Слой обоев: диагональный переход, две линзы и блик.
+ *
+ * Линзы — круги ШИРЕ экрана, обрезанные его кромками: у системных обоев
+ * они именно такие, и уменьшенные до «кружков» читаются наклейками.
+ * Стекло даёт полупрозрачная заливка со светлой кромкой по окружности.
+ */
+function Wallpaper() {
+  const lens = {
+    position: "absolute",
+    borderRadius: "50%",
+    boxShadow: "inset 0 1px 0 0 var(--os-edge)",
+  } as const;
+
+  return (
+    <div aria-hidden className="absolute inset-0" style={{ overflow: "hidden" }}>
+      <div
+        className="absolute inset-0"
+        style={{
+          background:
+            "radial-gradient(120% 60% at 12% 34%, var(--os-lilac) 0%, rgba(174,157,209,0) 62%), " +
+            "radial-gradient(70% 34% at 98% 82%, rgba(164,139,222,0.85) 0%, rgba(164,139,222,0) 72%), " +
+            "radial-gradient(80% 40% at 6% 98%, var(--os-bg-night) 0%, rgba(2,0,26,0) 72%), " +
+            "linear-gradient(158deg, var(--os-bg-top) 0%, var(--os-bg-deep) 46%, var(--os-bg-night) 100%)",
+        }}
+      />
+
+      {/* Верхняя линза: тёмная, уходит за правую кромку. */}
+      <div
+        style={{
+          ...lens,
+          left: "26%",
+          top: "-26%",
+          width: "132%",
+          aspectRatio: "1",
+          background:
+            "radial-gradient(110% 90% at 30% 8%, rgba(84,70,140,0.98) 0%, rgba(62,49,118,0.96) 34%, " +
+            "rgba(34,26,74,0.96) 72%, rgba(18,14,44,0.96) 100%)",
+        }}
+      />
+
+      {/* Тёплый блик в стыке линз — единственное тёплое пятно кадра. */}
+      <div
+        className="absolute"
+        style={{
+          left: "44%",
+          top: "40%",
+          width: "34%",
+          height: "16%",
+          background:
+            "radial-gradient(closest-side, rgba(255,226,214,0.55) 0%, rgba(255,226,214,0) 100%)",
+          filter: "blur(6px)",
+        }}
+      />
+
+      {/* Нижняя линза: холодная, уходит за левую и нижнюю кромки. */}
+      <div
+        style={{
+          ...lens,
+          left: "-70%",
+          top: "34%",
+          width: "158%",
+          aspectRatio: "1",
+          background:
+            "radial-gradient(120% 90% at 62% 4%, rgba(190,196,236,0.95) 0%, rgba(124,128,199,0.9) 26%, " +
+            "rgba(67,71,140,0.92) 58%, rgba(14,11,36,0.96) 100%)",
+        }}
+      />
+    </div>
+  );
+}
 
 const TILE = 60;
 
@@ -166,9 +254,7 @@ export function HomeScreen({ appName, appMark, appIcon, bankName }: Props) {
       style={{
         ...IDENTITY,
         fontFamily: "var(--os-font)",
-        background:
-          "radial-gradient(120% 80% at 50% 0%, rgba(255,255,255,0.12) 0%, rgba(0,0,0,0) 62%), " +
-          "linear-gradient(170deg, var(--os-wallpaper-top) 0%, var(--os-wallpaper-mid) 48%, var(--os-wallpaper-bottom) 100%)",
+        background: "var(--os-bg-deep)",
         /*
          * Поля и шаг — системной раскладки iPhone: колонка иконок 60 при
          * шаге 90, то есть 27 до кромки экрана. Первый ряд стоит ниже
@@ -180,8 +266,10 @@ export function HomeScreen({ appName, appMark, appIcon, bankName }: Props) {
         paddingBottom: "12px",
       }}
     >
+      <Wallpaper />
+
       <div
-        className="grid flex-1 content-start"
+        className="relative grid flex-1 content-start"
         style={{ gridTemplateColumns: `repeat(4, ${TILE}px)`, columnGap: "30px", rowGap: "22px" }}
       >
         <AppTile
@@ -197,7 +285,7 @@ export function HomeScreen({ appName, appMark, appIcon, bankName }: Props) {
       {/* Индикатор страниц: у домашнего экрана iOS он есть всегда. */}
       <div
         aria-hidden
-        className="flex shrink-0 items-center justify-center"
+        className="relative flex shrink-0 items-center justify-center"
         style={{ gap: "7px", paddingBottom: "20px" }}
       >
         {[0, 1].map((dot) => (

@@ -131,8 +131,14 @@ const DOCK: Tile[] = [
 interface Props {
   /** Имя приложения подрядчика на плитке. */
   appName: string;
-  /** Знак подрядчика: буква или короткое слово. */
+  /** Знак подрядчика: буква или короткое слово. Запасной вариант к `appIcon`. */
   appMark: string;
+  /**
+   * Знак приложения картинкой — тот же файл, что стоит в уведомлении о
+   * счёте: на домашнем экране и в баннере это одно приложение, и разные
+   * знаки читались бы как два разных.
+   */
+  appIcon?: string | null;
   /** Имя приложения банка — константа, приходит сверху. */
   bankName: string;
 }
@@ -180,7 +186,7 @@ const labelStyle = {
   whiteSpace: "nowrap",
 } as const;
 
-export function HomeScreen({ appName, appMark, bankName }: Props) {
+export function HomeScreen({ appName, appMark, appIcon, bankName }: Props) {
   return (
     <div
       data-screen-root
@@ -224,8 +230,16 @@ export function HomeScreen({ appName, appMark, bankName }: Props) {
                 fontWeight: 700,
               }}
             >
+              {appIcon ? (
+                <img
+                  alt=""
+                  src={appIcon}
+                  className="absolute inset-0"
+                  style={{ width: "100%", height: "100%", display: "block" }}
+                />
+              ) : null}
               <span aria-hidden className="absolute inset-0" style={{ background: TILE_GLOSS }} />
-              <span style={{ position: "relative" }}>{appMark}</span>
+              {appIcon ? null : <span style={{ position: "relative" }}>{appMark}</span>}
             </span>
           </span>
           <span style={labelStyle}>{appName}</span>
@@ -298,8 +312,13 @@ export function HomeScreen({ appName, appMark, bankName }: Props) {
               lineHeight: 1,
             }}
           >
+            <img
+              alt=""
+              src="/bank/app-icon.svg"
+              className="absolute inset-0"
+              style={{ width: "100%", height: "100%", display: "block" }}
+            />
             <span aria-hidden className="absolute inset-0" style={{ background: TILE_GLOSS }} />
-            <span style={{ position: "relative" }}>o</span>
           </span>
         </span>
       </div>

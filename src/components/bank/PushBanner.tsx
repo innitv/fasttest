@@ -23,6 +23,15 @@ interface Props {
    */
   title?: string;
   body?: string;
+  /**
+   * От какого приложения уведомление. Без этих полей баннер представляется
+   * банком — так он и работает в основном флоу, где банк просит подтвердить
+   * платёж. Уведомление о СЧЁТЕ присылает сервис подрядчика, и подменять его
+   * отправителя нельзя: иначе банк «знает» про счёт раньше, чем человек
+   * вообще решил платить.
+   */
+  appName?: string;
+  appIcon?: string;
   onOpen: () => void;
   onDismiss: () => void;
 }
@@ -38,10 +47,22 @@ interface Props {
  * Автоскрытия нет намеренно: в живом показе исчезнувший баннер оставляет
  * наблюдателя без точки продолжения.
  *
- * Демо-пометка стоит в шапке на месте времени iOS — попадает в любой
- * скриншот баннера и не добавляет ни одной строки к его высоте.
+ * В правом верхнем углу — время доставки, как у системного уведомления
+ * («Сейчас»). Демо-пометка стояла здесь до 2026-09-06 и снята решением
+ * владельца: баннер обязан читаться системным. Обязательная подпись
+ * «Демонстрация: платёж не выполняется» живёт на экранах банка и не
+ * зависит от этой строки.
  */
-export function PushBanner({ merchant, amount, title, body, onOpen, onDismiss }: Props) {
+export function PushBanner({
+  merchant,
+  amount,
+  title,
+  body,
+  appName,
+  appIcon,
+  onOpen,
+  onDismiss,
+}: Props) {
   const [leaving, setLeaving] = useState(false);
   /*
    * Фокус баннеру ставится программно (см. ниже), и Chromium/WebKit считают
@@ -177,7 +198,24 @@ export function PushBanner({ merchant, amount, title, body, onOpen, onDismiss }:
           cursor: "pointer",
         }}
       >
-        <BankAppIcon />
+        {appIcon ? (
+          <img
+            data-testid="push-app-icon"
+            alt=""
+            aria-hidden="true"
+            src={appIcon}
+            width={38}
+            height={38}
+            className="shrink-0"
+            style={{
+              width: "var(--bank-push-icon)",
+              height: "var(--bank-push-icon)",
+              display: "block",
+            }}
+          />
+        ) : (
+          <BankAppIcon />
+        )}
 
         <span className="flex min-w-0 flex-1 flex-col">
           <span
@@ -189,9 +227,9 @@ export function PushBanner({ merchant, amount, title, body, onOpen, onDismiss }:
               color: "var(--bank-text-secondary)",
             }}
           >
-            <span style={{ whiteSpace: "nowrap" }}>{COPY["push.app"]}</span>
-            <span data-testid="push-demo-tag" style={{ whiteSpace: "nowrap" }}>
-              {COPY["push.demo_tag"]}
+            <span style={{ whiteSpace: "nowrap" }}>{appName ?? COPY["push.app"]}</span>
+            <span data-testid="push-time" style={{ whiteSpace: "nowrap" }}>
+              {COPY["push.time"]}
             </span>
           </span>
 

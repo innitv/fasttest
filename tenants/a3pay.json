@@ -124,6 +124,8 @@
     "totals": { "sum": 39900, "discount": 0, "currency": "RUB" },
 
     "home_push": {
+      "app_name": "A3 Pay",
+      "app_icon": "/tenants/a3pay/app-icon.svg",
       "title": "Счёт за август — 399 ₽",
       "body": "Яндекс Плюс. Оплатите до 12 августа"
     },

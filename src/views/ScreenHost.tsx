@@ -564,8 +564,9 @@ export function ScreenHost({ theme, forcedState, showHandoff, initialStage }: Pr
       case "home":
         return (
           <HomeScreen
-            appName={tenant.display_name}
+            appName={homePush?.app_name ?? tenant.display_name}
             appMark={tenant.display_name.slice(0, 1)}
+            appIcon={homePush?.app_icon ?? null}
             bankName={OZON_LABEL}
           />
         );
@@ -667,6 +668,8 @@ export function ScreenHost({ theme, forcedState, showHandoff, initialStage }: Pr
           // второе просит подтвердить уже начатый платёж.
           title={stage === "home_push" ? homePush?.title : undefined}
           body={stage === "home_push" ? homePush?.body : undefined}
+          appName={stage === "home_push" ? homePush?.app_name : undefined}
+          appIcon={stage === "home_push" ? homePush?.app_icon : undefined}
           onOpen={stage === "home_push" ? handleHomePushOpen : handlePushOpen}
           onDismiss={stage === "home_push" ? handleHomePushDismiss : handlePushDismiss}
         />

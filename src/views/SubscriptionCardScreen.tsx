@@ -108,13 +108,21 @@ export function SubscriptionCardScreen({
       <div
         data-testid="scroll-container"
         className="no-scrollbar flex-1 overflow-y-auto"
-        style={{ ...pad, paddingBottom: "var(--k-page-bottom-reserve)" }}
+        // Отступ от шапки до контента — 20 (макет A3 Pay). Стоит на
+        // контейнере прокрутки, а не внутри первого блока: внутри он
+        // складывался с центрированием плитки по строке и мерился
+        // как 21.
+        style={{
+          ...pad,
+          paddingTop: "20px",
+          paddingBottom: "var(--k-page-bottom-reserve)",
+        }}
       >
         {/* ── Зона 2: чья подписка ─────────────────────────────────── */}
         <div
           data-testid="plan-header"
           className="flex items-center"
-          style={{ gap: "12px", paddingTop: "4px" }}
+          style={{ gap: "12px" }}
         >
           <span
             aria-hidden

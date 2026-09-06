@@ -70,7 +70,10 @@ interface Props {
 const INPUT_ID = "phone-input";
 const MESSAGE_ID = "phone-message";
 
-function messageFor(error: PhoneGateError): string {
+function messageFor(error: PhoneGateError, look: "inline" | "card"): string {
+  // В покое карточное оформление объясняет механику целиком: там слот на
+  // две строки, и обрывать фразу многоточием не приходится.
+  if (error === null && look === "card") return COPY["phone.hint_bank"];
   switch (error) {
     case "empty":
       return COPY["phone.error.empty"];
@@ -223,7 +226,7 @@ export function PhoneGateBlock({
             textOverflow: look === "card" ? undefined : "ellipsis",
           }}
         >
-          {messageFor(error)}
+          {messageFor(error, look)}
         </div>
       </div>
     </div>

@@ -44,7 +44,14 @@ const PATH_ROUTES: Record<string, { tenant: string; archetype: TenantConfig["arc
   "/a3pay": { tenant: "a3pay", archetype: "subscription_card" },
 };
 
-/** Лаунчер — только для локальной отладки, по неугадываемому пути и только в dev. */
+/**
+ * Страница со списком всех демо — по неугадываемому пути.
+ *
+ * До 2026-09-06 она собиралась только в dev. Решением владельца поставляется
+ * и в прод: ему нужна одна ссылка, чтобы показывать демо с телефона. Правило
+ * при этом не ослаблено — корень и любой неизвестный путь по-прежнему отдают
+ * заглушку, и подрядчик, получивший свою ссылку, списка не увидит.
+ */
 const LAUNCHER_PATH = "/__launcher";
 
 export function App() {
@@ -105,10 +112,18 @@ export function App() {
   if (route.kind === "loading") return <div style={{ minHeight: "100vh" }} />;
 
   if (route.kind === "launcher") {
-    // Вторая, compile-time защита поверх маршрутизации: `import.meta.env.DEV`
-    // сворачивается при сборке, поэтому в прод-бандл разметка лаунчера со
-    // списком тем не попадает вовсе, а не просто становится недостижимой.
-    return import.meta.env.DEV ? <LauncherView /> : <StubView />;
+    /*
+     * Список приходит ИЗ ТОЙ ЖЕ константы, что и маршрутизация: страница со
+     * ссылками не может разойтись с тем, что реально открывается.
+     */
+    return (
+      <LauncherView
+        routes={Object.entries(PATH_ROUTES).map(([path, route]) => ({
+          path,
+          tenant: route.tenant,
+        }))}
+      />
+    );
   }
   if (route.kind === "stub") return <StubView />;
   if (route.kind === "error") {
@@ -153,9 +168,9 @@ function normalizePath(pathname: string): string {
 async function resolveRoute(pathname: string, search: string): Promise<Route> {
   const path = normalizePath(pathname);
 
-  // Лаунчер доступен только в dev по служебному пути; в проде — заглушка.
+  // Страница со списком демо — по служебному пути, и только по нему.
   if (path === LAUNCHER_PATH) {
-    return import.meta.env.DEV ? { kind: "launcher" } : { kind: "stub" };
+    return { kind: "launcher" };
   }
 
   // Прямая ссылка подрядчика: путь задаёт тему и архетип, query уточняет состояние.

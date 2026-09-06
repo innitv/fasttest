@@ -94,6 +94,29 @@ if (notBundled.length > 0) {
   );
 }
 
+// ── 5. Тема без подписи на странице ссылок ───────────────────────────
+/*
+ * Страница `/__launcher` перечисляет маршруты из той же константы, что и
+ * маршрутизация, — разойтись с рабочими ссылками она не может. А вот подпись
+ * (имя подрядчика и что показывает экран) живёт в самой странице, и тема без
+ * неё попала бы в список строкой «Тема без подписи» — молча.
+ */
+const launcherSource = readFileSync(path.join(root, "src", "views", "LauncherView.tsx"), "utf8");
+const captionsBlock = launcherSource.slice(
+  launcherSource.indexOf("const CAPTIONS"),
+  launcherSource.indexOf("const FEATURED"),
+);
+const captioned = new Set(
+  [...captionsBlock.matchAll(/^\s{2}"?([a-z0-9-]+)"?:\s*\{/gm)].map((m) => m[1]),
+);
+const withoutCaption = [...routedTenants].filter((slug) => !captioned.has(slug));
+if (withoutCaption.length > 0) {
+  findings.push(
+    `тема без подписи на странице ссылок — ${withoutCaption.join(", ")}. ` +
+      "Добавь её в CAPTIONS (src/views/LauncherView.tsx): иначе в списке будет заглушка.",
+  );
+}
+
 // ── Итог ─────────────────────────────────────────────────────────────
 if (findings.length > 0) {
   console.log("registry: ПРОВАЛ");
@@ -104,3 +127,4 @@ if (findings.length > 0) {
 console.log("registry: порядок");
 console.log(`  - тем: ${themeFiles.length}, у каждой свой маршрут и запись в BUNDLED_TENANTS`);
 console.log(`  - маршрутов: ${routes.length}, архетип каждого совпадает с архетипом темы`);
+console.log(`  - подписей на странице ссылок: ${captioned.size}, ни одна тема не осталась без своей`);

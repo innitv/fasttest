@@ -143,6 +143,14 @@
   --k-motion-medium: 200ms;
   --k-motion-overlay: 420ms;
   --k-ease-ios: cubic-bezier(0.32, 0.72, 0, 1);
+  /*
+   * Кривая брендовой анимации знака A3 Pay. Перенесена из репозитория
+   * a3brand (`.a3case-piece-in`) вместе с самой хореографией: она мягче
+   * на разгоне и дольше доводит, чем системная `--k-ease-ios`, и на
+   * сборке знака разница видна — куски выходят плавно, а не «щёлкают».
+   * Живёт здесь, в шкале, а не в компоненте: движение задаёт общий слой.
+   */
+  --k-ease-brand-mark: cubic-bezier(0.3, 0.4, 0.3, 1);
 }
 
 /*
@@ -567,7 +575,7 @@ button:active,
  * знак появляется собранным, длительность splash сохраняется.
  */
 .a3-mark-piece {
-  animation-timing-function: var(--k-ease-ios);
+  animation-timing-function: var(--k-ease-brand-mark);
   animation-fill-mode: both;
   animation-iteration-count: 1;
 }

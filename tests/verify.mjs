@@ -1302,6 +1302,76 @@ for (const width of WIDTHS) {
   );
 }
 
+// ═══ Пуш одинаков на КАЖДОМ маршруте ═════════════════════════════════
+/*
+ * Баннер уведомления — общий слой демо: один компонент, одна айдентика
+ * банка, один набор строк. Разъехаться он может тихо: тема получает своё
+ * имя приложения и свой знак (так сделано для уведомления о СЧЁТЕ у A3 Pay),
+ * и достаточно один раз передать эти поля не туда, чтобы у одного
+ * подрядчика в пуше платежа оказался чужой отправитель. Глазами это ловится
+ * только на той теме, которую открыли.
+ *
+ * Поэтому проверка обходит ВСЕ маршруты из `PATH_ROUTES` и сверяет на
+ * стадии `push` четыре вещи: знак банка приходит АССЕТОМ (а не монограммой),
+ * имя приложения совпадает с константой написания, время на месте, и на
+ * баннере нет кольца фокуса (диагноз 22).
+ */
+{
+  const appSource = readFileSync(path.resolve(projectRoot, "src/App.tsx"), "utf8");
+  const routesBlock = appSource.split("const PATH_ROUTES")[1]?.split("};")[0] ?? "";
+  const routes = [...routesBlock.matchAll(/"(\/[a-z0-9-]+)":\s*\{\s*tenant:/g)].map((m) => m[1]);
+
+  const BANK_ICON = "/bank/app-icon.svg";
+  const BANK_LABEL = "Ozon Банк";
+
+  const rows = [];
+  let ok = routes.length > 0;
+  if (routes.length === 0) rows.push("не разобран PATH_ROUTES в src/App.tsx");
+
+  for (const route of routes) {
+    const data = await withPage(392, `${BASE}${route}?stage=push`, async (page) => {
+      await page
+        .waitForSelector('[data-testid="push-banner"]', { timeout: 4000 })
+        .catch(() => {});
+      return page.evaluate(() => {
+        const banner = document.querySelector('[data-testid="push-banner"]');
+        if (!banner) return null;
+        const icon = banner.querySelector('[data-testid="push-app-icon"]');
+        const box = icon?.getBoundingClientRect();
+        return {
+          iconTag: icon?.tagName.toLowerCase() ?? null,
+          iconSrc: icon?.getAttribute("src") ?? null,
+          iconW: box ? Math.round(box.width) : 0,
+          app: banner.querySelector("span > span > span")?.textContent?.trim() ?? "",
+          time: banner.querySelector('[data-testid="push-time"]')?.textContent?.trim() ?? "",
+          outline: getComputedStyle(banner).outlineStyle,
+        };
+      });
+    });
+
+    const passed =
+      data !== null &&
+      data.iconTag === "img" &&
+      data.iconSrc === BANK_ICON &&
+      data.iconW >= 32 &&
+      data.app === BANK_LABEL &&
+      data.time.length > 0 &&
+      data.outline === "none";
+    if (!passed) ok = false;
+    rows.push(
+      data === null
+        ? `${route}: баннера нет`
+        : `${route}: ${data.iconTag}=${data.iconSrc} ${data.iconW}px, «${data.app}», «${data.time}», кольцо=${data.outline}`,
+    );
+  }
+
+  record(
+    `Пуш платежа одинаков на каждом маршруте: знак банка ассетом, имя-константа, без кольца фокуса (${routes.length} шт.)`,
+    ok,
+    rows.join(" | "),
+  );
+}
+
 // ═══ Проверка 6: скриншоты ════════════════════════════════════════════
 const shots = [
   ["stub-root-392", 392, ""],

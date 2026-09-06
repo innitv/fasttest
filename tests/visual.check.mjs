@@ -103,6 +103,9 @@ const FRAMES = [
    */
   ["a3pay-home-push", "/?tenant=a3pay&stage=home_push"],
   ["a3pay-card", "/?tenant=a3pay&stage=contractor"],
+  // Splash приложения сервиса: пара к splash банка, и такой же кадр
+  // смены айдентики — только в обратную сторону.
+  ["a3pay-app-splash", "/?tenant=a3pay&stage=app_splash"],
 ];
 
 const browser = await chromium.launch();

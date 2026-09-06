@@ -25,6 +25,7 @@ import {
 import { BankPaymentScreen } from "./BankPaymentScreen";
 import { BankSplashScreen } from "./BankSplashScreen";
 import { BankSuccessScreen } from "./BankSuccessScreen";
+import { AppSplashScreen } from "./AppSplashScreen";
 import { CarrierPaymentScreen } from "./CarrierPaymentScreen";
 import { HomeScreen } from "./HomeScreen";
 import { OzonRailScreen } from "./OzonRailScreen";
@@ -215,6 +216,13 @@ export function ScreenHost({ theme, forcedState, showHandoff, initialStage }: Pr
     return () => window.clearTimeout(id);
   }, [stage, homePushSeen, timings.splash_ms]);
 
+  /** Splash приложения живёт столько же, сколько splash банка. */
+  useEffect(() => {
+    if (stage !== "app_splash") return;
+    const id = window.setTimeout(() => setStage("contractor"), timings.splash_ms);
+    return () => window.clearTimeout(id);
+  }, [stage, timings.splash_ms]);
+
   useEffect(() => {
     if (stage !== "splash") return;
     const id = window.setTimeout(() => setStage("bank_payment"), timings.splash_ms);
@@ -360,10 +368,15 @@ export function ScreenHost({ theme, forcedState, showHandoff, initialStage }: Pr
   // ── Шаг 0: уведомление о счёте на домашнем экране ──────────────────
   const homePush = tenant.content.home_push;
 
-  /** Тап по уведомлению открывает форму подрядчика — так демо и начинается. */
+  /**
+   * Тап по уведомлению открывает ПРИЛОЖЕНИЕ сервиса: сначала его splash,
+   * потом карточка подписки. Без splash переход читался мгновенной подменой
+   * экрана, а приложение всё-таки запускается.
+   */
   const handleHomePushOpen = useCallback(() => {
-    setStage("contractor");
-  }, []);
+    setStage(homePush?.app_icon ? "app_splash" : "contractor");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [homePush?.app_icon]);
 
   /** Свайп вверх: уведомление убрано, пользователь остался на домашнем. */
   const handleHomePushDismiss = useCallback(() => {
@@ -574,6 +587,10 @@ export function ScreenHost({ theme, forcedState, showHandoff, initialStage }: Pr
         return contractorScreen;
       case "ozon_rail":
         return railScreen;
+      case "app_splash":
+        return homePush?.app_icon ? (
+          <AppSplashScreen name={homePush.app_name} />
+        ) : null;
       case "splash":
         return <BankSplashScreen dotsCycleMs={timings.dots_cycle_ms} />;
       case "bank_payment":

@@ -14,7 +14,9 @@
  *
  * Тема с `demo.entry="home"` (A3 Pay) начинается на ДВЕ стадии раньше: на
  * домашнем экране устройства, куда приходит уведомление о счёте.
- *   `home` → `home_push` → `contractor` → … → `paid`
+ *   `home` → `home_push` → `app_splash` → `contractor` → … → `paid`
+ * `app_splash` — открытие приложения сервиса по уведомлению; пара к `splash`
+ * банка, и каждый из двух представляется своей айдентикой.
  * `home_push` — не отдельный экран, а тот же домашний с баннером поверх:
  * стадия названа отдельно, чтобы кадр снимался и открывался ссылкой.
  *
@@ -24,6 +26,7 @@
 export type DemoStage =
   | "home"
   | "home_push"
+  | "app_splash"
   | "contractor"
   | "ozon_rail"
   | "push"
@@ -35,6 +38,7 @@ export type DemoStage =
 export const DEMO_STAGES: readonly DemoStage[] = [
   "home",
   "home_push",
+  "app_splash",
   "contractor",
   "ozon_rail",
   "push",

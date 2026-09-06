@@ -299,7 +299,7 @@ yarn preview      # http://127.0.0.1:4319
 
 | Параметр | Значение | Зачем |
 |---|---|---|
-| `?stage=` | `home`, `home_push`, `contractor`, `ozon_rail`, `push`, `splash`, `bank_payment`, `bank_success`, `paid` | Открыть конкретный шаг маршрута, не проходя его руками. `home` и `home_push` есть только у темы с `demo.entry="home"` |
+| `?stage=` | `home`, `home_push`, `app_splash`, `contractor`, `ozon_rail`, `push`, `splash`, `bank_payment`, `bank_success`, `paid` | Открыть конкретный шаг маршрута, не проходя его руками. `home`, `home_push` и `app_splash` есть только у темы с `demo.entry="home"` |
 | `?state=` | `handoff`, `ozon_selected`, `cta_sent`, `cta_disabled`, `field_error`, `promo_open`, `phone_expanded`, `phone_checking`, `phone_error` | Показать оверлей перехода и прочие промежуточные состояния |
 | `?a11y=` | `enforced` (по умолчанию), `donor_faithful` | Переключить режим контраста: с принудительными коррекциями до порогов либо как у донора |
 | `?archetype=` | `cart_checkout`, `subscription_payment`, `ticket_checkout`, `store_checkout`, `plan_sheet`, `order_steps`, `slot_delivery`, `bonus_checkout`, `pickup_checkout`, `carrier_delivery`, `subscription_bind` | Проверить тему на чужой раскладке |

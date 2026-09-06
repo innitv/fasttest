@@ -549,6 +549,115 @@ button:active,
   }
 }
 
+/*
+ * ── Сборка фирменного знака на splash приложения ─────────────────────
+ *
+ * Хореография перенесена из брендового кейса A3 Pay (репозиторий
+ * a3brand, `src/case/Case.tsx` → MARK_PIECES): левая опора идёт снизу
+ * вверх, правая — сверху вниз, за ней перекладина справа налево, и
+ * следом по очереди три луча. Там это фрагмент семисекундного цикла;
+ * здесь окно сжато до 0.91 с: splash живёт 1.2 с, и собранный знак должен
+ * успеть постоять, а не смениться в момент последнего луча.
+ *
+ * Живёт в ОБЩЕМ слое движения, а не в компоненте: длительности и кривая
+ * задаются здесь, экран только вешает классы (правило проекта, сторожит
+ * `check:motion`). Кривая — та же `--k-ease-ios`, что у всего демо.
+ *
+ * `prefers-reduced-motion` гасит анимации глобальным правилом ниже:
+ * знак появляется собранным, длительность splash сохраняется.
+ */
+.a3-mark-piece {
+  animation-timing-function: var(--k-ease-ios);
+  animation-fill-mode: both;
+  animation-iteration-count: 1;
+}
+
+@keyframes a3-mark-up {
+  from {
+    clip-path: inset(100% 0 0 0);
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+  }
+}
+
+@keyframes a3-mark-down {
+  from {
+    clip-path: inset(0 0 100% 0);
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+  }
+}
+
+@keyframes a3-mark-bar {
+  from {
+    clip-path: inset(0 0 0 56%);
+  }
+  to {
+    clip-path: inset(0 0 0 29%);
+  }
+}
+
+@keyframes a3-mark-beam-long {
+  from {
+    clip-path: inset(0 0 75% 0);
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+  }
+}
+
+@keyframes a3-mark-beam-mid {
+  from {
+    clip-path: inset(0 0 52% 0);
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+  }
+}
+
+@keyframes a3-mark-beam-short {
+  from {
+    clip-path: inset(0 0 36% 0);
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+  }
+}
+
+/* Стойки и перекладина: порядок и паузы — из брендового кейса. */
+.a3-mark-left {
+  animation-name: a3-mark-up;
+  animation-duration: 260ms;
+  animation-delay: 0ms;
+}
+.a3-mark-right {
+  animation-name: a3-mark-down;
+  animation-duration: 300ms;
+  animation-delay: 260ms;
+}
+.a3-mark-bar {
+  animation-name: a3-mark-bar;
+  animation-duration: 260ms;
+  animation-delay: 500ms;
+}
+.a3-mark-beam-1 {
+  animation-name: a3-mark-beam-long;
+  animation-duration: 170ms;
+  animation-delay: 560ms;
+}
+.a3-mark-beam-2 {
+  animation-name: a3-mark-beam-mid;
+  animation-duration: 170ms;
+  animation-delay: 650ms;
+}
+.a3-mark-beam-3 {
+  animation-name: a3-mark-beam-short;
+  animation-duration: 170ms;
+  animation-delay: 740ms;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

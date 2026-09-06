@@ -1,5 +1,4 @@
-import { useEffect, useState } from "react";
-
+import { LoadingDots } from "@demo/components/LoadingDots";
 import { BankWordmark } from "@demo/components/bank/BankWordmark";
 import { COPY } from "@demo/content/copy";
 
@@ -33,49 +32,17 @@ export function BankSplashScreen({ dotsCycleMs }: Props) {
 
       <div className="flex flex-1 flex-col items-center justify-center">
         <BankWordmark variant="splash" />
-        <LoadingDots cycleMs={dotsCycleMs} />
+        {/* Точки — общий компонент демо; цвета и размеры приходят
+            значениями из слоя банка, сам компонент токенов не знает. */}
+        <LoadingDots
+          cycleMs={dotsCycleMs}
+          color="var(--bank-on-primary)"
+          colorDim="var(--bank-dot-dim)"
+          size="var(--bank-dot-d)"
+          gap="var(--bank-dot-gap)"
+          marginTop="29px"
+        />
       </div>
     </div>
-  );
-}
-
-/** Три точки, цикл 900 мс: три фазы по 300, в каждой приглушена своя. */
-function LoadingDots({ cycleMs }: { cycleMs: number }) {
-  const [phase, setPhase] = useState(2);
-
-  useEffect(() => {
-    const reduced =
-      typeof window !== "undefined" &&
-      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (reduced) return;
-
-    const step = Math.round(cycleMs / 3);
-    const timer = window.setInterval(
-      () => setPhase((value) => (value + 1) % 3),
-      step,
-    );
-    return () => window.clearInterval(timer);
-  }, [cycleMs]);
-
-  return (
-    <span
-      data-testid="loading-dots"
-      aria-hidden="true"
-      className="flex items-center"
-      style={{ gap: "var(--bank-dot-gap)", marginTop: "29px" }}
-    >
-      {[0, 1, 2].map((index) => (
-        <span
-          key={index}
-          style={{
-            width: "var(--bank-dot-d)",
-            height: "var(--bank-dot-d)",
-            borderRadius: "9999px",
-            background:
-              index === phase ? "var(--bank-dot-dim)" : "var(--bank-on-primary)",
-          }}
-        />
-      ))}
-    </span>
   );
 }

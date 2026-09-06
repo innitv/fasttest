@@ -1,0 +1,144 @@
+{
+  "tenant_id": "a3pay",
+  "display_name": "Яндекс Плюс",
+  "archetype": "subscription_card",
+
+  "header": { "style": "back_title", "back_label": "Назад" },
+
+  "brand": {
+    "primary": "#044AB3",
+    "on_primary": "#FFFFFF",
+    "accent": null,
+    "logo": { "kind": "text", "text": "A3 Pay", "slot_ratio": null }
+  },
+
+  "surface": {
+    "background": "#FFFFFF",
+    "card": "#FFFFFF",
+    "form": "#F6F7F9",
+    "border": "#EBECEF",
+    "divider": "#EBECEF",
+    "text_primary": "#000000",
+    "text_secondary": "#64696E",
+    "danger": "#D92B20",
+    "field_error": "#D92B20"
+  },
+
+  "elevation": {
+    "model": "tonal_fill",
+    "border_width": 1,
+    "selected_border_width": 2,
+    "shadow": null
+  },
+
+  "radius": {
+    "card": 14,
+    "control": 12,
+    "field": 14,
+    "chip": 999,
+    "sheet": 16,
+    "allow_inversion": true
+  },
+
+  "density": {
+    "page_padding": 16,
+    "block_gap": 12,
+    "row_height": 50,
+    "control_height": 56,
+    "method_button_height": 50,
+    "section_gap": 20
+  },
+
+  "component_width": { "choice_card_pct": 42, "payment_card_pct": 32 },
+
+  "typography": {
+    "family": "system",
+    "body": 16,
+    "h1": 20,
+    "section_title": 17,
+    "caption": 13,
+    "price": 20,
+    "label_weight": 500,
+    "title_weight": 600,
+    "emphasis_weight": 600
+  },
+
+  "cta": {
+    "placement": "inline",
+    "label": "Оплатить {amount}",
+    "include_amount": true,
+    "requires_selection": false,
+    "font_size": 17,
+    "font_weight": 600
+  },
+
+  "payment_list": {
+    "layout": "radio_rows",
+    "section_title": "Способ оплаты",
+    "selection": "radio_outline",
+    "methods": [
+      { "id": "ozon", "label": "Ozon Банк", "caption": null, "logo": "none" }
+    ],
+    "default_selected": "ozon"
+  },
+
+  "ozon": {
+    "label": "Ozon Банк",
+    "position": 1,
+    "adopts_tenant_theme": true,
+    "handoff": "overlay"
+  },
+
+  "content": {
+    "title": "Карточка подписки",
+
+    "subscription_card": {
+      "nav_title": "Яндекс Плюс",
+      "plan_title": "Яндекс Плюс",
+      "plan_caption": "Стандарт · 399 ₽ в месяц",
+      "plan_logo": null,
+      "invoice": {
+        "title": "Счёт за август — 399 ₽",
+        "caption": "до 12 августа",
+        "cta_label": "Оплатить 399 ₽"
+      },
+      "facts": [
+        { "label": "Тариф", "value": "Стандарт" },
+        { "label": "Периодичность", "value": "Раз в месяц" },
+        { "label": "Следующий счёт", "value": "12 августа" }
+      ],
+      "payment": {
+        "label": "Способ оплаты",
+        "value": "Ozon Банк",
+        "pill": "Сменить",
+        "caption": "Подтверждение в банке",
+        "mark": "OZ"
+      },
+      "actions": [
+        { "label": "Сменить тариф", "danger": false },
+        { "label": "Сменить способ оплаты", "danger": false },
+        { "label": "Отписаться", "danger": true }
+      ]
+    },
+
+    "totals": { "sum": 39900, "discount": 0, "currency": "RUB" },
+
+    "home_push": {
+      "title": "Счёт за август — 399 ₽",
+      "body": "Яндекс Плюс. Оплатите до 12 августа"
+    },
+
+    "return_label": "Вернуться к подписке",
+    "paid_title": "Счёт оплачен",
+    "payment_purpose": "Оплата подписки",
+    "summary_detail": "Счёт за август, Яндекс Плюс"
+  },
+
+  "demo": {
+    "balance": "34 190,50 ₽",
+    "entry": "home",
+    "timings": { "push_delay_ms": 600, "splash_ms": 1200, "pay_loading_ms": 900, "dots_cycle_ms": 900 }
+  },
+
+  "a11y_mode": "enforced"
+}

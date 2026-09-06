@@ -51,6 +51,20 @@ interface Props {
    * нечего.
    */
   autoReveal?: boolean;
+  /**
+   * Оформление блока.
+   *
+   * "inline" (дефолт) — шаблонное: метка 14/500, поле 48, слот сообщения в
+   * одну строку. Так проверка выглядит у всех тем, снятых со страницы
+   * оплаты донора.
+   *
+   * "card" — метрики макета A3 Pay (349:87): метка 12/400 серым, поле 60 с
+   * обводкой 1.5, введённые цифры 20/600 и круглая кнопка очистки, слот
+   * сообщения в две строки — ошибка там формулируется фразой, а не
+   * подписью. Оформление названо ВАРИАНТОМ, а не переехало в тему: это
+   * решение одного макета, и растаскивать его по осям темизации незачем.
+   */
+  look?: "inline" | "card";
 }
 
 const INPUT_ID = "phone-input";
@@ -78,6 +92,7 @@ export function PhoneGateBlock({
   onSubmit,
   focusSignal,
   autoReveal = true,
+  look = "inline",
 }: Props) {
   const inputRef = useRef<HTMLInputElement>(null);
   const blockRef = useRef<HTMLDivElement>(null);
@@ -144,7 +159,8 @@ export function PhoneGateBlock({
         // не свои 200/160 мс по месту: движение задаёт шкала, а не компонент.
         // При prefers-reduced-motion глобальное правило styles.css делает
         // смену мгновенной — движение убрано, блок и его высота живут.
-        height: expanded ? "108px" : "0px",
+        // 12 + 16 метка + 6 + 60 поле + 8 + 36 слот сообщения (две строки).
+        height: expanded ? (look === "card" ? "138px" : "108px") : "0px",
         overflow: "hidden",
         transition: "height var(--k-motion-medium) var(--k-ease-ios)",
       }}
@@ -164,14 +180,14 @@ export function PhoneGateBlock({
           htmlFor={INPUT_ID}
           style={{
             display: "block",
-            fontSize: "14px",
-            fontWeight: 500,
-            lineHeight: "18px",
-            color: "var(--t-text-primary)",
+            fontSize: look === "card" ? "12px" : "14px",
+            fontWeight: look === "card" ? 400 : 500,
+            lineHeight: look === "card" ? "16px" : "18px",
+            color: look === "card" ? "var(--t-text-secondary)" : "var(--t-text-primary)",
             marginBottom: "6px",
           }}
         >
-          {COPY["phone.label"]}
+          {look === "card" ? COPY["phone.label_bank"] : COPY["phone.label"]}
         </label>
 
         <PhoneField
@@ -180,6 +196,7 @@ export function PhoneGateBlock({
           error={error}
           checking={checking}
           expanded={expanded}
+          look={look}
           onChange={onChange}
           onSubmit={onSubmit}
         />
@@ -193,14 +210,17 @@ export function PhoneGateBlock({
           data-testid="phone-message"
           data-kind={error ? "error" : "hint"}
           style={{
-            height: "18px",
-            marginTop: "6px",
+            // Слот зарезервирован ВСЕГДА и не меняет высоту при появлении
+            // ошибки. У варианта карточки он на две строки: там ошибка —
+            // фраза («Проверьте номер и попробуйте ещё раз»), а не подпись.
+            height: look === "card" ? "36px" : "18px",
+            marginTop: look === "card" ? "8px" : "6px",
             fontSize: "var(--t-font-caption)",
             lineHeight: "18px",
             color: error ? "var(--t-surface-field-error)" : "var(--t-text-secondary)",
             overflow: "hidden",
-            whiteSpace: "nowrap",
-            textOverflow: "ellipsis",
+            whiteSpace: look === "card" ? "normal" : "nowrap",
+            textOverflow: look === "card" ? undefined : "ellipsis",
           }}
         >
           {messageFor(error)}
@@ -216,6 +236,7 @@ interface FieldProps {
   error: PhoneGateError;
   checking: boolean;
   expanded: boolean;
+  look: "inline" | "card";
   onChange: (digits: string) => void;
   onSubmit: () => void;
 }
@@ -226,6 +247,7 @@ function PhoneField({
   error,
   checking,
   expanded,
+  look,
   onChange,
   onSubmit,
 }: FieldProps) {
@@ -238,7 +260,9 @@ function PhoneField({
     : focused
       ? "var(--t-focus-ring)"
       : "var(--t-surface-border)";
-  const borderWidth = error || focused ? "2px" : "1px";
+  // У карточного варианта обводка одна и та же толщина в покое и в ошибке
+  // (1.5 по макету): меняется только цвет, и высота 60 не дрожит.
+  const borderWidth = look === "card" ? "1.5px" : error || focused ? "2px" : "1px";
 
   const dataState = checking
     ? "checking"
@@ -257,11 +281,11 @@ function PhoneField({
       data-testid="phone-field"
       className="flex w-full items-center"
       style={{
-        height: "var(--k-field-h)",
+        height: look === "card" ? "60px" : "var(--k-field-h)",
         borderRadius: "var(--t-radius-field)",
         background: "var(--t-surface-card)",
         border: `${borderWidth} solid ${borderColor}`,
-        paddingInline: "12px",
+        paddingInline: look === "card" ? "16px" : "12px",
         gap: "6px",
         boxSizing: "border-box",
       }}
@@ -273,8 +297,8 @@ function PhoneField({
         style={{
           // Тот же кегль, что у поля: префикс и введённые цифры читаются как
           // одна строка, поэтому минимум 16px распространяется и на него.
-          fontSize: "max(var(--k-field-font), var(--t-font-body))",
-          fontWeight: 400,
+          fontSize: look === "card" ? "20px" : "max(var(--k-field-font), var(--t-font-body))",
+          fontWeight: look === "card" ? 600 : 400,
           color: "var(--t-text-primary)",
         }}
       >
@@ -315,11 +339,56 @@ function PhoneField({
           color: "var(--t-text-primary)",
           // Не ниже 16px: иначе Safari на iOS зумит страницу при фокусе, и
           // блок проверки номера уезжает из вида ровно в момент ввода.
-          fontSize: "max(var(--k-field-font), var(--t-font-body))",
-          fontWeight: 400,
+          fontSize: look === "card" ? "20px" : "max(var(--k-field-font), var(--t-font-body))",
+          fontWeight: look === "card" ? 600 : 400,
           padding: 0,
         }}
       />
+
+      {/* Очистка значения — только у карточного варианта: она есть на
+          макете и появляется, лишь когда стирать есть что. Зона нажатия
+          добита до порога прозрачным полем, сама плашка остаётся 28. */}
+      {look === "card" && digits.length > 0 && (
+        <button
+          type="button"
+          data-testid="phone-clear"
+          aria-label={COPY["a11y.phone.clear"]}
+          tabIndex={expanded ? undefined : -1}
+          onClick={() => {
+            onChange("");
+            inputRef.current?.focus();
+          }}
+          className="flex shrink-0 items-center justify-center"
+          style={{
+            width: "28px",
+            height: "28px",
+            minWidth: "var(--k-tap-min)",
+            minHeight: "var(--k-tap-min)",
+            marginInlineEnd: "-8px",
+            background: "none",
+            border: "none",
+            padding: 0,
+            cursor: "pointer",
+          }}
+        >
+          <span
+            aria-hidden
+            className="flex items-center justify-center"
+            style={{
+              width: "28px",
+              height: "28px",
+              borderRadius: "9999px",
+              background: "var(--t-surface-divider)",
+              color: "var(--t-text-secondary)",
+              fontSize: "13px",
+              fontWeight: "var(--t-label-weight)",
+              lineHeight: 1,
+            }}
+          >
+            ✕
+          </span>
+        </button>
+      )}
     </div>
   );
 }

@@ -239,13 +239,24 @@ function validateSemantics(tenant: TenantConfig): Diagnostic[] {
     }
   }
 
+  /*
+   * Архетип, у которого списка способов НЕТ: способ привязан к подписке
+   * заранее и показан строкой состояния. Два правила ниже сторожат СПИСОК
+   * ВЫБОРА, и на таком экране им сторожить нечего — минимум в два способа
+   * требует выбора, которого экран не предлагает, а предвыбор «Ozon Банк»
+   * здесь и есть состояние подписки, а не потерянное действие. Наблюдаемое
+   * действие демо на нём — оплата счёта.
+   */
+  const withoutMethodList = tenant.archetype === "subscription_card";
+
   // ── E_METHOD_COUNT ─────────────────────────────────────────────────
   const methods = tenant.payment_list.methods;
-  if (methods.length < 2 || methods.length > 8) {
+  const minMethods = withoutMethodList ? 1 : 2;
+  if (methods.length < minMethods || methods.length > 8) {
     diagnostics.push({
       code: "E_METHOD_COUNT",
       severity: "error",
-      message: `В payment_list.methods ${methods.length} элементов, допустимо 2–8`,
+      message: `В payment_list.methods ${methods.length} элементов, допустимо ${minMethods}–8`,
     });
   }
 
@@ -334,6 +345,21 @@ function validateSemantics(tenant: TenantConfig): Diagnostic[] {
     });
   }
 
+  // ── E_HOME_PUSH_MISSING ────────────────────────────────────────────
+  /*
+   * Точка входа «домашний экран» держится на уведомлении: без него кадр
+   * висит в пустоте, и попасть к подрядчику нечем. Молчаливого перехода
+   * «сразу к форме» здесь нет — он спрятал бы недозаполненную тему.
+   */
+  if (tenant.demo.entry === "home" && tenant.content.home_push === null) {
+    diagnostics.push({
+      code: "E_HOME_PUSH_MISSING",
+      severity: "error",
+      message: 'demo.entry="home", но content.home_push не задан',
+      detail: "Домашний экран открывает форму подрядчика уведомлением о счёте; без него сценарию нечем начаться.",
+    });
+  }
+
   // ── W_PHONE_GATE_DISABLED ──────────────────────────────────────────
   if (!tenant.ozon.phone_gate.enabled) {
     diagnostics.push({
@@ -345,7 +371,7 @@ function validateSemantics(tenant: TenantConfig): Diagnostic[] {
   }
 
   // ── W_OZON_PRESELECTED ─────────────────────────────────────────────
-  if (tenant.payment_list.default_selected === OZON_METHOD_ID) {
+  if (!withoutMethodList && tenant.payment_list.default_selected === OZON_METHOD_ID) {
     diagnostics.push({
       code: "W_OZON_PRESELECTED",
       severity: "warning",
@@ -424,6 +450,9 @@ function validateSemantics(tenant: TenantConfig): Diagnostic[] {
     // донор со своим выбором оплаты, и единственный, где список смешанный —
     // привязанные карты и строки-действия рядом.
     subscription_bind: "method_rows",
+    // У карточки подписки списка способов нет вовсе: способ уже выбран и
+    // показан строкой. `radio_rows` здесь — формальность контракта.
+    subscription_card: "radio_rows",
   };
   const expectedLayout = layoutByArchetype[tenant.archetype];
   if (tenant.payment_list.layout !== expectedLayout) {

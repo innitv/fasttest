@@ -65,7 +65,12 @@ const isBank = (stage: DemoStage): boolean => BANK_STAGES.includes(stage);
 export function transitionFor(prev: DemoStage | null, next: DemoStage): TransitionType {
   if (prev === null || prev === next) return "none";
   // Вход в пуш: под баннером остаётся прежний экран, полноэкранного перехода нет.
-  if (next === "push") return "none";
+  if (next === "push" || next === "home_push") return "none";
+  // Тап по уведомлению о счёте открывает приложение подрядчика — тот же
+  // модальный выезд снизу, что и открытие банка по пушу платежа.
+  if (prev === "home_push" && next === "contractor") return "sheet-up";
+  // Свайп по уведомлению: баннер уехал сам, домашний экран под ним статичен.
+  if (prev === "home_push") return "none";
   // Тап по пушу открывает банк — модальный выезд снизу вверх.
   if (prev === "push" && next === "splash") return "sheet-up";
   // Дисмисс пуша (свайп вверх): баннер уже уехал сам, экран под ним статичен.

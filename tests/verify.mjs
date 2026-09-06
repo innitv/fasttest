@@ -1221,8 +1221,44 @@ for (const width of WIDTHS) {
       await page
         .waitForSelector('[data-testid="phone-frame"]', { timeout: 4000 })
         .catch(() => {});
+
+      /*
+       * Тема может начинаться НЕ с формы подрядчика: у A3 Pay сценарий
+       * открывается домашним экраном устройства, куда приходит уведомление
+       * о счёте. Дым для такой темы длиннее ровно на один шаг — дождаться
+       * уведомления и открыть по нему форму: иначе проверка сообщала бы
+       * «кнопки нет» там, где кнопка появляется шагом позже.
+       */
+      const startedAtHome =
+        (await page
+          .locator('[data-testid="phone-frame"]')
+          .getAttribute("data-stage")
+          .catch(() => null)) === "home";
+      if (startedAtHome) {
+        await page
+          .waitForSelector('[data-testid="push-banner"]', { timeout: 4000 })
+          .catch(() => {});
+        await page.click('[data-testid="push-banner"]').catch(() => {});
+        await page
+          .waitForFunction(
+            () =>
+              document
+                .querySelector('[data-testid="phone-frame"]')
+                ?.getAttribute("data-stage") === "contractor",
+            { timeout: 4000 },
+          )
+          .catch(() => {});
+        // Экран подрядчика приезжает отдельным чанком: без ожидания кнопки
+        // проверка мерила бы кадр Suspense-заглушки и отчитывалась «кнопки
+        // нет» там, где она появляется десятком миллисекунд позже.
+        await page
+          .waitForSelector('[data-testid="primary-cta"]', { timeout: 4000 })
+          .catch(() => {});
+      }
+
       const frame = await page.$('[data-testid="phone-frame"]');
       return {
+        startedAtHome,
         tenantId: frame
           ? await page.locator('[data-testid="phone-frame"]').getAttribute("data-tenant")
           : null,
@@ -1255,7 +1291,7 @@ for (const width of WIDTHS) {
       data.consoleErrors.length === 0;
     if (!passed) ok = false;
     rows.push(
-      `${route}→${tenant}: стадия ${data.stage}, кнопка=${data.cta}, заглушка=${data.stub}, ошибка конфига=${data.configError}, ошибок консоли ${data.consoleErrors.length}`,
+      `${route}→${tenant}: ${data.startedAtHome ? "старт с домашнего экрана → " : ""}стадия ${data.stage}, кнопка=${data.cta}, заглушка=${data.stub}, ошибка конфига=${data.configError}, ошибок консоли ${data.consoleErrors.length}`,
     );
   }
 

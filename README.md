@@ -25,6 +25,7 @@
 | `/ewa` | EWA PRODUCT | `carrier_delivery` — сетка перевозчиков, допродажа, оплата отдельной страницей |
 | `/tripster` | Tripster | `order_prepay` — предоплата созданного заказа, шторка способов |
 | `/plus` | Яндекс Плюс | `subscription_bind` — подключение подписки, согласие на будущие списания |
+| `/a3pay` | Яндекс Плюс (A3 Pay) | `subscription_card` — карточка подписки со счётом; сценарий начинается на домашнем экране устройства |
 
 Корень `/` и любой неизвестный путь отдают нейтральную заглушку: подрядчик,
 получивший свою ссылку, не видит существования других тем.
@@ -298,7 +299,7 @@ yarn preview      # http://127.0.0.1:4319
 
 | Параметр | Значение | Зачем |
 |---|---|---|
-| `?stage=` | `contractor`, `ozon_rail`, `push`, `splash`, `bank_payment`, `bank_success`, `paid` | Открыть конкретный шаг маршрута, не проходя его руками |
+| `?stage=` | `home`, `home_push`, `contractor`, `ozon_rail`, `push`, `splash`, `bank_payment`, `bank_success`, `paid` | Открыть конкретный шаг маршрута, не проходя его руками. `home` и `home_push` есть только у темы с `demo.entry="home"` |
 | `?state=` | `handoff`, `ozon_selected`, `cta_sent`, `cta_disabled`, `field_error`, `promo_open`, `phone_expanded`, `phone_checking`, `phone_error` | Показать оверлей перехода и прочие промежуточные состояния |
 | `?a11y=` | `enforced` (по умолчанию), `donor_faithful` | Переключить режим контраста: с принудительными коррекциями до порогов либо как у донора |
 | `?archetype=` | `cart_checkout`, `subscription_payment`, `ticket_checkout`, `store_checkout`, `plan_sheet`, `order_steps`, `slot_delivery`, `bonus_checkout`, `pickup_checkout`, `carrier_delivery`, `subscription_bind` | Проверить тему на чужой раскладке |
@@ -306,7 +307,7 @@ yarn preview      # http://127.0.0.1:4319
 | `?tenant=` | `flowwow-like`, `uchi-like`, `voroh`, `voroh-light`, `monochrome`, `padlhub`, `yes-atlas`, `rml`, `hval`, `bombbar`, `mybox`, `ewa`, `yandex-plus` | Явный выбор поставляемой темы (путь обычно удобнее) |
 | `?archetype=` | `cart_checkout`, `subscription_payment`, `ticket_checkout`, `store_checkout`, `plan_sheet`, `order_steps`, `slot_delivery`, `bonus_checkout`, `pickup_checkout`, `order_prepay`, `subscription_bind` | Проверить тему на чужой раскладке |
 | `?t=` | base64url от JSON-конфига тенанта | Отдать демо со своей темой ссылкой, без пересборки и деплоя |
-| `?tenant=` | `flowwow-like`, `uchi-like`, `voroh`, `voroh-light`, `monochrome`, `padlhub`, `yes-atlas`, `rml`, `hval`, `bombbar`, `mybox`, `tripster`, `yandex-plus` | Явный выбор поставляемой темы (путь обычно удобнее) |
+| `?tenant=` | `flowwow-like`, `uchi-like`, `voroh`, `voroh-light`, `monochrome`, `padlhub`, `yes-atlas`, `rml`, `hval`, `bombbar`, `mybox`, `tripster`, `yandex-plus`, `a3pay` | Явный выбор поставляемой темы (путь обычно удобнее) |
 
 Некорректный конфиг в `?t=` не приводит к белому экрану: показывается экран
 диагностики с кодом ошибки (`E_URL_BASE64`, `E_URL_JSON`, `E_OZON_LABEL` и т. д.).

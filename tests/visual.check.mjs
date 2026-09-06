@@ -94,6 +94,15 @@ const FRAMES = [
    */
   ["bank-payment-plus", "/?tenant=yandex-plus&stage=bank_payment"],
   ["bank-success-plus", "/?tenant=yandex-plus&stage=bank_success"],
+  /*
+   * A3 Pay начинается на две стадии раньше остальных тем, и первый кадр
+   * (`tenant-a3pay`) снимает домашний экран устройства, а не форму. Поэтому
+   * два кадра сверх общего правила: уведомление о счёте на домашнем экране
+   * и сама карточка подписки — без них регресс не видел бы ни системного
+   * слоя, ни экрана, ради которого тема заведена.
+   */
+  ["a3pay-home-push", "/?tenant=a3pay&stage=home_push"],
+  ["a3pay-card", "/?tenant=a3pay&stage=contractor"],
 ];
 
 const browser = await chromium.launch();

@@ -17,11 +17,16 @@ import { PushBanner } from "@demo/components/bank/PushBanner";
 import { COPY, formatMoney } from "@demo/content/copy";
 import { track } from "@demo/lib/analytics";
 import type { BuiltTheme } from "@demo/theme/build-theme";
-import { OZON_METHOD_ID, type TenantConfig } from "@demo/theme/tenant.schema";
+import {
+  OZON_LABEL,
+  OZON_METHOD_ID,
+  type TenantConfig,
+} from "@demo/theme/tenant.schema";
 import { BankPaymentScreen } from "./BankPaymentScreen";
 import { BankSplashScreen } from "./BankSplashScreen";
 import { BankSuccessScreen } from "./BankSuccessScreen";
 import { CarrierPaymentScreen } from "./CarrierPaymentScreen";
+import { HomeScreen } from "./HomeScreen";
 import { OzonRailScreen } from "./OzonRailScreen";
 import { PaidConfirmationScreen } from "./PaidConfirmationScreen";
 import type { DemoStage } from "./demo-flow";
@@ -84,6 +89,9 @@ const CONTRACTOR_SCREENS: Record<
   subscription_bind: lazy(() =>
     import("./SubscriptionBindScreen").then((m) => ({ default: m.SubscriptionBindScreen })),
   ),
+  subscription_card: lazy(() =>
+    import("./SubscriptionCardScreen").then((m) => ({ default: m.SubscriptionCardScreen })),
+  ),
 };
 
 interface Props {
@@ -137,7 +145,13 @@ export function ScreenHost({ theme, forcedState, showHandoff, initialStage }: Pr
     initialStage ??
     (tenant.archetype === "subscription_payment" && ozonForced
       ? "ozon_rail"
-      : "contractor");
+      : // Тема с `demo.entry="home"` начинается на домашнем экране
+        // устройства: форму подрядчика откроет уведомление о счёте.
+        // Forced-состояния к нему не относятся — они описывают форму,
+        // и заход по ним начинается сразу с неё.
+        tenant.demo.entry === "home" && forcedState === null && !showHandoff
+        ? "home"
+        : "contractor");
   const [stage, setStage] = useState<DemoStage>(startStage);
   const [bankLoading, setBankLoading] = useState(false);
   const [amountOverride, setAmountOverride] = useState<number | null>(null);
@@ -186,6 +200,21 @@ export function ScreenHost({ theme, forcedState, showHandoff, initialStage }: Pr
    * prefers-reduced-motion: движение убирается, экран и его длительность —
    * нет.
    */
+  /*
+   * Домашний экран стоит ровно столько, чтобы его успели прочитать, и сам
+   * отдаёт кадр уведомлению. Длительность — та же, что у splash: обе паузы
+   * отмеряют «экран показан», и разводить их двумя числами нечем.
+   */
+  const [homePushSeen, setHomePushSeen] = useState(false);
+  useEffect(() => {
+    if (stage !== "home" || homePushSeen) return;
+    const id = window.setTimeout(() => {
+      setHomePushSeen(true);
+      setStage("home_push");
+    }, timings.splash_ms);
+    return () => window.clearTimeout(id);
+  }, [stage, homePushSeen, timings.splash_ms]);
+
   useEffect(() => {
     if (stage !== "splash") return;
     const id = window.setTimeout(() => setStage("bank_payment"), timings.splash_ms);
@@ -327,6 +356,19 @@ export function ScreenHost({ theme, forcedState, showHandoff, initialStage }: Pr
     tenant.tenant_id,
     tenant.archetype,
   ]);
+
+  // ── Шаг 0: уведомление о счёте на домашнем экране ──────────────────
+  const homePush = tenant.content.home_push;
+
+  /** Тап по уведомлению открывает форму подрядчика — так демо и начинается. */
+  const handleHomePushOpen = useCallback(() => {
+    setStage("contractor");
+  }, []);
+
+  /** Свайп вверх: уведомление убрано, пользователь остался на домашнем. */
+  const handleHomePushDismiss = useCallback(() => {
+    setStage("home");
+  }, []);
 
   // ── Шаг 2: пуш ─────────────────────────────────────────────────────
   const handlePushOpen = useCallback(() => {
@@ -503,10 +545,15 @@ export function ScreenHost({ theme, forcedState, showHandoff, initialStage }: Pr
    * для A — экран подрядчика. Смена айдентики наступает на самом пуше.
    */
   const backdropStage: DemoStage =
-    tenant.archetype === "subscription_payment" || tenant.archetype === "carrier_delivery"
-      ? "ozon_rail"
-      : "contractor";
-  const pushOpen = stage === "push";
+    stage === "home_push"
+      ? // Уведомление о счёте приходит на домашний экран, а не к подрядчику:
+        // подрядчик за ним ещё не открыт.
+        "home"
+      : tenant.archetype === "subscription_payment" ||
+          tenant.archetype === "carrier_delivery"
+        ? "ozon_rail"
+        : "contractor";
+  const pushOpen = stage === "push" || stage === "home_push";
   const visualStage: DemoStage = pushOpen ? backdropStage : stage;
 
   // Содержимое одной стадии. Обёртывается в m.div снаружи, поэтому сама
@@ -514,6 +561,14 @@ export function ScreenHost({ theme, forcedState, showHandoff, initialStage }: Pr
   // отдельным слоем и анимируется собственным spring-выездом.
   const renderStage = (current: DemoStage) => {
     switch (current) {
+      case "home":
+        return (
+          <HomeScreen
+            appName={tenant.display_name}
+            appMark={tenant.display_name.slice(0, 1)}
+            bankName={OZON_LABEL}
+          />
+        );
       case "contractor":
         return contractorScreen;
       case "ozon_rail":
@@ -607,8 +662,13 @@ export function ScreenHost({ theme, forcedState, showHandoff, initialStage }: Pr
         <PushBanner
           merchant={payload.merchant}
           amount={payload.amount}
-          onOpen={handlePushOpen}
-          onDismiss={handlePushDismiss}
+          // Уведомление о счёте и уведомление о платеже — один компонент и
+          // одна айдентика банка, но разные строки: первое зовёт оплатить,
+          // второе просит подтвердить уже начатый платёж.
+          title={stage === "home_push" ? homePush?.title : undefined}
+          body={stage === "home_push" ? homePush?.body : undefined}
+          onOpen={stage === "home_push" ? handleHomePushOpen : handlePushOpen}
+          onDismiss={stage === "home_push" ? handleHomePushDismiss : handlePushDismiss}
         />
       )}
 

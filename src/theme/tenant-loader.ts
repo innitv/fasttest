@@ -39,6 +39,7 @@ export const BUNDLED_TENANTS: Record<string, () => Promise<{ default: unknown }>
   "tripster": () => import("../../tenants/tripster.json"),
   "ewa": () => import("../../tenants/ewa.json"),
   "yandex-plus": () => import("../../tenants/yandex-plus.json"),
+  "a3pay": () => import("../../tenants/a3pay.json"),
 };
 
 export const DEFAULT_TENANT_SLUG = "flowwow-like";

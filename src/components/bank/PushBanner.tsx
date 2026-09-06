@@ -14,6 +14,15 @@ import { BankAppIcon } from "./BankWordmark";
 interface Props {
   merchant: string;
   amount: string;
+  /**
+   * Свои строки уведомления. Без них баннер говорит то, что говорит в
+   * основном флоу: «подтвердите платёж на такую-то сумму». С ними — то, что
+   * говорит уведомление о СЧЁТЕ, которое приходит до формы подрядчика.
+   * Айдентика и имя приложения в обоих случаях банковские: пуш присылает
+   * банк, а строки — данные подрядчика.
+   */
+  title?: string;
+  body?: string;
   onOpen: () => void;
   onDismiss: () => void;
 }
@@ -32,8 +41,19 @@ interface Props {
  * Демо-пометка стоит в шапке на месте времени iOS — попадает в любой
  * скриншот баннера и не добавляет ни одной строки к его высоте.
  */
-export function PushBanner({ merchant, amount, onOpen, onDismiss }: Props) {
+export function PushBanner({ merchant, amount, title, body, onOpen, onDismiss }: Props) {
   const [leaving, setLeaving] = useState(false);
+  /*
+   * Фокус баннеру ставится программно (см. ниже), и Chromium/WebKit считают
+   * такой фокус «клавиатурным»: поверх уведомления рисуется кольцо
+   * `:focus-visible` — 2 px чёрным по всему периметру. У системного
+   * уведомления обводки нет, и кадр со смены айдентики выглядел обведённым.
+   *
+   * Кольцо не удаляется, а откладывается до первого нажатия клавиши: пока
+   * пользователь не трогал клавиатуру, оно не нужно; как только тронул —
+   * возвращается штатное `:focus-visible` из `styles.css`.
+   */
+  const [autoFocused, setAutoFocused] = useState(true);
   const ref = useRef<HTMLButtonElement>(null);
   const touchStartY = useRef<number | null>(null);
   const swiped = useRef(false);
@@ -50,6 +70,13 @@ export function PushBanner({ merchant, amount, onOpen, onDismiss }: Props) {
     focusWithoutScroll(ref.current);
   }, []);
 
+  useEffect(() => {
+    if (!autoFocused) return;
+    const onKey = () => setAutoFocused(false);
+    window.addEventListener("keydown", onKey, { once: true });
+    return () => window.removeEventListener("keydown", onKey);
+  }, [autoFocused]);
+
   const dismiss = () => {
     setLeaving(true);
     window.setTimeout(onDismiss, PUSH_BANNER_OUT_MS);
@@ -62,7 +89,7 @@ export function PushBanner({ merchant, amount, onOpen, onDismiss }: Props) {
       style={{ pointerEvents: "none", fontFamily: "var(--bank-font)" }}
     >
       <span aria-live="assertive" className="sr-only">
-        {BANK_COPY.livePush(amount)}
+        {title ? `${title}. ${body ?? ""}` : BANK_COPY.livePush(amount)}
       </span>
 
       <m.button
@@ -136,13 +163,17 @@ export function PushBanner({ merchant, amount, onOpen, onDismiss }: Props) {
           padding: "var(--bank-push-pad)",
           gap: "12px",
           borderRadius: "var(--bank-radius-push)",
-          background: "rgba(255,255,255,0.92)",
-          backdropFilter: "blur(20px)",
-          WebkitBackdropFilter: "blur(20px)",
+          // Материал системного уведомления: размытие ПЛЮС насыщение. Без
+          // saturate подложка сереет, и баннер читается белой плашкой, а не
+          // стеклом поверх экрана (HIG, Materials).
+          background: "rgba(252,252,254,0.82)",
+          backdropFilter: "blur(28px) saturate(180%)",
+          WebkitBackdropFilter: "blur(28px) saturate(180%)",
           // Единственная тень во всём наборе экранов банка: у уведомления
           // iOS она есть, без неё баннер сливается с экраном подрядчика.
           boxShadow: "0 8px 24px rgba(0,0,0,0.16)",
           border: "none",
+          outline: autoFocused ? "none" : undefined,
           cursor: "pointer",
         }}
       >
@@ -176,7 +207,7 @@ export function PushBanner({ merchant, amount, onOpen, onDismiss }: Props) {
               textOverflow: "ellipsis",
             }}
           >
-            {BANK_COPY.pushTitle(amount)}
+            {title ?? BANK_COPY.pushTitle(amount)}
           </span>
 
           {/* Усечение бьёт по мерчанту, не по сумме: сумма стоит
@@ -193,7 +224,7 @@ export function PushBanner({ merchant, amount, onOpen, onDismiss }: Props) {
               overflow: "hidden",
             }}
           >
-            {BANK_COPY.pushBody(merchant)}
+            {body ?? BANK_COPY.pushBody(merchant)}
           </span>
         </span>
       </m.button>

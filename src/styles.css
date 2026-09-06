@@ -189,19 +189,20 @@
 
   /* Форма */
   --bank-radius-sheet-top: 16px;
-  --bank-radius-receipt: 22px;
-  --bank-radius-control: 14px;
+  --bank-radius-receipt: 24px;
+  --bank-radius-control: 10px;
   --bank-radius-account-card: 16px;
   --bank-radius-avatar: 22px;
   --bank-radius-avatar-small: 12px;
   --bank-radius-push: 22px;
   --bank-radius-app-icon: 9px;
-  --bank-radius-tile: 16px;
+  --bank-radius-tile: 12px;
 
   /* Плотность */
-  --bank-button-h: 54px;
+  --bank-button-h: 48px;
   --bank-page-padding: 16px;
-  --bank-receipt-side-margin: 27px;
+  /* Доля ширины у донора: 346 из 425 (замер 2026-09-05) — поле 8.2 %. */
+  --bank-receipt-side-margin: 8.2%;
   --bank-chip-h: 29px;
 
   /*
@@ -226,13 +227,15 @@
   --bank-illustration-w: 180px;
   --bank-illustration-h: 130px;
   --bank-avatar-payment: 44px;
-  --bank-avatar-success: 78px;
+  --bank-avatar-success: 82px;
   --bank-badge-d: 23px;
   --bank-account-card-h: 74px;
   --bank-account-icon-d: 29px;
   --bank-receipt-notch-d: 29px;
-  --bank-receipt-notch-y: 127px;
-  --bank-docs-tile: 56px;
+  /* Центр разрыва чека: вырезы И пунктир берут это число, поэтому
+     разъехаться им нечем (замер 2026-09-05: центр разрыва 140). */
+  --bank-receipt-notch-y: 140px;
+  --bank-docs-tile: 44px;
   --bank-push-inset: 10px;
   /* Баннер пуша: обычный верхний отступ страницы. Донорские 62 включали
      статус-бар iOS; статус-бара больше нет, остаётся отступ страницы. */

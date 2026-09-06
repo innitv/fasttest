@@ -7,6 +7,25 @@ import {
 import { BANK_COPY, COPY } from "@demo/content/copy";
 import type { BankPayload } from "@demo/theme/bank-payload";
 
+const ICON_PROPS = {
+  width: 22,
+  height: 22,
+  viewBox: "0 0 24 24",
+  fill: "none",
+  stroke: "currentColor",
+  strokeWidth: 1.8,
+  strokeLinecap: "round" as const,
+  strokeLinejoin: "round" as const,
+};
+
+/** Ряд действий банка под чеком: четыре статичные плитки, как у донора. */
+const TILES = [
+  { label: COPY["bank.tile_repeat"], icon: <svg {...ICON_PROPS}><path d="M20 11a8 8 0 1 1-2.3-5.6M20 3v5h-5" /></svg> },
+  { label: COPY["bank.docs_tile"], icon: <svg {...ICON_PROPS}><path d="M6 3.5h8.5L19 8v12.5H6V3.5Z" /><path d="M9 12h7M9 16h5" /></svg> },
+  { label: COPY["bank.tile_template"], icon: <svg {...ICON_PROPS}><path d="m12 4 2.4 5 5.6.7-4 3.9 1 5.4-5-2.7-5 2.7 1-5.4-4-3.9 5.6-.7L12 4Z" /></svg> },
+  { label: COPY["bank.tile_autopay"], icon: <svg {...ICON_PROPS}><path d="M4 6.5h16v14H4v-14ZM8 3v5M16 3v5M4 11h16" /></svg> },
+];
+
 interface Props {
   payload: BankPayload;
   onReturn: () => void;
@@ -37,8 +56,17 @@ export function BankSuccessScreen({ payload, onReturn }: Props) {
         // высоты экрана: enforced держит ≥4.9:1 (5.38 у верха → 4.91 на y=74).
         // Прежняя плоская пришпиленная зона (обрыв) убрана. Средние/нижние
         // стопы — измеренные цвета донора `ozon-03-success.jpg`.
+        /*
+          Свечение за чеком — отдельный слой ПОВЕРХ градиента, снят с живого
+          экрана банка 2026-09-05: `radial-gradient(50% 50%, #C7F9B8 0%,
+          .8 на 30%, прозрачно к краю)` размером 600×600 при вьюпорте 425,
+          то есть диаметр ≈ 1.4 ширины экрана, центр примерно на 40% высоты.
+          Салатовый здесь не цвет мерчанта, а цвет УСПЕХА: он один и тот же
+          на всех платежах — иначе банк читал бы тему подрядчика, чего
+          граница демо не допускает.
+        */
         background:
-          "linear-gradient(180deg, var(--bank-gradient-top) 0, #1163f6 64px, #3d82e8 150px, #7eb5de 42%, #74a9ed 62%, #8cb0fe 100%)",
+          "radial-gradient(circle 275px at 50% 40%, rgba(199, 249, 184, 0.85) 0%, rgba(199, 249, 184, 0.55) 30%, rgba(199, 249, 184, 0) 100%), linear-gradient(180deg, var(--bank-gradient-top) 0, #1163f6 64px, #3d82e8 150px, #7eb5de 42%, #74a9ed 62%, #8cb0fe 100%)",
         color: "var(--bank-on-primary)",
         fontFamily: "var(--bank-font)",
       }}
@@ -113,7 +141,16 @@ export function BankSuccessScreen({ payload, onReturn }: Props) {
         tabIndex={0}
         style={{
           top: "var(--bank-header-h)",
-          bottom: "calc(111px + env(safe-area-inset-bottom, 0px))",
+          bottom: "calc(var(--bank-button-h) + 28px + env(safe-area-inset-bottom, 0px))",
+          /*
+            Группа «аватар + чек + плитка» центрируется ЦЕЛИКОМ, а между её
+            частями стоят фиксированные донорские отступы. До правки верхний
+            разделитель прижимал чек к шапке, а плитка растягивалась в
+            остатке — на высоком экране это разносило их по краям: тело чека
+            вверху, плитка где-то внизу. `safe` не даёт срезать верх группы,
+            когда она выше области.
+          */
+          justifyContent: "flex-start",
           // Ось X зафиксирована явно: пара `overflow-y: auto` + `overflow-x:
           // visible` невозможна, ось X вычислилась бы в `auto`, и блок стал бы
           // ещё одним горизонтальным скролл-контейнером (на iOS такие
@@ -128,10 +165,13 @@ export function BankSuccessScreen({ payload, onReturn }: Props) {
           containerName: "success",
         }}
       >
-        <div
-          aria-hidden="true"
-          style={{ flex: "0 1 135px", minHeight: "12px" }}
-        />
+        {/*
+          Пустоты сверху и снизу в донорской пропорции 1.32 : 1 (замер живого
+          экрана: над аватаром 393, под рядом действий 298). Центрирование
+          давало 0.93 — группа стояла выше донорской и оставляла под собой
+          больше воздуха, чем над собой.
+        */}
+        <div aria-hidden="true" style={{ flex: "1.32 1 0", minHeight: "8px" }} />
 
         <div className="relative flex shrink-0 justify-center" style={{ zIndex: 1 }}>
           <AvatarBadge
@@ -145,17 +185,21 @@ export function BankSuccessScreen({ payload, onReturn }: Props) {
 
         <div
           data-testid="receipt-card"
-          className="flex shrink-0 flex-col items-center"
+          className="relative flex shrink-0 flex-col items-center"
           style={{
-            marginTop: "-37px",
+            // Аватар выступает над чеком на 36 (замер донора: чек 429,
+            // аватар 393 при высоте 82) — отсюда подъём на 82 − 36.
+            marginTop: "-46px",
             // Ширина задаётся явно, поля — `auto`: чек центрируется сам, при
             // любой ширине колонки и независимо от того, что делает
             // выравнивание родителя. Симметричные боковые поля донора (27)
             // сохранены.
             width: "calc(100% - 2 * var(--bank-receipt-side-margin))",
             marginInline: "auto",
-            paddingTop: "55px",
-            paddingBottom: "20px",
+            // Отступы внутри чека сняты с живого экрана 2026-09-05:
+            // «Успешно» на 57 от верха карточки, получатель — на 24 от низа.
+            paddingTop: "57px",
+            paddingBottom: "24px",
             paddingInline: "16px",
             borderRadius: "var(--bank-radius-receipt)",
             background: "var(--bank-surface)",
@@ -178,18 +222,29 @@ export function BankSuccessScreen({ payload, onReturn }: Props) {
           </span>
           <span
             data-testid="bank-success-amount"
-            style={{ marginTop: "6px", fontSize: "26px", fontWeight: 700 }}
+            style={{ marginTop: "0px", fontSize: "24px", fontWeight: 700 }}
           >
             {BANK_COPY.successAmount(payload.amount)}
           </span>
 
           {/* Линия отрыва по оси вырезов */}
+          <span aria-hidden="true" style={{ height: "33px" }} />
+
           <span
             aria-hidden="true"
             style={{
-              alignSelf: "stretch",
-              marginTop: "20px",
-              marginBottom: "18px",
+              /*
+                Линия отрыва привязана к тому же числу, что и вырезы по краям
+                (`--bank-receipt-notch-y`), и потому не может от них уехать:
+                до этого она стояла в потоке и разошлась с вырезами на 13 px,
+                как только поменялись отступы внутри чека. В потоке остаётся
+                распорка той же высоты — разрыв между суммой и реквизитом
+                сохраняется (у донора 32).
+              */
+              position: "absolute",
+              left: "16px",
+              right: "16px",
+              top: "calc(var(--bank-receipt-notch-y) - 0.5px)",
               height: "1px",
               /*
                 Точки, а не штрихи: у чека в самом банке линия отрыва — мелкий
@@ -222,9 +277,9 @@ export function BankSuccessScreen({ payload, onReturn }: Props) {
           <span
             data-testid="bank-success-merchant"
             style={{
-              marginTop: "6px",
-              fontSize: "17px",
-              fontWeight: 700,
+              marginTop: "8px",
+              fontSize: "16px",
+              fontWeight: 600,
               textAlign: "center",
             }}
           >
@@ -244,49 +299,63 @@ export function BankSuccessScreen({ payload, onReturn }: Props) {
           </span>
         </div>
 
-        {/* ── Зона 7: плитка «Чек». Статична, aria-hidden ─────────── */}
+        {/*
+          ── Зона 7: ряд действий. Статичен, aria-hidden ───────────────
+          У банка под чеком РЯД из четырёх плиток, а не одна: замер живого
+          экрана 2026-09-05 — иконка 44×44 с радиусом 12, контейнер 68,
+          шаг 76 (то есть зазор 8), подпись 12/400 через 8 от иконки, ряд
+          центрирован. Одинокая плитка посреди пустого поля читалась как
+          недорисованный экран.
+
+          В демо все четыре ничего не делают — это оформление чека, поэтому
+          ряд целиком скрыт от скринридера.
+        */}
         <div
           data-testid="docs-tile"
           aria-hidden="true"
-          className="flex flex-col items-center justify-center"
-          style={{
-            // Растёт в остатке между чеком и кнопкой (на высоком экране
-            // центрируется ровно как раньше) и не сжимается ниже собственной
-            // высоты: раньше `flex-1` без минимума выдавливал её на кнопку.
-            flex: "1 1 auto",
-            minHeight: "calc(var(--bank-docs-tile) + 30px)",
-            paddingBlock: "8px",
-          }}
+          className="flex shrink-0 items-start justify-center"
+          /*
+            Зазор до чека — 24.
+            🔴 Не 84: между чеком (низ 660) и рядом (верх 744) у донора лежит
+            баннер-подсказка 660→720, и разность координат — это его высота
+            плюс зазор, а не зазор. Баннера у нас нет, а дырка от него
+            оставалась.
+          */
+          style={{ marginTop: "24px", gap: "8px" }}
         >
-          <span
-            className="flex items-center justify-center"
-            style={{
-              width: "var(--bank-docs-tile)",
-              height: "var(--bank-docs-tile)",
-              borderRadius: "var(--bank-radius-tile)",
-              background: "var(--bank-surface)",
-              color: "var(--bank-primary)",
-            }}
-          >
-            <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
-              <path
-                d="M6 3.5h8.5L19 8v12.5H6V3.5Z"
-                stroke="currentColor"
-                strokeWidth="1.8"
-                strokeLinejoin="round"
-              />
-              <path
-                d="M9 11h7M9 15h5"
-                stroke="currentColor"
-                strokeWidth="1.8"
-                strokeLinecap="round"
-              />
-            </svg>
-          </span>
-          <span style={{ marginTop: "8px", fontSize: "13px", fontWeight: 400 }}>
-            {COPY["bank.docs_tile"]}
-          </span>
+          {TILES.map((tile) => (
+            <span
+              key={tile.label}
+              className="flex flex-col items-center"
+              style={{ width: "68px" }}
+            >
+              <span
+                className="flex items-center justify-center"
+                style={{
+                  width: "var(--bank-docs-tile)",
+                  height: "var(--bank-docs-tile)",
+                  borderRadius: "var(--bank-radius-tile)",
+                  background: "var(--bank-surface)",
+                  color: "var(--bank-primary)",
+                }}
+              >
+                {tile.icon}
+              </span>
+              <span
+                style={{
+                  marginTop: "8px",
+                  fontSize: "12px",
+                  fontWeight: 400,
+                  textAlign: "center",
+                }}
+              >
+                {tile.label}
+              </span>
+            </span>
+          ))}
         </div>
+
+        <div aria-hidden="true" style={{ flex: "1 1 0", minHeight: "8px" }} />
       </div>
 
       {/* ── Зона 8: кнопка возврата. Нижний резерв — обычный отступ
@@ -295,7 +364,9 @@ export function BankSuccessScreen({ payload, onReturn }: Props) {
         className="absolute inset-x-0 bottom-0"
         style={{
           paddingInline: "var(--bank-page-padding)",
-          paddingBottom: "calc(28px + env(safe-area-inset-bottom, 0px))",
+          // Под кнопкой у донора 16 (замер живого экрана 2026-09-05),
+          // а не 28: она стоит у самой кромки, а не висит над ней.
+          paddingBottom: "calc(16px + env(safe-area-inset-bottom, 0px))",
         }}
       >
         <BankPrimaryButton
@@ -304,7 +375,8 @@ export function BankSuccessScreen({ payload, onReturn }: Props) {
           loading={false}
           onClick={onReturn}
           testId="bank-return-cta"
-          height="55px"
+          // Высота из общего токена: у донора обе кнопки банка одинаковы (48).
+          height="var(--bank-button-h)"
         />
       </div>
     </div>

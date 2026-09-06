@@ -299,8 +299,10 @@ export function BankPrimaryButton({
         borderRadius: "var(--bank-radius-control)",
         background: "var(--bank-primary)",
         color: "var(--bank-on-primary)",
-        fontSize: "17px",
-        fontWeight: 700,
+        // Кегль и вес сняты с живого экрана банка (2026-09-05): 16/500, а не
+        // 17/700 — прежние числа делали кнопку тяжелее донорской.
+        fontSize: "16px",
+        fontWeight: 500,
         border: "none",
         whiteSpace: "nowrap",
         overflow: "hidden",

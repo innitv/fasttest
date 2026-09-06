@@ -48,52 +48,58 @@ import type { ForcedState, PhoneGateSlot, ScreenProps } from "./screen-props";
  * Экраны банка, пуш и подтверждение статичны намеренно — они общие для всех
  * тем, идут сразу за экраном подрядчика и в сумме много меньше.
  */
-const CONTRACTOR_SCREENS: Record<
+/**
+ * Загрузчики экранов подрядчика.
+ *
+ * Раньше здесь сразу стоял `lazy(...)`, и достать сам импорт было нечем.
+ * Теперь фабрики живут отдельно, потому что их нужно уметь вызывать
+ * ЗАРАНЕЕ: у темы, которая начинается с домашнего экрана, чанк экрана
+ * тянулся в момент показа — и первые 300 мс после заставки под ней висел
+ * пустой фон, а контент вставал рывком. Заставка на то и стоит, чтобы за её
+ * время экран догрузился.
+ */
+const CONTRACTOR_LOADERS: Record<
   TenantConfig["archetype"],
-  ComponentType<ScreenProps>
+  () => Promise<{ default: ComponentType<ScreenProps> }>
 > = {
-  cart_checkout: lazy(() =>
+  cart_checkout: () =>
     import("./CartCheckoutScreen").then((m) => ({ default: m.CartCheckoutScreen })),
-  ),
-  subscription_payment: lazy(() =>
+  subscription_payment: () =>
     import("./SubscriptionPaymentScreen").then((m) => ({
       default: m.SubscriptionPaymentScreen,
     })),
-  ),
-  ticket_checkout: lazy(() =>
+  ticket_checkout: () =>
     import("./TicketCheckoutScreen").then((m) => ({ default: m.TicketCheckoutScreen })),
-  ),
-  store_checkout: lazy(() =>
+  store_checkout: () =>
     import("./StoreCheckoutScreen").then((m) => ({ default: m.StoreCheckoutScreen })),
-  ),
-  plan_sheet: lazy(() =>
+  plan_sheet: () =>
     import("./PlanSheetScreen").then((m) => ({ default: m.PlanSheetScreen })),
-  ),
-  order_steps: lazy(() =>
+  order_steps: () =>
     import("./OrderStepsScreen").then((m) => ({ default: m.OrderStepsScreen })),
-  ),
-  slot_delivery: lazy(() =>
+  slot_delivery: () =>
     import("./SlotDeliveryScreen").then((m) => ({ default: m.SlotDeliveryScreen })),
-  ),
-  bonus_checkout: lazy(() =>
+  bonus_checkout: () =>
     import("./BonusCheckoutScreen").then((m) => ({ default: m.BonusCheckoutScreen })),
-  ),
-  pickup_checkout: lazy(() =>
+  pickup_checkout: () =>
     import("./PickupCheckoutScreen").then((m) => ({ default: m.PickupCheckoutScreen })),
-  ),
-  carrier_delivery: lazy(() =>
+  carrier_delivery: () =>
     import("./CarrierDeliveryScreen").then((m) => ({ default: m.CarrierDeliveryScreen })),
-  ),
-  order_prepay: lazy(() =>
+  order_prepay: () =>
     import("./OrderPrepayScreen").then((m) => ({ default: m.OrderPrepayScreen })),
-  ),
-  subscription_bind: lazy(() =>
+  subscription_bind: () =>
     import("./SubscriptionBindScreen").then((m) => ({ default: m.SubscriptionBindScreen })),
-  ),
-  subscription_card: lazy(() =>
+  subscription_card: () =>
     import("./SubscriptionCardScreen").then((m) => ({ default: m.SubscriptionCardScreen })),
-  ),
 };
+
+/*
+ * Таблица остаётся ТАБЛИЦЕЙ: компилятор по-прежнему требует запись для
+ * каждого архетипа — она проверяется на `CONTRACTOR_LOADERS` выше, — а
+ * `lazy` навешивается на готовые загрузчики.
+ */
+const CONTRACTOR_SCREENS = Object.fromEntries(
+  Object.entries(CONTRACTOR_LOADERS).map(([archetype, load]) => [archetype, lazy(load)]),
+) as unknown as Record<TenantConfig["archetype"], ComponentType<ScreenProps>>;
 
 interface Props {
   theme: BuiltTheme;
@@ -215,6 +221,16 @@ export function ScreenHost({ theme, forcedState, showHandoff, initialStage }: Pr
     }, timings.splash_ms);
     return () => window.clearTimeout(id);
   }, [stage, homePushSeen, timings.splash_ms]);
+
+  /*
+   * Кадры до формы — время, за которое её чанк обязан приехать. Иначе
+   * заставка растворяется в пустой фон, а контент встаёт рывком уже после
+   * неё: замер показывал ~280 мс пустого кадра под уходящей заставкой.
+   */
+  useEffect(() => {
+    if (stage !== "home" && stage !== "home_push" && stage !== "app_splash") return;
+    void CONTRACTOR_LOADERS[tenant.archetype]();
+  }, [stage, tenant.archetype]);
 
   /** Splash приложения живёт столько же, сколько splash банка. */
   useEffect(() => {
@@ -588,9 +604,32 @@ export function ScreenHost({ theme, forcedState, showHandoff, initialStage }: Pr
       case "ozon_rail":
         return railScreen;
       case "app_splash":
-        return homePush?.app_icon ? (
-          <AppSplashScreen name={homePush.app_name} />
-        ) : null;
+        if (!homePush?.app_icon) return null;
+        /*
+         * Под заставкой СРАЗУ монтируется экран приложения — скрытым.
+         *
+         * Иначе `lazy` разрешается только в момент перехода, и первые ~300 мс
+         * после растворения заставки Suspense держит заглушку: экран вставал
+         * рывком уже после того, как заставка ушла (замер: fallback жил
+         * 1200→1490 мс при переходе с 1190). Предзагрузка чанка этого не
+         * лечит — ждать заставку заставляет первый РЕНДЕР ленивого
+         * компонента, а не сеть.
+         *
+         * Скрытый слой не читается диктором и не ловит касания: для
+         * пользователя на этом кадре есть только заставка.
+         */
+        return (
+          <>
+            <div
+              aria-hidden
+              className="absolute inset-0"
+              style={{ visibility: "hidden", pointerEvents: "none" }}
+            >
+              {contractorScreen}
+            </div>
+            <AppSplashScreen name={homePush.app_name} />
+          </>
+        );
       case "splash":
         return <BankSplashScreen dotsCycleMs={timings.dots_cycle_ms} />;
       case "bank_payment":
@@ -661,10 +700,24 @@ export function ScreenHost({ theme, forcedState, showHandoff, initialStage }: Pr
           */}
           <Suspense
             fallback={
-              <div
-                className="absolute inset-0"
-                style={{ background: "var(--t-surface-background)" }}
-              />
+              /*
+               * Пока чанк экрана не отрисован, у темы с заставкой держится
+               * ЗАСТАВКА, а не пустой фон. Иначе она растворялась в белое
+               * поле, и интерфейс вставал рывком уже после перехода: замер
+               * показывал ~290 мс пустого кадра. Чанк к этому моменту давно
+               * загружен (предзагрузка выше), но первый рендер `lazy`
+               * всё равно проходит через Suspense.
+               */
+              homePush ? (
+                <div className="absolute inset-0">
+                  <AppSplashScreen name={homePush.app_name} />
+                </div>
+              ) : (
+                <div
+                  className="absolute inset-0"
+                  style={{ background: "var(--t-surface-background)" }}
+                />
+              )
             }
           >
             {renderStage(visualStage)}

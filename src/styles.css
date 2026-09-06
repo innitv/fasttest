@@ -672,6 +672,15 @@ button:active,
   *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
+    /*
+     * Задержка обнуляется вместе с длительностью. Иначе анимация,
+     * разложенная по времени задержками (сборка фирменного знака: шесть
+     * кусков со стартами до 0.74 с), формально «мгновенная», а по факту
+     * выкладывается почти секунду рывками — ровно то, от чего человек
+     * включал эту настройку.
+     */
+    animation-delay: 0ms !important;
     transition-duration: 0.01ms !important;
+    transition-delay: 0ms !important;
   }
 }

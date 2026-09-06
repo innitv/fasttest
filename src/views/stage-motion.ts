@@ -50,7 +50,8 @@ export type TransitionType =
   | "push-back"
   | "sheet-up"
   | "sheet-down"
-  | "bank-internal";
+  | "bank-internal"
+  | "app-launch";
 
 const BANK_STAGES: readonly DemoStage[] = ["splash", "bank_payment", "bank_success"];
 const isBank = (stage: DemoStage): boolean => BANK_STAGES.includes(stage);
@@ -69,8 +70,14 @@ export function transitionFor(prev: DemoStage | null, next: DemoStage): Transiti
   // Тап по уведомлению о счёте открывает приложение подрядчика — тот же
   // модальный выезд снизу, что и открытие банка по пушу платежа.
   if (prev === "home_push" && next === "app_splash") return "sheet-up";
-  // Splash уступает место первому экрану приложения без движения: он
-  // и есть это приложение, «въезжать» ему неоткуда.
+  /*
+   * Splash уступает место первому экрану приложения так, как это делает
+   * iOS: launch screen не подменяется кадром, а РАСТВОРЯЕТСЯ — уходит в
+   * прозрачность, чуть увеличиваясь, будто экран приближается к
+   * смотрящему, — и под ним проявляется интерфейс. Мгновенная подмена
+   * читалась рывком: две картинки без связи между ними.
+   */
+  if (prev === "app_splash" && next === "contractor") return "app-launch";
   if (prev === "app_splash") return "none";
   // Свайп по уведомлению: баннер уехал сам, домашний экран под ним статичен.
   if (prev === "home_push") return "none";
@@ -174,6 +181,10 @@ function spec(type: TransitionType): Transition {
     // Внутри банка ход самый малый: экран меняется, рамка и подложка — нет.
     case "bank-internal":
       return { duration: 0.3, ease: "easeOut" };
+    // Растворение launch screen: короче листа — это не презентация нового
+    // экрана, а исчезновение заставки того же приложения.
+    case "app-launch":
+      return { duration: 0.36, ease: IOS_EASE };
     default:
       // Мгновенно: уходящий экран снимается сразу, без дублей в DOM.
       return { duration: 0 };
@@ -205,6 +216,10 @@ export const stageVariants: Variants = {
         return { x: 0, y: 0, opacity: 1, zIndex: 1 };
       case "bank-internal":
         return { x: 0, y: 10, opacity: 0, zIndex: 2 };
+      case "app-launch":
+        // Интерфейс уже «под» заставкой: он проявляется на месте, чуть
+        // подрастая, а не приезжает откуда-то со стороны.
+        return { x: 0, y: 0, opacity: 0, scale: 0.985, zIndex: 1 };
       default:
         return { x: 0, y: 0, opacity: 1, zIndex: 1 };
     }
@@ -213,6 +228,9 @@ export const stageVariants: Variants = {
     x: 0,
     y: 0,
     opacity: 1,
+    // Масштаб называется явно: у «app-launch» экран входит слегка
+    // уменьшенным, а у подложки листа он остаётся 0.98 после ухода вглубь.
+    scale: 1,
     zIndex: enterZ(type),
     pointerEvents: "auto",
     transition: spec(type),
@@ -237,6 +255,17 @@ export const stageVariants: Variants = {
         return { x: 0, y: "100%", opacity: 1, zIndex: 3, pointerEvents: "none", transition: spec(type) };
       case "bank-internal":
         return { x: 0, y: -6, opacity: 0, zIndex: 1, pointerEvents: "none", transition: spec(type) };
+      case "app-launch":
+        // Заставка уходит ПОВЕРХ интерфейса: растёт и гаснет.
+        return {
+          x: 0,
+          y: 0,
+          opacity: 0,
+          scale: 1.06,
+          zIndex: 3,
+          pointerEvents: "none",
+          transition: spec(type),
+        };
       default:
         return { x: 0, y: 0, opacity: 1, zIndex: 1, pointerEvents: "none", transition: spec(type) };
     }

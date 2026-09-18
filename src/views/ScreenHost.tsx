@@ -90,6 +90,8 @@ const CONTRACTOR_LOADERS: Record<
     import("./SubscriptionBindScreen").then((m) => ({ default: m.SubscriptionBindScreen })),
   subscription_card: () =>
     import("./SubscriptionCardScreen").then((m) => ({ default: m.SubscriptionCardScreen })),
+  booking_payment: () =>
+    import("./BookingPaymentScreen").then((m) => ({ default: m.BookingPaymentScreen })),
 };
 
 /*

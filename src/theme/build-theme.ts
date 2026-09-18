@@ -453,6 +453,9 @@ function validateSemantics(tenant: TenantConfig): Diagnostic[] {
     // У карточки подписки списка способов нет вовсе: способ уже выбран и
     // показан строкой. `radio_rows` здесь — формальность контракта.
     subscription_card: "radio_rows",
+    // У Onlinetours выбор оплаты — СВОЯ нижняя шторка со списком и радио:
+    // «Ozon Банк» встаёт в неё первой позицией, а не в достроенную демо.
+    booking_payment: "sheet_select",
   };
   const expectedLayout = layoutByArchetype[tenant.archetype];
   if (tenant.payment_list.layout !== expectedLayout) {

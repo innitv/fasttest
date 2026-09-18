@@ -1,0 +1,199 @@
+{
+  "tenant_id": "onlinetours",
+  "display_name": "Onlinetours",
+  "archetype": "booking_payment",
+  "header": {
+    "style": "centered_logo",
+    "back_label": null
+  },
+  "brand": {
+    "primary": "#FD9D27",
+    "on_primary": "#1C1C1C",
+    "accent": null,
+    "logo": {
+      "kind": "slot",
+      "text": "onlinetours",
+      "slot_ratio": "160x24"
+    }
+  },
+  "surface": {
+    "background": "#F5F6F9",
+    "card": "#FFFFFF",
+    "form": "#F5F6F9",
+    "border": "#EDEDED",
+    "divider": "#EDEDED",
+    "text_primary": "#1C1C1C",
+    "text_secondary": "#A8A8A8",
+    "danger": "#E5352B",
+    "field_error": "#E5352B",
+    "track": "#A8A8A8",
+    "link": "#5B66F7"
+  },
+  "elevation": {
+    "model": "tonal_fill",
+    "border_width": 1,
+    "selected_border_width": 2,
+    "shadow": null
+  },
+  "radius": {
+    "card": 16,
+    "control": 12,
+    "field": 12,
+    "chip": 999,
+    "sheet": 16,
+    "allow_inversion": true
+  },
+  "density": {
+    "page_padding": 12,
+    "block_gap": 12,
+    "row_height": 60,
+    "control_height": 56,
+    "method_button_height": 68,
+    "section_gap": 16
+  },
+  "component_width": {
+    "choice_card_pct": 42,
+    "payment_card_pct": 32
+  },
+  "typography": {
+    "family": "grotesk",
+    "body": 16,
+    "h1": 20,
+    "section_title": 18,
+    "caption": 14,
+    "price": 24,
+    "label_weight": 500,
+    "title_weight": 800,
+    "emphasis_weight": 600,
+    "fonts": {
+      "display": null,
+      "body": {
+        "family": "Manrope",
+        "src": "/tenants/onlinetours/manrope-500.woff",
+        "weights": [
+          {
+            "weight": 500,
+            "src": "/tenants/onlinetours/manrope-500.woff"
+          },
+          {
+            "weight": 600,
+            "src": "/tenants/onlinetours/manrope-700.woff"
+          },
+          {
+            "weight": 700,
+            "src": "/tenants/onlinetours/manrope-700.woff"
+          },
+          {
+            "weight": 800,
+            "src": "/tenants/onlinetours/manrope-800.woff"
+          }
+        ]
+      }
+    }
+  },
+  "cta": {
+    "placement": "inline",
+    "label": "Оплатить",
+    "include_amount": false,
+    "requires_selection": false,
+    "font_size": 16,
+    "font_weight": 600
+  },
+  "payment_list": {
+    "layout": "sheet_select",
+    "section_title": "Способ оплаты",
+    "selection": "radio_outline",
+    "methods": [
+      {
+        "id": "ozon",
+        "label": "Ozon Банк",
+        "caption": "Подтверждение в банке",
+        "logo": "slot",
+        "logo_src": "/bank/app-icon.svg"
+      },
+      {
+        "id": "sbp",
+        "label": "Оплата через СБП",
+        "caption": "Быстро и безопасно",
+        "logo": "slot",
+        "logo_src": "/tenants/onlinetours/sbp.svg"
+      },
+      {
+        "id": "card",
+        "label": "Банковской картой",
+        "caption": "Мир, Visa, Mastercard",
+        "logo": "slot",
+        "logo_src": "/tenants/onlinetours/card.svg"
+      },
+      {
+        "id": "ya-pay",
+        "label": "Яндекс Пэй",
+        "caption": "Оплата через Яндекс Пэй",
+        "logo": "none"
+      }
+    ],
+    "default_selected": "sbp"
+  },
+  "ozon": {
+    "label": "Ozon Банк",
+    "position": 1,
+    "adopts_tenant_theme": true,
+    "handoff": "overlay"
+  },
+  "content": {
+    "title": "Оплата брони",
+    "booking": {
+      "steps": [
+        {
+          "label": "Детали тура",
+          "done": true
+        },
+        {
+          "label": "Данные туристов",
+          "done": true
+        },
+        {
+          "label": "Оплата",
+          "done": false
+        }
+      ],
+      "card": {
+        "title": "Ozkaymak Falez Hotel",
+        "lines": [
+          "25 сен, пт - 2 окт, пт",
+          "7 ночей"
+        ]
+      },
+      "section_title": "Выберите способ оплаты",
+      "change_label": "Изменить",
+      "amount_label": "К оплате",
+      "support_phone": "+7 (495) 134-46-67"
+    },
+    "payment_sheet": {
+      "title": "Способ оплаты",
+      "cta_label": null,
+      "note": null,
+      "presentation": "radio_confirm"
+    },
+    "totals": {
+      "sum": 15481100,
+      "discount": 0,
+      "currency": "RUB"
+    },
+    "return_label": "Вернуться к брони",
+    "paid_title": "Бронь оплачена",
+    "payment_purpose": "Оплата тура",
+    "summary_detail": "Ozkaymak Falez Hotel, 7 ночей",
+    "header_logo": "/tenants/onlinetours/logo.svg"
+  },
+  "demo": {
+    "balance": "312 480,00 ₽",
+    "timings": {
+      "push_delay_ms": 600,
+      "splash_ms": 1200,
+      "pay_loading_ms": 900,
+      "dots_cycle_ms": 900
+    }
+  },
+  "a11y_mode": "donor_faithful"
+}

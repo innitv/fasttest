@@ -42,6 +42,7 @@ const PATH_ROUTES: Record<string, { tenant: string; archetype: TenantConfig["arc
   "/ewa": { tenant: "ewa", archetype: "carrier_delivery" },
   "/plus": { tenant: "yandex-plus", archetype: "subscription_bind" },
   "/a3pay": { tenant: "a3pay", archetype: "subscription_card" },
+  "/onlinetours": { tenant: "onlinetours", archetype: "booking_payment" },
 };
 
 /**

@@ -45,6 +45,7 @@ const CAPTIONS: Record<string, { name: string; kind: string }> = {
   tripster: { name: "Tripster", kind: "Предоплата созданного заказа, шторка способов" },
   "yandex-plus": { name: "Яндекс Плюс", kind: "Подключение подписки, согласие на списания" },
   a3pay: { name: "Яндекс Плюс · A3 Pay", kind: "Карточка подписки, старт с домашнего экрана" },
+  onlinetours: { name: "Onlinetours", kind: "Оплата брони тура, шаги оформления и шторка способов" },
 };
 
 /** Сценарий, который стоит показывать первым. */

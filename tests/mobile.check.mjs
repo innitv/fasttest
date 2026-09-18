@@ -876,6 +876,10 @@ const DESK_GREY = [230, 231, 234];
     // оплаты, раскрытым сразу, поэтому стадия задаётся адресом, а ожидание
     // «поле есть» снято замером, а не выведено из схемы.
     ["/a3pay?stage=contractor", null, true],
+    // У Onlinetours поле телефона появляется после выбора «Ozon Банк» в его
+    // собственной шторке: кликать по строке метода до её открытия нечем,
+    // поэтому состояние задаётся адресом — как у RML, ХВАЛа и MYBOX.
+    ["/onlinetours?state=phone_expanded", null, true],
   ];
   const rows = [];
   let ok = true;
@@ -1111,6 +1115,18 @@ const DESK_GREY = [230, 231, 234];
     // Закреплённый `brand.on_primary` — решение владельца, цена названа в
     // консоли кодом W_CTA_CONTRAST_PINNED (`FIXES.md`, баг 13).
     ["/tripster", "color-contrast", 'button[data-testid="primary-cta"]'],
+    /*
+     * Onlinetours в режиме `donor_faithful`: владелец 2026-09-18 потребовал
+     * клон донора, и серый донора — часть его вида. Замер: вторичный текст
+     * #A8A8A8 даёт 2.38:1 на белой карточке и 2.20:1 на фоне страницы
+     * #F5F6F9, ссылка «Изменить» #5B66F7 — 4.48:1 на белом (порог 4.5
+     * недобран на 0.02). Поднять их значит перекрасить донора: демо
+     * показывает ЕГО экран, а не улучшенный.
+     */
+    ["/onlinetours", "color-contrast", 'div[data-testid="booking-card"]'],
+    ["/onlinetours", "color-contrast", ".min-w-0"],
+    ["/onlinetours", "color-contrast", 'button[data-testid="open-payment-sheet"]'],
+    ["/onlinetours", "color-contrast", 'span[aria-hidden="true"]'],
   ];
   const isKnown = (route, ruleId, target) =>
     KNOWN.some(

@@ -48,8 +48,12 @@ const CAPTIONS: Record<string, { name: string; kind: string }> = {
   onlinetours: { name: "Onlinetours", kind: "Оплата брони тура, шаги оформления и шторка способов" },
 };
 
-/** Сценарий, который стоит показывать первым. */
-const FEATURED = "a3pay";
+/*
+ * Блок «Новый сценарий» не называет тему поимённо: новая — та, что заведена
+ * ПОСЛЕДНЕЙ, а порядок задаёт `PATH_ROUTES`, куда маршруты дописываются в
+ * конец. Раньше здесь стоял фиксированный slug, и следующая тема появлялась
+ * в списке, но не наверху — блок продолжал показывать предыдущую.
+ */
 
 const IDENTITY = {
   "--l-ink": "#eef2f8",
@@ -82,7 +86,8 @@ const pathStyle: CSSProperties = {
 };
 
 export function LauncherView({ routes }: { routes: LauncherRoute[] }) {
-  const featured = routes.find((route) => route.tenant === FEATURED) ?? null;
+  const featured = routes.length > 0 ? routes[routes.length - 1] : null;
+  const featuredCaption = featured ? CAPTIONS[featured.tenant] : null;
 
   return (
     <div
@@ -150,14 +155,12 @@ export function LauncherView({ routes }: { routes: LauncherRoute[] }) {
                 style={{ gap: "12px" }}
               >
                 <p style={{ margin: 0, fontSize: "20px", fontWeight: 700 }}>
-                  {CAPTIONS[featured.tenant]?.name ?? featured.tenant}
+                  {featuredCaption?.name ?? featured.tenant}
                 </p>
                 <span style={pathStyle}>{featured.path}</span>
               </div>
               <p style={{ margin: 0, color: "var(--l-ink-soft)", fontSize: "15px" }}>
-                Единственный сценарий, который начинается до формы: домашний экран
-                устройства, уведомление о счёте от A3 Pay, заставка со сборкой знака —
-                и карточка подписки со счётом за август.
+                {featuredCaption?.kind ?? "Тема без подписи"}
               </p>
               <a
                 href={featured.path}
@@ -199,8 +202,8 @@ export function LauncherView({ routes }: { routes: LauncherRoute[] }) {
                   href={route.path}
                   className="grid items-center"
                   style={{
-                    gridTemplateColumns: "1fr auto",
-                    gap: "4px 16px",
+                    gridTemplateColumns: "48px 1fr auto",
+                    gap: "4px 12px",
                     minHeight: "60px",
                     padding: "12px 16px",
                     textDecoration: "none",
@@ -208,13 +211,40 @@ export function LauncherView({ routes }: { routes: LauncherRoute[] }) {
                     borderTop: index === 0 ? "none" : "1px solid var(--l-line-soft)",
                   }}
                 >
-                  <span style={{ fontWeight: 600 }}>{caption?.name ?? route.tenant}</span>
-                  <span style={{ ...pathStyle, gridRow: "1 / span 2", gridColumn: 2 }}>
+                  {/*
+                   * Миниатюра первого экрана: выбирая ссылку для показа,
+                   * человек вспоминает ВИД экрана, а не формулировку
+                   * архетипа. Снимается `yarn previews`, лежит в
+                   * `public/previews/` — отдельно от эталонов регресса,
+                   * чтобы обновление одного не трогало другое.
+                   */}
+                  <img
+                    src={`/previews/${route.tenant}.jpg`}
+                    alt=""
+                    width={48}
+                    height={54}
+                    loading="lazy"
+                    style={{
+                      gridRow: "1 / span 2",
+                      gridColumn: 1,
+                      width: "48px",
+                      height: "54px",
+                      objectFit: "cover",
+                      objectPosition: "top",
+                      borderRadius: "6px",
+                      border: "1px solid var(--l-line)",
+                      background: "var(--l-line-soft)",
+                    }}
+                  />
+                  <span style={{ gridColumn: 2, fontWeight: 600 }}>
+                    {caption?.name ?? route.tenant}
+                  </span>
+                  <span style={{ ...pathStyle, gridRow: "1 / span 2", gridColumn: 3 }}>
                     {route.path}
                   </span>
                   <span
                     style={{
-                      gridColumn: 1,
+                      gridColumn: 2,
                       fontSize: "13px",
                       color: "var(--l-ink-soft)",
                     }}

@@ -121,6 +121,21 @@ const FRAMES = [
   // Splash приложения сервиса: пара к splash банка, и такой же кадр
   // смены айдентики — только в обратную сторону.
   ["a3pay-app-splash", "/?tenant=a3pay&stage=app_splash"],
+  /*
+   * Шторки выбора оплаты. У четырёх доноров выбор живёт в собственной
+   * нижней шторке, и до сих пор её не видел ни один эталон: правка общего
+   * кода листа или строки способа проходила мимо регресса. Здесь у каждой
+   * своя разметка — радио с кнопкой подтверждения (MYBOX), строки-карточки
+   * с суммами (Tripster), сетка логотипов на отдельной странице (EWA),
+   * радио без подтверждения (Onlinetours), — поэтому кадры отдельные, а не
+   * один «на шторку».
+   */
+  // У MYBOX шторку открывает строка способа, у Tripster — главная кнопка
+  // (отдельной строки способа на его экране нет вовсе), у Onlinetours —
+  // строка со ссылкой «Изменить». Триггеры разные, потому что разные доноры.
+  ["sheet-mybox", "/?tenant=mybox", '[data-testid="payment-sheet-trigger"]'],
+  ["sheet-tripster", "/?tenant=tripster", '[data-testid="primary-cta"]'],
+  ["sheet-onlinetours", "/?tenant=onlinetours", '[data-testid="open-payment-sheet"]'],
 ];
 
 const browser = await chromium.launch();
@@ -139,7 +154,7 @@ const rows = [];
 let failed = 0;
 let updated = 0;
 
-for (const [name, query] of FRAMES) {
+for (const [name, query, open] of FRAMES) {
   if (ONLY && !name.includes(ONLY)) continue;
 
   const page = await context.newPage();
@@ -147,6 +162,17 @@ for (const [name, query] of FRAMES) {
   // Шрифты темы приезжают файлами: кадр до их готовности снят другой гарнитурой.
   await page.evaluate(() => document.fonts.ready);
   await page.waitForTimeout(150);
+  /*
+   * Третий элемент кадра — селектор, который нужно нажать ДО снимка.
+   * Половина тем прячет выбор оплаты в шторку, и без нажатия регресс
+   * сторожил бы только кнопку, которая её открывает. `reducedMotion`
+   * контекста делает выезд мгновенным, поэтому пауза не нужна — хватает
+   * кадра после клика.
+   */
+  if (open) {
+    await page.click(open);
+    await page.waitForTimeout(150);
+  }
   const shot = await page.screenshot();
   await page.close();
 

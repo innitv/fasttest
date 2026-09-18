@@ -12,6 +12,7 @@
     "tenant:diff": "node tools/tenant-diff.mjs",
     "motion:trace": "node tools/motion-trace.mjs",
     "donor:snap": "node tools/donor-snap.mjs",
+    "previews": "node tools/launcher-previews.mjs",
     "donor:compare": "node tools/donor-compare.mjs",
     "verify": "node tests/verify.mjs",
     "check:mobile": "node tests/mobile.check.mjs",

@@ -117,6 +117,37 @@ if (withoutCaption.length > 0) {
   );
 }
 
+// ── 5.1. «Ozon Банк» стоит там, где обещает тема ─────────────────────
+/*
+ * `ozon.position` — это обещание темы: каким по счёту способ банка стоит в
+ * списке донора. Само по себе поле ничего не двигает — порядок задаёт
+ * массив `payment_list.methods`, и разъехаться они могут молча: демо
+ * покажет банк пятой строкой там, где тема утверждает, что он первый.
+ *
+ * Позиция — предмет демонстрации, а не оформление: ради неё показ и
+ * делается («Ozon Банк» первым в списке — условие демо, а не рекомендация
+ * подрядчику менять порядок способов).
+ */
+const positionFindings = [];
+for (const slug of themeFiles) {
+  const theme = JSON.parse(readFileSync(path.join(root, "tenants", `${slug}.json`), "utf8"));
+  const methods = theme.payment_list?.methods ?? [];
+  const index = methods.findIndex((m) => m.id === "ozon");
+  const promised = theme.ozon?.position;
+  if (index === -1 || typeof promised !== "number") continue;
+  if (index + 1 !== promised) {
+    positionFindings.push(
+      `${slug}: ozon.position=${promised}, а в списке он ${index + 1}-й`,
+    );
+  }
+}
+if (positionFindings.length > 0) {
+  findings.push(
+    `позиция банка разошлась с темой — ${positionFindings.join("; ")}. ` +
+      "Двигать нужно массив payment_list.methods: position только описывает его.",
+  );
+}
+
 // ── 6. Ассеты темы существуют и не подменены заглушкой ───────────────
 /*
  * Тема ссылается на файлы: логотип в шапке, знаки способов оплаты, файлы
@@ -180,3 +211,4 @@ console.log(`  - тем: ${themeFiles.length}, у каждой свой марш
 console.log(`  - маршрутов: ${routes.length}, архетип каждого совпадает с архетипом темы`);
 console.log(`  - подписей на странице ссылок: ${captioned.size}, ни одна тема не осталась без своей`);
 console.log("  - ассеты тем на месте и не подменены заглушкой антибота");
+console.log("  - позиция «Ozon Банк» в списке совпадает с обещанием темы");

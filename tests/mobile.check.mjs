@@ -1,4 +1,4 @@
-import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -1168,6 +1168,136 @@ const DESK_GREY = [230, 231, 234];
   }
 
   record("11. Аудит доступности (axe, wcag2a/2aa/21a/21aa)", ok, rows.join(" | "));
+}
+
+// ══ 12. Вес, который просит экран, ЗАГРУЖЕН файлом ══════════════════
+/*
+ * Тема может объявить свой шрифт и всё равно показать чужие буквы: браузер
+ * молча синтезирует недостающее начертание из ближайшего. «Шрифт подключён»
+ * про это не говорит — правило `@font-face` есть, файл приехал, а 500-й вес
+ * рисуется растянутым 400-м.
+ *
+ * Случай из практики (Onlinetours, 2026-09-18): `fonts.display` и
+ * `fonts.body` объявляли одно семейство Manrope, сборщик оставил правила
+ * только от display, и весь текст 500 пошёл синтетикой. Поймать это можно
+ * единственным способом — сверить ЗАПРОШЕННЫЕ страницей пары
+ * «семейство + вес» с тем, что реально загружено в `document.fonts`.
+ *
+ * Проверяются только темы со своим шрифтом: на системном стеке
+ * `document.fonts` пуст по определению, и сверять там нечего.
+ */
+{
+  const themedRoutes = [];
+  for (const file of readdirSync(path.join(here, "..", "tenants"))) {
+    if (!file.endsWith(".json")) continue;
+    const slug = file.replace(/\.json$/, "");
+    const theme = JSON.parse(
+      readFileSync(path.join(here, "..", "tenants", file), "utf8"),
+    );
+    const fonts = theme.typography?.fonts ?? {};
+    if (fonts.display || fonts.body) themedRoutes.push(slug);
+  }
+
+  const appSource = readFileSync(path.join(here, "..", "src", "App.tsx"), "utf8");
+  const routeBySlug = new Map(
+    [...appSource.matchAll(/"(\/[a-z0-9-]+)":\s*\{\s*tenant:\s*"([a-z0-9-]+)"/g)].map(
+      (m) => [m[2], m[1]],
+    ),
+  );
+
+  /*
+   * Осознанные отступления: донор просит вес, ФАЙЛА которого у нас нет. Это
+   * долг перед донором, а не решение — забирается при следующем заходе к
+   * нему (снятие шрифтов — `.claude/skills/donor-capture/`, шаг 5). Список
+   * держит проверку зелёной ради НОВЫХ случаев и одновременно называет
+   * старые поимённо.
+   */
+  const KNOWN_SYNTHETIC = [
+    ["/ewa", "TT Firs Neue|600"],
+    ["/ewa", "DIN Condensed|500"],
+    ["/rml", "Codec Pro|300"],
+  ];
+
+  let ok = true;
+  const rows = [];
+  for (const slug of themedRoutes) {
+    const route = routeBySlug.get(slug);
+    if (!route) continue;
+
+    const data = await withPhone(route, async (page) => {
+      await page.waitForTimeout(600);
+      return page.evaluate(async () => {
+        await document.fonts.ready;
+        /*
+         * Вес начертания бывает ДИАПАЗОНОМ: у переменного шрифта правило
+         * несёт `font-weight: 400 700`, и всё, что внутри, рисуется настоящей
+         * осью, а не синтетикой. Сравнение по точному числу объявляло бы
+         * синтетикой каждый промежуточный вес (у Tripster это 475 и 550).
+         */
+        const loaded = [];
+        document.fonts.forEach((face) => {
+          if (face.status !== "loaded") return;
+          const parts = String(face.weight).trim().split(/\s+/).map(Number);
+          loaded.push({
+            family: face.family.replace(/["']/g, ""),
+            min: parts[0],
+            max: parts.length > 1 ? parts[1] : parts[0],
+          });
+        });
+        if (loaded.length === 0) return { skipped: true, missing: [], asked: [] };
+
+        const families = new Set(loaded.map((face) => face.family));
+        const covered = (family, weight) =>
+          loaded.some(
+            (face) => face.family === family && weight >= face.min && weight <= face.max,
+          );
+        const asked = new Set();
+        for (const node of document.querySelectorAll("*")) {
+          const hasText = [...node.childNodes].some(
+            (child) => child.nodeType === 3 && child.textContent.trim(),
+          );
+          if (!hasText) continue;
+          const cs = getComputedStyle(node);
+          const family = cs.fontFamily.split(",")[0].replace(/["']/g, "").trim();
+          if (!families.has(family)) continue;
+          asked.add(`${family}|${cs.fontWeight}`);
+        }
+        const missing = [...asked].filter((key) => {
+          const [family, weight] = key.split("|");
+          return !covered(family, Number(weight));
+        });
+        return { skipped: false, missing, asked: [...asked] };
+      });
+    });
+
+    if (data.skipped) {
+      rows.push(`${route}: своих начертаний на странице нет`);
+      continue;
+    }
+    const known = data.missing.filter((key) =>
+      KNOWN_SYNTHETIC.some(([r, k]) => route.startsWith(r) && k === key),
+    );
+    data.missing = data.missing.filter((key) => !known.includes(key));
+    if (data.missing.length > 0) {
+      ok = false;
+      rows.push(
+        `${route}: синтезируется ${data.missing
+          .map((key) => key.replace("|", " "))
+          .join(", ")}`,
+      );
+    } else {
+      rows.push(
+        `${route}: все ${data.asked.length} запрошенных начертаний загружены` +
+          (known.length > 0 ? ` (известных долгов ${known.length})` : ""),
+      );
+    }
+  }
+
+  record(
+    "12. Вес, который просит экран, загружен файлом, а не синтезирован",
+    ok,
+    rows.join(" | "),
+  );
 }
 
 await browser.close();

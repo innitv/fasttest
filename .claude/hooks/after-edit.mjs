@@ -10,7 +10,10 @@
  * Что запускается и когда:
  *   CLAUDE.md, README.md, FIXES.md            → tests/docs.check.mjs
  *   src/App.tsx, tenants/*.json,
- *   src/theme/tenant-loader.ts                → tests/registry.check.mjs
+ *   src/theme/tenant-loader.ts,
+ *   src/views/LauncherView.tsx                → tests/registry.check.mjs
+ *   src/views/*.tsx, src/components/**.tsx    → tests/theme-boundary.check.mjs
+ *   те же плюс styles.css, stage-motion.ts    → tests/motion.check.mjs
  *
  * Правка любого другого файла — тишина и код 0: хук обязан быть незаметным,
  * пока сторожить нечего.
@@ -39,7 +42,34 @@ const RULES = [
     matches: (rel) =>
       rel === "src/App.tsx" ||
       rel === "src/theme/tenant-loader.ts" ||
+      // Подписи тем на странице ссылок сторожит та же проверка: тема без
+      // подписи попадает в список заглушкой и молча.
+      rel === "src/views/LauncherView.tsx" ||
       (rel.startsWith("tenants/") && rel.endsWith(".json")),
+  },
+  {
+    check: "tests/theme-boundary.check.mjs",
+    label: "граница темы и зашитые цвета",
+    /*
+     * Зашитый hex в экране ловится только этой проверкой, и ловится поздно:
+     * за одну сессию так дважды уехали цвета — фирменная палитра знака и
+     * подложка плашки. Проверка статическая (0.1 с), поэтому дешевле гонять
+     * её сразу после правки любого экрана или компонента.
+     */
+    matches: (rel) =>
+      (rel.startsWith("src/views/") || rel.startsWith("src/components/")) &&
+      /\.tsx?$/.test(rel),
+  },
+  {
+    check: "tests/motion.check.mjs",
+    label: "движение из общего слоя",
+    // Длительность или кривая, написанная по месту, тоже видна только
+    // проверке — и тоже статической.
+    matches: (rel) =>
+      rel === "src/styles.css" ||
+      rel === "src/views/stage-motion.ts" ||
+      ((rel.startsWith("src/views/") || rel.startsWith("src/components/")) &&
+        /\.tsx?$/.test(rel)),
   },
 ];
 

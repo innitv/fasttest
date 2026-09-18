@@ -339,7 +339,7 @@ yarn tenant:diff <actual.json> <expected.json>
 ```bash
 yarn check:theme   # статическая проверка границы темы, сервер не нужен
 yarn check:docs    # нумерация диагнозов в FIXES.md и ссылки на них
-yarn check:registry # у каждой темы есть маршрут, архетипы сходятся
+yarn check:registry # у каждой темы есть маршрут и подпись, архетипы сходятся, ассеты на месте
 yarn preview       # в отдельном окне
 yarn verify        # 25 приёмочных проверок в реальном браузере + скриншоты
 yarn check:mobile  # проверки в профиле телефона + скриншоты

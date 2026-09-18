@@ -1,4 +1,4 @@
-import { readdirSync, readFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -117,6 +117,57 @@ if (withoutCaption.length > 0) {
   );
 }
 
+// ── 6. Ассеты темы существуют и не подменены заглушкой ───────────────
+/*
+ * Тема ссылается на файлы: логотип в шапке, знаки способов оплаты, файлы
+ * начертаний. Промах в пути не роняет ни сборку, ни приёмку — экран просто
+ * рисует пустое место, а текст остаётся на системном шрифте.
+ *
+ * Второй случай тише первого: сайт донора за антиботом отдаёт на запрос
+ * ассета HTML-страницу `Forbidden`. Файл на месте, размер правдоподобный,
+ * расширение верное — и внутри страница с текстом «Forbidden» (так пришли
+ * три знака Onlinetours, пока их не забрали `fetch` со страницы донора).
+ * Поэтому проверяется не только НАЛИЧИЕ файла, но и его первый байт.
+ */
+const assetFindings = [];
+for (const slug of themeFiles) {
+  const theme = JSON.parse(readFileSync(path.join(root, "tenants", `${slug}.json`), "utf8"));
+  const paths = [];
+  const collect = (value) => {
+    if (typeof value === "string") {
+      if (/^\/(tenants|bank)\/[\w./-]+$/.test(value)) paths.push(value);
+      return;
+    }
+    if (Array.isArray(value)) {
+      value.forEach(collect);
+      return;
+    }
+    if (value && typeof value === "object") Object.values(value).forEach(collect);
+  };
+  collect(theme);
+
+  for (const assetPath of [...new Set(paths)]) {
+    const file = path.join(root, "public", assetPath.replace(/^\//, ""));
+    if (!existsSync(file)) {
+      assetFindings.push(`${slug}: файла нет — ${assetPath}`);
+      continue;
+    }
+    const head = readFileSync(file).subarray(0, 64).toString("latin1").trimStart();
+    if (assetPath.endsWith(".svg") && !head.startsWith("<svg") && !head.startsWith("<?xml")) {
+      assetFindings.push(`${slug}: не SVG, а «${head.slice(0, 24).replace(/\s+/g, " ")}…» — ${assetPath}`);
+    }
+    if (/\.woff2?$/.test(assetPath) && !head.startsWith("wOF")) {
+      assetFindings.push(`${slug}: не файл шрифта — ${assetPath}`);
+    }
+  }
+}
+if (assetFindings.length > 0) {
+  findings.push(
+    `ассеты темы не на месте — ${assetFindings.join("; ")}. ` +
+      "Положи файл в public/tenants/<slug>/ (ассеты донора за антиботом забираются fetch СО страницы донора).",
+  );
+}
+
 // ── Итог ─────────────────────────────────────────────────────────────
 if (findings.length > 0) {
   console.log("registry: ПРОВАЛ");
@@ -128,3 +179,4 @@ console.log("registry: порядок");
 console.log(`  - тем: ${themeFiles.length}, у каждой свой маршрут и запись в BUNDLED_TENANTS`);
 console.log(`  - маршрутов: ${routes.length}, архетип каждого совпадает с архетипом темы`);
 console.log(`  - подписей на странице ссылок: ${captioned.size}, ни одна тема не осталась без своей`);
+console.log("  - ассеты тем на месте и не подменены заглушкой антибота");

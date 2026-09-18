@@ -134,7 +134,7 @@ yarn build          # tsc --noEmit + vite build
 yarn check:theme    # граница темы, сервер не нужен
 yarn check:motion   # движение из общего слоя, сервер не нужен
 yarn check:docs     # нумерация диагнозов и ссылки на них, сервер не нужен
-yarn check:registry # тема ↔ маршрут ↔ архетип, сервер не нужен
+yarn check:registry # тема ↔ маршрут ↔ архетип ↔ подпись ↔ ассеты, сервер не нужен
 yarn preview        # в отдельном окне, затем:
 yarn verify         # приёмочные проверки в браузере
 yarn check:mobile   # проверки в профиле iPhone с тач-жестами

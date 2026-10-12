@@ -10,6 +10,12 @@ interface BackTitleProps {
 interface CenteredLogoProps {
   style: "centered_logo";
   logoText: string;
+  /**
+   * Знак подрядчика файлом. Текстовый слот — замена на случай, когда знака
+   * у темы нет; подставлять его при снятом логотипе значит рисовать другой
+   * бренд на экране того же подрядчика.
+   */
+  logoSrc?: string | null;
 }
 
 type Props = BackTitleProps | CenteredLogoProps;
@@ -34,7 +40,15 @@ export function ScreenHeader(props: Props) {
           borderBottom: "var(--k-brand-header-border) solid var(--t-surface-divider)",
         }}
       >
-        <BrandSlot text={props.logoText} />
+        {props.logoSrc ? (
+          <img
+            src={props.logoSrc}
+            alt={props.logoText}
+            style={{ height: "var(--k-brand-slot-h, 24px)", width: "auto", display: "block" }}
+          />
+        ) : (
+          <BrandSlot text={props.logoText} />
+        )}
       </header>
     );
   }

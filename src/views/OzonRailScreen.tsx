@@ -16,6 +16,11 @@ interface Props {
   onBack: () => void;
   /** Блок проверки телефона; здесь всегда раскрыт (это его собственный экран). */
   phoneGate: PhoneGateSlot | null;
+  /**
+   * Знак подрядчика файлом, когда тема его даёт: экран принадлежит ему, и
+   * текстовый слот вместо снятого логотипа читается другим брендом.
+   */
+  logoSrc?: string | null;
 }
 
 /**
@@ -39,6 +44,7 @@ export function OzonRailScreen({
   onCta,
   onBack,
   phoneGate,
+  logoSrc = null,
 }: Props) {
   const { content } = tenant;
 
@@ -53,6 +59,7 @@ export function OzonRailScreen({
       <ScreenHeader
         style="centered_logo"
         logoText={tenant.brand.logo.text ?? tenant.display_name}
+        logoSrc={logoSrc}
       />
 
       <div

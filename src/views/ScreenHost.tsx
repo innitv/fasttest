@@ -154,7 +154,9 @@ export function ScreenHost({ theme, forcedState, showHandoff, initialStage }: Pr
   // а не инлайн: forced-состояния phone_* и ozon_selected открывают именно его.
   const startStage: DemoStage =
     initialStage ??
-    (tenant.archetype === "subscription_payment" && ozonForced
+    ((tenant.archetype === "subscription_payment" ||
+      tenant.archetype === "order_tracker") &&
+    ozonForced
       ? "ozon_rail"
       : // Тема с `demo.entry="home"` начинается на домашнем экране
         // устройства: форму подрядчика откроет уведомление о счёте.
@@ -273,7 +275,18 @@ export function ScreenHost({ theme, forcedState, showHandoff, initialStage }: Pr
       // Навигационная модель архетипа B (донор Uchi): тап по способу оплаты
       // ведёт на его ОТДЕЛЬНЫЙ экран, а не выбирает строку. Доводится только
       // «Ozon Банк»; СБП и Кошелёк — заглушки вне сценария (тап без перехода).
-      if (tenant.archetype === "subscription_payment") {
+      /*
+       * Та же модель у НДФЛки, и это ЕЁ правило, а не заимствование: у
+       * донора кнопка способа не выбирает строку, а уводит на следующую
+       * страницу — на платёжный шлюз. Поэтому окно оплаты не закрывается с
+       * выбранным способом, а сменяется экраном: закрыть его и показать
+       * проверку номера на странице заказа значит отправить человека НАЗАД
+       * там, где донор ведёт вперёд (решение владельца 2026-10-12).
+       */
+      if (
+        tenant.archetype === "subscription_payment" ||
+        tenant.archetype === "order_tracker"
+      ) {
         if (id === OZON_METHOD_ID) {
           setSelected(OZON_METHOD_ID);
           track("payment_method_selected", { ...base, method_id: id });
@@ -575,6 +588,7 @@ export function ScreenHost({ theme, forcedState, showHandoff, initialStage }: Pr
         ctaSentLabel={ctaSentLabel}
         onCta={handleCta}
         onBack={handleOzonRailBack}
+        logoSrc={tenant.content.header_logo}
         phoneGate={phoneGateSlot}
       />
     );

@@ -1,8 +1,6 @@
 import { Fragment, useId, useState, type CSSProperties } from "react";
 import { AnimatePresence, m } from "framer-motion";
 
-import { PhoneGateBlock } from "@demo/components/PhoneGateBlock";
-import { PrimaryButton } from "@demo/components/PrimaryButton";
 import { COPY, formatMoney, methodAccessibleName } from "@demo/content/copy";
 import type { ScreenProps } from "./screen-props";
 import { SHEET_OVERLAY_SPEC, SHEET_SCRIM_SPEC } from "./stage-motion";
@@ -25,20 +23,16 @@ import { SHEET_OVERLAY_SPEC, SHEET_SCRIM_SPEC } from "./stage-motion";
  * второй позицией (решение владельца 2026-10-12), демо не достраивает своей
  * шторки.
  *
- * Чего у донора не воспроизводим: уход на платёжный шлюз по нажатию кнопки.
- * На его месте наш рельс — проверка номера и оплата появляются карточкой под
- * заказом, то есть там же, куда донор вернул бы пользователя после шлюза.
+ * На месте ухода на платёжный шлюз — наш рельс ОТДЕЛЬНОЙ СТРАНИЦЕЙ (стадия
+ * `ozon_rail`): проверка номера и оплата. Первая версия закрывала окно и
+ * показывала их карточкой на этой же странице — человек уходил назад там,
+ * где донор ведёт вперёд (правка по замечанию владельца 2026-10-12).
  */
 export function OrderTrackerScreen({
   tenant,
   selectedMethod,
   onSelectMethod,
-  ctaState,
-  ctaLoadingLabel,
-  ctaSentLabel,
-  onCta,
   forcedState,
-  phoneGate,
 }: ScreenProps) {
   const { content } = tenant;
   const tracker = content.tracker;
@@ -50,8 +44,6 @@ export function OrderTrackerScreen({
   const pad: CSSProperties = { paddingInline: "var(--t-page-padding)" };
   const payable = content.totals.sum - content.totals.discount;
   const amount = formatMoney(payable);
-  const method =
-    tenant.payment_list.methods.find((item) => item.id === selectedMethod) ?? null;
   const sheet = content.payment_sheet;
 
   /** Карточка донора: белая, обводка 1 и радиус 16 — единственный материал. */
@@ -212,49 +204,13 @@ export function OrderTrackerScreen({
           </button>
         </section>
 
-        {/* ── Зона 4: наш рельс на месте ухода на шлюз ──────────────── */}
-        {phoneGate && phoneGate.expanded && (
-          <section
-            data-testid="pay-block"
-            style={{ ...card, marginTop: "12px", padding: "4px 16px 16px" }}
-          >
-            <PhoneGateBlock
-              expanded={phoneGate.expanded}
-              digits={phoneGate.digits}
-              error={phoneGate.error}
-              checking={phoneGate.checking}
-              onChange={phoneGate.onChange}
-              onSubmit={phoneGate.onSubmit}
-              focusSignal={phoneGate.focusSignal}
-            />
-            <div
-              className="flex items-center justify-between"
-              style={{ marginTop: "12px", gap: "8px" }}
-            >
-              <span style={caption}>{method?.label ?? tenant.ozon.label}</span>
-              <span
-                data-testid="pay-amount"
-                style={{
-                  fontSize: "var(--t-font-body)",
-                  fontWeight: "var(--t-emphasis-weight)",
-                  color: "var(--t-text-primary)",
-                }}
-              >
-                {amount}
-              </span>
-            </div>
-            <div style={{ marginTop: "12px" }}>
-              <PrimaryButton
-                label={`${tenant.cta.label} ${amount}`}
-                loadingLabel={ctaLoadingLabel}
-                sentLabel={ctaSentLabel}
-                state={forcedState === "cta_disabled" ? "disabled" : ctaState}
-                onClick={onCta}
-                testId="primary-cta"
-              />
-            </div>
-          </section>
-        )}
+        {/*
+         * Платёжного блока на этом экране НЕТ — и это модель донора, а не
+         * упущение: у него кнопка способа уводит на следующую страницу,
+         * поэтому проверка номера и оплата живут на стадии `ozon_rail`.
+         * Стоявший тут блок закрывал окно и возвращал человека на страницу
+         * заказа — назад там, где донор ведёт вперёд.
+         */}
 
         {/* ── Зона 5: шаги услуги и дела пользователя ───────────────── */}
         <div className="flex flex-col" style={{ marginTop: "16px", gap: "12px" }}>

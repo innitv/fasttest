@@ -90,7 +90,7 @@
   "cta": {
     "placement": "inline",
     "label": "Оплатить",
-    "include_amount": false,
+    "include_amount": true,
     "requires_selection": false,
     "font_size": 16,
     "font_weight": 600

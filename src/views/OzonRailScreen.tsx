@@ -1,6 +1,5 @@
 import { PhoneGateBlock } from "@demo/components/PhoneGateBlock";
 import { PrimaryButton } from "@demo/components/PrimaryButton";
-import { NeutralPlate } from "@demo/components/primitives";
 import { ScreenHeader } from "@demo/components/ScreenHeader";
 import { COPY, resolveCtaLabel } from "@demo/content/copy";
 import type { ButtonState } from "@demo/components/PrimaryButton";
@@ -100,14 +99,23 @@ export function OzonRailScreen({
           className="flex items-center"
           style={{ gap: "12px", marginTop: "8px", marginBottom: "20px" }}
         >
-          <NeutralPlate
-            width="40px"
-            height="40px"
-            style={{
-              background: "var(--t-surface-card)",
-              boxShadow: "inset 0 0 0 var(--t-border-width) var(--t-surface-border)",
-              flexShrink: 0,
-            }}
+          {/*
+           * Знак банка рядом с заголовком — решение владельца 2026-10-12.
+           *
+           * До него тут стояла нейтральная плитка: правило «айдентика банка
+           * наступает на пуше» читалось как запрет на любой знак раньше. Но
+           * экран НАЗЫВАЕТ способ оплаты («Оплата через Ozon Банк»), а знак
+           * способа — часть его имени, а не смена айдентики: ни одного
+           * токена `--bank-*` экран по-прежнему не читает, палитра и
+           * гарнитура остаются подрядчика.
+           */}
+          <img
+            src="/bank/app-icon.svg"
+            alt=""
+            aria-hidden="true"
+            width={40}
+            height={40}
+            style={{ width: "40px", height: "40px", display: "block", flexShrink: 0 }}
           />
           <h1
             data-testid="page-title"

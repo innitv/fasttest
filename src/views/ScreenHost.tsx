@@ -92,6 +92,8 @@ const CONTRACTOR_LOADERS: Record<
     import("./SubscriptionCardScreen").then((m) => ({ default: m.SubscriptionCardScreen })),
   booking_payment: () =>
     import("./BookingPaymentScreen").then((m) => ({ default: m.BookingPaymentScreen })),
+  order_tracker: () =>
+    import("./OrderTrackerScreen").then((m) => ({ default: m.OrderTrackerScreen })),
 };
 
 /*

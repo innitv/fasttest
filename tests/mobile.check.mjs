@@ -880,6 +880,10 @@ const DESK_GREY = [230, 231, 234];
     // собственной шторке: кликать по строке метода до её открытия нечем,
     // поэтому состояние задаётся адресом — как у RML, ХВАЛа и MYBOX.
     ["/onlinetours?state=phone_expanded", null, true],
+    // У НДФЛки поле телефона появляется в карточке под заказом после выбора
+    // «Ozon Банк» в её окне оплаты: до открытия окна кликать нечем, поэтому
+    // состояние задаётся адресом — как у Onlinetours, RML, ХВАЛа и MYBOX.
+    ["/ndflka?state=phone_expanded", null, true],
   ];
   const rows = [];
   let ok = true;
@@ -1127,6 +1131,17 @@ const DESK_GREY = [230, 231, 234];
     ["/onlinetours", "color-contrast", ".min-w-0"],
     ["/onlinetours", "color-contrast", 'button[data-testid="open-payment-sheet"]'],
     ["/onlinetours", "color-contrast", 'span[aria-hidden="true"]'],
+    /*
+     * НДФЛка. Два донорских цвета, замеренных на живой странице 2026-10-12:
+     * самый слабый серый метаданных заказа #919193 даёт 3.14:1 на белой
+     * карточке (порог 4.5 для 14px), а ярлык прогресса «ОПРОС 0%» —
+     * оранжевый #F59E0B на бледной заливке #FEF5E7, 1.99:1 при кегле 10.
+     * Поднять любой из них значит перекрасить донора; подписи таб-бара в
+     * этот список НЕ попали — там серый оказался темнее (#585659, 6.9:1),
+     * и первая версия экрана расходилась с донором, а не с порогом.
+     */
+    ["/ndflka", "color-contrast", 'div[data-testid="order-meta"]'],
+    ["/ndflka", "color-contrast", 'span[data-testid="step-badge"]'],
   ];
   const isKnown = (route, ruleId, target) =>
     KNOWN.some(

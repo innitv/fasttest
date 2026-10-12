@@ -136,6 +136,9 @@ const FRAMES = [
   ["sheet-mybox", "/?tenant=mybox", '[data-testid="payment-sheet-trigger"]'],
   ["sheet-tripster", "/?tenant=tripster", '[data-testid="primary-cta"]'],
   ["sheet-onlinetours", "/?tenant=onlinetours", '[data-testid="open-payment-sheet"]'],
+  // У НДФЛки выбор оплаты — не нижняя шторка, а ОКНО ПО ЦЕНТРУ со столбиком
+  // кнопок-способов: кадр сторожит и подачу окна, и знаки на кнопках.
+  ["sheet-ndflka", "/?tenant=ndflka", '[data-testid="open-payment-sheet"]'],
 ];
 
 const browser = await chromium.launch();
@@ -178,10 +181,48 @@ for (const [name, query, open] of FRAMES) {
 
   const goldPath = path.join(BASELINE, `${name}.png`);
 
-  if (UPDATE || !existsSync(goldPath)) {
+  if (!existsSync(goldPath)) {
     writeFileSync(goldPath, shot);
     updated += 1;
-    rows.push(`  ${name}: эталон ${existsSync(goldPath) && !UPDATE ? "создан" : "обновлён"}`);
+    rows.push(`  ${name}: эталон создан`);
+    continue;
+  }
+
+  /*
+   * При `--update` эталон переписывается только если изменилась КАРТИНКА.
+   *
+   * Playwright кладёт в PNG свои метаданные, и байты снимка отличаются от
+   * байтов эталона при попиксельно одинаковом кадре. Из-за этого каждый
+   * `--update` поднимал в коммит пять-шесть посторонних файлов, которые
+   * приходилось возвращать руками через `git checkout` и сверять заново,
+   * чтобы не принять настоящее расхождение за шум (`FIXES.md`, баг 24).
+   */
+  if (UPDATE) {
+    const before = decodePng(readFileSync(goldPath));
+    const after = decodePng(shot);
+    const sameSize = before.width === after.width && before.height === after.height;
+    let changed = !sameSize;
+    for (let y = 0; !changed && y < before.height; y += 1) {
+      for (let x = 0; x < before.width; x += 1) {
+        const a = pixelAt(before, x, y);
+        const b = pixelAt(after, x, y);
+        if (
+          Math.abs(a[0] - b[0]) > TOLERANCE ||
+          Math.abs(a[1] - b[1]) > TOLERANCE ||
+          Math.abs(a[2] - b[2]) > TOLERANCE
+        ) {
+          changed = true;
+          break;
+        }
+      }
+    }
+    if (changed) {
+      writeFileSync(goldPath, shot);
+      updated += 1;
+      rows.push(`  ${name}: эталон обновлён`);
+    } else {
+      rows.push(`  ${name}: картинка та же, эталон не тронут`);
+    }
     continue;
   }
 

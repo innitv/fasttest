@@ -46,6 +46,7 @@ const CAPTIONS: Record<string, { name: string; kind: string }> = {
   "yandex-plus": { name: "Яндекс Плюс", kind: "Подключение подписки, согласие на списания" },
   a3pay: { name: "Яндекс Плюс · A3 Pay", kind: "Карточка подписки, старт с домашнего экрана" },
   onlinetours: { name: "Onlinetours", kind: "Оплата брони тура, шаги оформления и шторка способов" },
+  ndflka: { name: "НДФЛка", kind: "Заказ в кабинете: трекер шагов услуги и шторка оплаты кнопками" },
 };
 
 /*

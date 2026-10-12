@@ -456,6 +456,10 @@ function validateSemantics(tenant: TenantConfig): Diagnostic[] {
     // У Onlinetours выбор оплаты — СВОЯ нижняя шторка со списком и радио:
     // «Ozon Банк» встаёт в неё первой позицией, а не в достроенную демо.
     booking_payment: "sheet_select",
+    // У НДФЛки выбор оплаты — тоже СВОЯ шторка, но способы в ней не
+    // строки с радио, а кнопки фирменного цвета с суммой: ось раскладки
+    // та же, подача задаётся `payment_sheet.presentation`.
+    order_tracker: "sheet_select",
   };
   const expectedLayout = layoutByArchetype[tenant.archetype];
   if (tenant.payment_list.layout !== expectedLayout) {
@@ -812,6 +816,14 @@ function deriveColors(tenant: TenantConfig): DerivedColors {
   // ── Вторичная цветовая пара (лавандовый аккордеон донора B) ────────
   if (tenant.brand.secondary) {
     vars["--t-secondary-fill"] = tenant.brand.secondary.fill;
+    /*
+     * Рамка вторичной кнопки: донорская, если названа, иначе общая граница
+     * выбранного. Контраст рамки порогами не правится — WCAG 1.4.11 требует
+     * 3:1 от ГРАНИЦ УПРАВЛЕНИЯ, а здесь рамка декоративная: кнопку читают
+     * по тексту, и он проверяется парой выше.
+     */
+    vars["--t-secondary-border"] =
+      tenant.brand.secondary.border ?? vars["--t-brand-border-selected"];
     const pairRatio = contrastRatio(
       tenant.brand.secondary.text,
       tenant.brand.secondary.fill,
@@ -845,6 +857,12 @@ function deriveColors(tenant: TenantConfig): DerivedColors {
   vars["--t-surface-control-active"] =
     tenant.surface.control_active ?? tenant.surface.text_primary;
   vars["--t-surface-track"] = tenant.surface.track ?? tenant.surface.border;
+  /*
+   * Метаданные строки слабее вторичного текста, и это ЗАМЕР донора, а не
+   * оттенок по вкусу. Коррекция контраста его не трогает по той же причине,
+   * что и вторичный: оба выправляются вместе в режиме `enforced` ниже.
+   */
+  vars["--t-text-muted"] = tenant.surface.text_muted ?? vars["--t-text-secondary"];
   vars["--t-surface-field-error"] = tenant.surface.field_error;
 
   /*

@@ -237,6 +237,63 @@ if (hardcoded.length > 0) {
   failures.push(`Зашитые цвета в компонентах экранов: ${hardcoded.join(", ")}`);
 }
 
+/*
+ * ── Токен, который читает экран, ОБЪЯВЛЕН слоем темы ─────────────────
+ *
+ * Неизвестная переменная в CSS не ошибка: свойство просто не применяется,
+ * и текст наследует цвет страницы. Так кнопка НДФЛки вышла с чёрной
+ * надписью вместо белой — экран читал `--t-brand-on-primary`, а слой
+ * отдаёт `--t-brand-on` (`FIXES.md`, баг 24). Ни сборка, ни типизация, ни
+ * проверки выше этого не видят: они сторожат НАПРАВЛЕНИЕ обращения, а не
+ * существование имени.
+ *
+ * Фолбэк `var(--t-link, var(--t-text-primary))` законен и разбирается: оба
+ * имени проверяются по отдельности.
+ */
+const themeSource = readFileSync(
+  path.resolve(here, "../src/theme/build-theme.ts"),
+  "utf8",
+);
+const declared = new Set(
+  [...themeSource.matchAll(/vars\["(--t-[a-z0-9-]+)"\]/g)].map((m) => m[1]),
+);
+/*
+ * Часть токенов объявляется не литералом, а по ключу РОЛИ:
+ * vars[`--t-${role.key}`] и vars[`--t-${role.key}-on`]. Имена таких ролей
+ * перечислены тут же списком объектов `{ key: "accent", … }`, поэтому
+ * собираются и они — иначе проверка объявила бы несуществующим токен,
+ * который слой исправно отдаёт.
+ */
+const roleKeys = [...themeSource.matchAll(/[\s{,]key:\s*"([a-z0-9-]+)"/g)].map((m) => m[1]);
+for (const m of themeSource.matchAll(/vars\[`--t-\$\{[\w.]+\}([a-z-]*)`\]/g)) {
+  for (const key of roleKeys) declared.add(`--t-${key}${m[1]}`);
+}
+// Шкала демо (`--k-*`) и собственные переменные компонентов объявляются в
+// styles.css — здесь проверяются только токены темы.
+const styles = readFileSync(path.resolve(here, "../src/styles.css"), "utf8");
+for (const m of styles.matchAll(/(--t-[a-z0-9-]+)\s*:/g)) declared.add(m[1]);
+
+const unknownTokens = [];
+for (const dir of scanDirs) {
+  for (const file of readdirSync(dir)) {
+    if (!/\.tsx?$/.test(file)) continue;
+    const text = readFileSync(path.join(dir, file), "utf8");
+    text.split("\n").forEach((line, index) => {
+      for (const m of line.matchAll(/var\((--t-[a-z0-9-]+)/g)) {
+        if (!declared.has(m[1])) {
+          unknownTokens.push(`${file}:${index + 1} → ${m[1]}`);
+        }
+      }
+    });
+  }
+}
+if (unknownTokens.length > 0) {
+  failures.push(
+    `Токены, которых build-theme не отдаёт: ${unknownTokens.join(", ")}. ` +
+      "Опечатка в имени не ломает сборку — цвет молча наследуется (FIXES.md, баг 24).",
+  );
+}
+
 if (failures.length > 0) {
   console.error("theme-boundary: ПРОВАЛ");
   failures.forEach((item) => console.error(`  - ${item}`));
@@ -249,5 +306,6 @@ console.log(
     "  - экраны банка не содержат ни одной переменной --t-*\n" +
     "  - PaidConfirmation не содержит ни одной переменной --bank-*\n" +
     "  - строчное написание бренда встречается только внутри слота BankWordmark\n" +
-    "  - зашитых цветов в компонентах экранов подрядчика нет",
+    "  - зашитых цветов в компонентах экранов подрядчика нет\n" +
+    "  - каждый токен --t-*, который читают экраны, объявлен слоем темы",
 );

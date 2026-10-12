@@ -1,0 +1,271 @@
+{
+  "tenant_id": "ndflka",
+  "display_name": "НДФЛка",
+  "archetype": "order_tracker",
+  "header": {
+    "style": "logo_account",
+    "back_label": null
+  },
+  "brand": {
+    "primary": "#7248DA",
+    "on_primary": "#FFFFFF",
+    "accent": null,
+    "secondary": {
+      "fill": "#4E28AE",
+      "text": "#FFFFFF",
+      "border": "#D0BEF1"
+    },
+    "logo": {
+      "kind": "slot",
+      "text": "НДФЛка",
+      "slot_ratio": "146x29"
+    }
+  },
+  "surface": {
+    "background": "#FFFFFF",
+    "card": "#FFFFFF",
+    "form": "#F8F7FB",
+    "border": "#E6E6E8",
+    "divider": "#E7E6E8",
+    "text_primary": "#181819",
+    "text_secondary": "#585659",
+    "danger": "#E5352B",
+    "field_error": "#E5352B",
+    "track": "#919193",
+    "link": "#4E28AE",
+    "notice": {
+      "fill": "#FEF5E7",
+      "marker": "#F59E0B"
+    },
+    "text_muted": "#919193"
+  },
+  "elevation": {
+    "model": "flat_outline",
+    "border_width": 1,
+    "selected_border_width": 2,
+    "shadow": null
+  },
+  "radius": {
+    "card": 16,
+    "control": 12,
+    "field": 8,
+    "chip": 4,
+    "sheet": 16,
+    "allow_inversion": true
+  },
+  "density": {
+    "page_padding": 16,
+    "block_gap": 12,
+    "row_height": 60,
+    "control_height": 48,
+    "method_button_height": 48,
+    "section_gap": 16
+  },
+  "component_width": {
+    "choice_card_pct": 42,
+    "payment_card_pct": 32
+  },
+  "typography": {
+    "family": "grotesk",
+    "body": 16,
+    "h1": 20,
+    "section_title": 18,
+    "caption": 14,
+    "price": 24,
+    "label_weight": 500,
+    "title_weight": 700,
+    "emphasis_weight": 600,
+    "fonts": {
+      "display": null,
+      "body": {
+        "family": "Inter",
+        "src": "/tenants/ndflka/inter-variable.woff2",
+        "weight_range": {
+          "min": 300,
+          "max": 700
+        }
+      }
+    }
+  },
+  "cta": {
+    "placement": "inline",
+    "label": "Оплатить",
+    "include_amount": false,
+    "requires_selection": false,
+    "font_size": 16,
+    "font_weight": 600
+  },
+  "payment_list": {
+    "layout": "sheet_select",
+    "section_title": "Оплатить",
+    "selection": "row_press",
+    "methods": [
+      {
+        "id": "sbp",
+        "label": "СБП",
+        "caption": null,
+        "logo": "slot",
+        "logo_src": "/tenants/ndflka/icon-payment-sbp.svg"
+      },
+      {
+        "id": "ozon",
+        "label": "Ozon Банк",
+        "caption": "Оплатить с Ozon Банк",
+        "logo": "slot",
+        "logo_src": "/bank/app-icon.svg"
+      },
+      {
+        "id": "card",
+        "label": "Банковской картой",
+        "caption": null,
+        "logo": "slot",
+        "logo_src": "/tenants/ndflka/icon-payment-visa.svg",
+        "logo_src_extra": [
+          "/tenants/ndflka/icon-payment-mastercard.svg",
+          "/tenants/ndflka/icon-payment-mir.svg"
+        ]
+      },
+      {
+        "id": "ya-pay",
+        "label": "Оплатить с Я.Пэй",
+        "caption": "Оплатить с Я.Пэй",
+        "logo": "slot",
+        "logo_src": "/tenants/ndflka/icon-payment-yandex.svg"
+      },
+      {
+        "id": "ya-split",
+        "label": "Яндекс Сплит",
+        "caption": "500 ₽ x4",
+        "logo": "slot",
+        "logo_src": "/tenants/ndflka/icon-payment-split.svg"
+      },
+      {
+        "id": "dolyame",
+        "label": "Долями",
+        "caption": "4 платежа по 500 ₽",
+        "logo": "slot",
+        "logo_src": "/tenants/ndflka/icon-payment-dolyame.svg"
+      }
+    ],
+    "default_selected": null
+  },
+  "ozon": {
+    "label": "Ozon Банк",
+    "position": 2,
+    "adopts_tenant_theme": true,
+    "handoff": "overlay"
+  },
+  "content": {
+    "title": "Активный заказ",
+    "tracker": {
+      "back_label": "Активные",
+      "order": {
+        "number": "№3104417",
+        "date": "12.10.2026",
+        "service": "Максимальный вычет"
+      },
+      "hint": "Начните с оплаты заказа. Мы проверим ваши документы и направим декларации в ФНС, а вы получите деньги за 1 день",
+      "steps": [
+        {
+          "title": "Формирование заказа",
+          "icon": "/tenants/ndflka/step-order.svg",
+          "badge": "ОПРОС 0%",
+          "text": "После оплаты и выбора категорий будет сформирован список документов и папки для загрузки",
+          "action": {
+            "title": null,
+            "label": "Добавить доступ от nalog.ru",
+            "icon": "/tenants/ndflka/step-password.svg"
+          }
+        },
+        {
+          "title": "Проверка документов",
+          "icon": "/tenants/ndflka/step-docs.svg",
+          "badge": null,
+          "text": "Загрузите необходимые документы в папки и нажмите «Отправить на проверку»",
+          "action": {
+            "title": null,
+            "label": "Введите номер вашей карты",
+            "icon": "/tenants/ndflka/step-card.svg"
+          }
+        },
+        {
+          "title": "Договор и декларация в ФНС",
+          "icon": "/tenants/ndflka/step-agreement.svg",
+          "badge": null,
+          "text": "Эксперт оформит декларацию для ФНС и после подписания договора НДФЛка перечислит вам деньги",
+          "action": null
+        },
+        {
+          "title": "Деньги от НДФЛки",
+          "icon": "/tenants/ndflka/step-money.svg",
+          "badge": null,
+          "text": "Ожидайте перевод на вашу карту в течение 1-го рабочего дня после подписания договора",
+          "action": {
+            "title": "Расскажи другу про НДФЛку",
+            "label": "Скопировать ссылку",
+            "icon": "/tenants/ndflka/step-friend.svg"
+          }
+        },
+        {
+          "title": "Перевод по договору",
+          "icon": "/tenants/ndflka/step-remittance.svg",
+          "badge": null,
+          "text": "В течение 3 дней после получения средств от ФНС производится перевод по QR-коду или реквизитам. А мы постараемся напомнить.",
+          "action": null
+        }
+      ],
+      "tabs": [
+        {
+          "label": "Главная",
+          "icon": "/tenants/ndflka/icon-navigation-home.svg"
+        },
+        {
+          "label": "Заказы",
+          "icon": "/tenants/ndflka/icon-navigation-orders-active.svg"
+        },
+        {
+          "label": "Чат",
+          "icon": "/tenants/ndflka/icon-navigation-chat.svg"
+        },
+        {
+          "label": "Документы",
+          "icon": "/tenants/ndflka/icon-navigation-docs.svg"
+        },
+        {
+          "label": "Профиль",
+          "icon": "/tenants/ndflka/icon-navigation-profile.svg"
+        }
+      ],
+      "active_tab": 1,
+      "chevron": "/tenants/ndflka/chevron-right.svg"
+    },
+    "payment_sheet": {
+      "title": "Оплата",
+      "cta_label": null,
+      "note": "Оплачивая заказ, вы соглашаетесь с офертой",
+      "presentation": "amount_buttons",
+      "cost_label": "Стоимость услуг:",
+      "promo_label": "Оплатить с промокодом"
+    },
+    "totals": {
+      "sum": 199900,
+      "discount": 0,
+      "currency": "RUB"
+    },
+    "return_label": "Вернуться к заказу",
+    "paid_title": "Заказ оплачен",
+    "payment_purpose": "Оплата услуг НДФЛка",
+    "summary_detail": "Максимальный вычет",
+    "header_logo": "/tenants/ndflka/logo.svg"
+  },
+  "demo": {
+    "balance": "312 480,00 ₽",
+    "timings": {
+      "push_delay_ms": 600,
+      "splash_ms": 1200,
+      "pay_loading_ms": 900,
+      "dots_cycle_ms": 900
+    }
+  },
+  "a11y_mode": "donor_faithful"
+}

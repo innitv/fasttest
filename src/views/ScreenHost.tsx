@@ -614,7 +614,12 @@ export function ScreenHost({ theme, forcedState, showHandoff, initialStage }: Pr
         // подрядчик за ним ещё не открыт.
         "home"
       : tenant.archetype === "subscription_payment" ||
-          tenant.archetype === "carrier_delivery"
+          tenant.archetype === "carrier_delivery" ||
+          // НДФЛка: оплата живёт на отдельной странице, и уведомление
+          // приходит НА НЕЁ. Без этой ветки подложкой вставала страница
+          // заказа — пуш выглядел так, будто оплату закрыли и вернули
+          // человека назад.
+          tenant.archetype === "order_tracker"
         ? "ozon_rail"
         : "contractor";
   const pushOpen = stage === "push" || stage === "home_push";

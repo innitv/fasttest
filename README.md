@@ -28,6 +28,7 @@
 | `/a3pay` | Яндекс Плюс (A3 Pay) | `subscription_card` — карточка подписки со счётом; сценарий начинается на домашнем экране устройства |
 | `/onlinetours` | Onlinetours | `booking_payment` — оплата брони тура: шаги оформления, карточка брони, шторка способов |
 | `/ndflka` | НДФЛка | `order_tracker` — заказ в кабинете: карточка заказа, трекер шагов услуги, окно оплаты со столбиком кнопок |
+| `/autoteka` | Автотека | `warranty_checkout` — данные автомобиля и контакты, два тарифа и две кнопки оплаты |
 
 Корень `/` и любой неизвестный путь отдают нейтральную заглушку: подрядчик,
 получивший свою ссылку, не видит существования других тем.
@@ -45,21 +46,37 @@
 темы; эталоны регресса для этого не годятся и связывать их со страницей
 нельзя — обоснование в шапке `tools/launcher-previews.mjs`.
 
-Агентная оснастка проекта живёт в `.claude/`: навыки `tenant-theme` и
-`donor-capture`, команда `/acceptance`, `launch.json`, `settings.json` с
-разрешёнными командами и хук
-`hooks/after-edit.mjs` — он запускает `check:docs` после правки этого файла,
-`CLAUDE.md` или `FIXES.md` и `check:registry` после правки `src/App.tsx`,
-`src/theme/tenant-loader.ts` или темы в `tenants/`.
+## Работа в Codex
+
+- [AGENTS.md](AGENTS.md) содержит правила проекта и включает Lazyweb для продуктовых UI-задач.
+- В [`.agents/skills/`](.agents/skills/) лежат три навыка. В чате вызови
+  `$tenant-theme` для темы подрядчика, `$donor-capture` для замера референса
+  или `$acceptance` для полной приёмки.
+- Для независимого ревью покрытия попроси Codex применить
+  [`acceptance_reviewer`](.codex/agents/acceptance_reviewer.toml).
+- [Локальное окружение](.codex/environments/environment.toml) задаёт установку
+  зависимостей для worktree и действия **Dev server · 5173** и **Preview · 4319**
+  в приложении Codex. Перед Preview выполни `yarn build`.
+- [Хук PostToolUse](.codex/hooks.json) после `apply_patch` запускает затронутые
+  статические проверки документации, реестра тем, границы темы и движения.
+  Для первого запуска требуется доверие к проекту и подтверждение хука в
+  Codex (`/hooks` в CLI). После правок через терминал или внешний редактор
+  запускай нужные проверки по списку ниже.
+
+Форматы описаны в документации OpenAI. [Инструкции проекта](https://learn.chatgpt.com/docs/agent-configuration/agents-md),
+[навыки](https://learn.chatgpt.com/docs/build-skills),
+[хуки](https://learn.chatgpt.com/docs/hooks),
+[субагенты](https://learn.chatgpt.com/docs/agent-configuration/subagents),
+[локальные окружения](https://learn.chatgpt.com/docs/environments/local-environment).
 
 ## Чек-лист: от снятия донора до сдачи
 
 Полный порядок одним списком. Подробности каждого пункта — в разделах ниже и
-в `CLAUDE.md`; здесь только последовательность, чтобы шаг нельзя было
+в `AGENTS.md`; здесь только последовательность, чтобы шаг нельзя было
 пропустить, не заметив. Пункты со звёздочкой появились после того, как их
 пропуск стоил переделки.
 
-Этот список — источник правды по порядку работ; навык `.claude/skills/tenant-theme/`
+Этот список — источник правды по порядку работ; навык `.agents/skills/tenant-theme/`
 на него ссылается и добавляет только маршрут и точки остановки. Меняется порядок —
 меняется здесь, а не в двух местах.
 
@@ -106,7 +123,7 @@
 **Показ**
 
 - [ ] Показать человеку СРАЗУ после первой сборки экрана, до подгонки
-      чисел (`CLAUDE.md` → «Показ человеку»)
+      чисел (`AGENTS.md` → «Показ человеку»)
 
 **Сдача**
 
@@ -115,7 +132,7 @@
       что поле действительно нашлось (шаг 6)
 - [ ] Внести тему в таблицы этого README: ссылки, `?archetype=`, `?tenant=`
 - [ ] `yarn build` → `check:theme` + `check:motion` → `preview` + `verify`
-      → `check:mobile` → `check:visual` (или командой `/acceptance`)
+      → `check:mobile` → `check:visual` (или навыком `$acceptance`)
 - [ ] ★ Тема со своей шторкой выбора оплаты — завести ТРЕТИЙ кадр
       (`sheet-<slug>` в `FRAMES`, третьим элементом селектор кнопки,
       которая её открывает): без него регресс видит только кнопку, а
@@ -126,10 +143,10 @@
 - [ ] ★ Прогнать axe (`check:mobile` №11): аудит ловит то, чего не видно
       глазами — кнопку без имени, `aria-label` на безролевом узле
       (`FIXES.md`, баг 21)
-- [ ] Новая проверка — только с негативным контролем (`CLAUDE.md`)
+- [ ] Новая проверка — только с негативным контролем (`AGENTS.md`)
 - [ ] Снять поднятые серверы и удалить временное — до отчёта, а не в нём
 - [ ] Разложить новые правила по адресам репозитория: порядок работы сюда,
-      диагнозы в `FIXES.md`, границы в `CLAUDE.md`
+      диагнозы в `FIXES.md`, границы в `AGENTS.md`
 
 ## Как заводится тема нового подрядчика
 
@@ -165,7 +182,7 @@
    правилами, что и основного документа.
    Развилки снятия — пустой профиль (CSP, shadow DOM, cross-origin iframe),
    чекаут, не отдающийся гостю, выбор профиля замера — собраны маршрутом в
-   навыке `.claude/skills/donor-capture/`; диагноз границ документа —
+   навыке `.agents/skills/donor-capture/`; диагноз границ документа —
    `FIXES.md`, баг 18. Здесь порядок и обоснование, там развилки: копий не
    заводить.
 
@@ -325,14 +342,15 @@ yarn preview      # http://127.0.0.1:4319
 | Параметр | Значение | Зачем |
 |---|---|---|
 | `?stage=` | `home`, `home_push`, `app_splash`, `contractor`, `ozon_rail`, `push`, `splash`, `bank_payment`, `bank_success`, `paid` | Открыть конкретный шаг маршрута, не проходя его руками. `home`, `home_push` и `app_splash` есть только у темы с `demo.entry="home"` |
+| `?VIN=` | VIN из 17 символов | Заполнить поле VIN на `/autoteka`. Поддерживается также `?vin=`. |
 | `?state=` | `handoff`, `ozon_selected`, `cta_sent`, `cta_disabled`, `field_error`, `promo_open`, `phone_expanded`, `phone_checking`, `phone_error` | Показать оверлей перехода и прочие промежуточные состояния |
 | `?a11y=` | `enforced` (по умолчанию), `donor_faithful` | Переключить режим контраста: с принудительными коррекциями до порогов либо как у донора |
-| `?archetype=` | `cart_checkout`, `subscription_payment`, `ticket_checkout`, `store_checkout`, `plan_sheet`, `order_steps`, `slot_delivery`, `bonus_checkout`, `pickup_checkout`, `carrier_delivery`, `subscription_bind`, `subscription_card`, `booking_payment`, `order_tracker` | Проверить тему на чужой раскладке |
+| `?archetype=` | `cart_checkout`, `subscription_payment`, `ticket_checkout`, `store_checkout`, `plan_sheet`, `order_steps`, `slot_delivery`, `bonus_checkout`, `pickup_checkout`, `carrier_delivery`, `subscription_bind`, `subscription_card`, `booking_payment`, `order_tracker`, `warranty_checkout` | Проверить тему на чужой раскладке |
 | `?t=` | base64url от JSON-конфига тенанта | Отдать демо со своей темой ссылкой, без пересборки и деплоя |
 | `?tenant=` | `flowwow-like`, `uchi-like`, `voroh`, `voroh-light`, `monochrome`, `padlhub`, `yes-atlas`, `rml`, `hval`, `bombbar`, `mybox`, `ewa`, `yandex-plus` | Явный выбор поставляемой темы (путь обычно удобнее) |
 | `?archetype=` | `cart_checkout`, `subscription_payment`, `ticket_checkout`, `store_checkout`, `plan_sheet`, `order_steps`, `slot_delivery`, `bonus_checkout`, `pickup_checkout`, `order_prepay`, `subscription_bind` | Проверить тему на чужой раскладке |
 | `?t=` | base64url от JSON-конфига тенанта | Отдать демо со своей темой ссылкой, без пересборки и деплоя |
-| `?tenant=` | `flowwow-like`, `uchi-like`, `voroh`, `voroh-light`, `monochrome`, `padlhub`, `yes-atlas`, `rml`, `hval`, `bombbar`, `mybox`, `tripster`, `yandex-plus`, `a3pay`, `onlinetours`, `ndflka` | Явный выбор поставляемой темы (путь обычно удобнее) |
+| `?tenant=` | `flowwow-like`, `uchi-like`, `voroh`, `voroh-light`, `monochrome`, `padlhub`, `yes-atlas`, `rml`, `hval`, `bombbar`, `mybox`, `tripster`, `yandex-plus`, `a3pay`, `onlinetours`, `ndflka`, `autoteka` | Явный выбор поставляемой темы (путь обычно удобнее) |
 
 Некорректный конфиг в `?t=` не приводит к белому экрану: показывается экран
 диагностики с кодом ошибки (`E_URL_BASE64`, `E_URL_JSON`, `E_OZON_LABEL` и т. д.).
@@ -352,16 +370,19 @@ yarn tenant:diff <actual.json> <expected.json>
 ## Проверки
 
 ```bash
-yarn check:theme   # статическая проверка границы темы, сервер не нужен
-yarn check:docs    # нумерация диагнозов в FIXES.md и ссылки на них
-yarn check:registry # у каждой темы есть маршрут и подпись, архетипы сходятся, ассеты на месте
-yarn preview       # в отдельном окне
-yarn verify        # 25 приёмочных проверок в реальном браузере + скриншоты
-yarn check:mobile  # проверки в профиле телефона + скриншоты
+yarn build          # проверка типов и сборка dist/
+yarn check:theme    # граница темы
+yarn check:motion   # общий слой движения
+yarn check:docs     # нумерация диагнозов и ссылки на них
+yarn check:registry # маршруты, подписи, архетипы и ассеты тем
+yarn preview        # в отдельном терминале, затем:
+yarn verify         # приёмочные проверки в браузере и скриншоты
+yarn check:mobile   # проверки в профиле телефона
+yarn check:visual   # сравнение с визуальными эталонами
 ```
 
-Прогнать всё разом в правильном порядке — команда `/acceptance` (`.claude/commands/`):
-она поднимает сервер, гоняет четыре проверки и убирает за собой.
+Для полной приёмки вызови `$acceptance`. Для браузерных проверок установи
+Chromium командой `yarn playwright install chromium`.
 
 `yarn check:mobile` — отдельная приёмка в профиле устройства (`iPhone 13`:
 `isMobile`, `hasTouch`, DPR устройства) с настоящими тач-жестами. Она ловит

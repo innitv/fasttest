@@ -42,6 +42,7 @@ export const BUNDLED_TENANTS: Record<string, () => Promise<{ default: unknown }>
   "a3pay": () => import("../../tenants/a3pay.json"),
   "onlinetours": () => import("../../tenants/onlinetours.json"),
   "ndflka": () => import("../../tenants/ndflka.json"),
+  "autoteka": () => import("../../tenants/autoteka.json"),
 };
 
 export const DEFAULT_TENANT_SLUG = "flowwow-like";

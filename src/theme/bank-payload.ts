@@ -151,6 +151,12 @@ const ARCHETYPE_DEFAULTS: Record<
     paymentPurpose: "Оплата услуг",
     summaryDetail: "Заказ в кабинете",
   },
+  warranty_checkout: {
+    returnLabel: "Вернуться к оформлению",
+    paidTitle: "Автогарантия оплачена",
+    paymentPurpose: "Оплата автогарантии",
+    summaryDetail: "Гарантия на автомобиль",
+  },
   subscription_bind: {
     // Возврат — в тот же чекаут, из которого пользователь ушёл: подписка
     // подключается ВНУТРИ сценария подрядчика, а не в отдельном приложении.

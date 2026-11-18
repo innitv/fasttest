@@ -884,6 +884,7 @@ const DESK_GREY = [230, 231, 234];
     // «Ozon Банк» в её окне оплаты: до открытия окна кликать нечем, поэтому
     // состояние задаётся адресом — как у Onlinetours, RML, ХВАЛа и MYBOX.
     ["/ndflka?state=phone_expanded", null, true],
+    ["/autoteka", null, true],
   ];
   const rows = [];
   let ok = true;
@@ -1142,6 +1143,10 @@ const DESK_GREY = [230, 231, 234];
      */
     ["/ndflka", "color-contrast", 'div[data-testid="order-meta"]'],
     ["/ndflka", "color-contrast", 'span[data-testid="step-badge"]'],
+    // Автотека: белый текст на исходной зелёной заливке выбранного тарифа
+    // #3BC776 даёт 2,18:1. Сохраняем измеренную пару по запросу на точную копию.
+    ["/autoteka", "color-contrast", "#warranty-period-month"],
+    ["/autoteka", "color-contrast", "#warranty-price-month"],
   ];
   const isKnown = (route, ruleId, target) =>
     KNOWN.some(
@@ -1223,7 +1228,7 @@ const DESK_GREY = [230, 231, 234];
   /*
    * Осознанные отступления: донор просит вес, ФАЙЛА которого у нас нет. Это
    * долг перед донором, а не решение — забирается при следующем заходе к
-   * нему (снятие шрифтов — `.claude/skills/donor-capture/`, шаг 5). Список
+   * нему (снятие шрифтов — `.agents/skills/donor-capture/`, шаг 5). Список
    * держит проверку зелёной ради НОВЫХ случаев и одновременно называет
    * старые поимённо.
    */

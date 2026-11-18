@@ -460,6 +460,7 @@ function validateSemantics(tenant: TenantConfig): Diagnostic[] {
     // строки с радио, а кнопки фирменного цвета с суммой: ось раскладки
     // та же, подача задаётся `payment_sheet.presentation`.
     order_tracker: "sheet_select",
+    warranty_checkout: "vertical_buttons",
   };
   const expectedLayout = layoutByArchetype[tenant.archetype];
   if (tenant.payment_list.layout !== expectedLayout) {
@@ -828,15 +829,16 @@ function deriveColors(tenant: TenantConfig): DerivedColors {
       tenant.brand.secondary.text,
       tenant.brand.secondary.fill,
     );
+    const enforceSecondary = enforced && !tenant.brand.secondary.preserve_text;
     const fixed =
-      enforced && pairRatio < 4.5
+      enforceSecondary && pairRatio < 4.5
         ? ensureReadableOn(tenant.brand.secondary.text, tenant.brand.secondary.fill, 4.5)
         : { color: tenant.brand.secondary.text, contrast: pairRatio, corrected: false, failed: false };
     vars["--t-secondary-text"] = fixed.color;
     if (pairRatio < 4.5) {
       diagnostics.push({
-        code: enforced ? "I_SECONDARY_PAIR_FIXED" : "W_SECONDARY_PAIR",
-        severity: enforced ? "info" : "warning",
+        code: enforceSecondary ? "I_SECONDARY_PAIR_FIXED" : "W_SECONDARY_PAIR",
+        severity: enforceSecondary ? "info" : "warning",
         message: `Вторичная пара даёт ${formatContrast(pairRatio)} при пороге 4.5:1`,
       });
     }

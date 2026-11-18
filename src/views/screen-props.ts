@@ -42,6 +42,11 @@ export interface PhoneGateSlot {
   focusSignal: number;
 }
 
+export interface WarrantyDraft {
+  fields: Record<string, string>;
+  accepted: boolean;
+}
+
 export interface ScreenProps {
   tenant: TenantConfig;
   selectedMethod: string | null;
@@ -62,4 +67,9 @@ export interface ScreenProps {
    * демо противоречило бы себе на соседних экранах.
    */
   onSelectAmount?: (sumKopecks: number) => void;
+  selectedAmount?: number | null;
+  warrantyForm?: {
+    draft: WarrantyDraft;
+    onChange: (draft: WarrantyDraft) => void;
+  };
 }

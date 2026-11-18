@@ -1,0 +1,15 @@
+version = 1
+name = "fasttest"
+
+[setup]
+script = "yarn install --frozen-lockfile"
+
+[[actions]]
+name = "Dev server · 5173"
+icon = "run"
+command = "yarn dev --strictPort"
+
+[[actions]]
+name = "Preview · 4319"
+icon = "run"
+command = "yarn preview --strictPort"

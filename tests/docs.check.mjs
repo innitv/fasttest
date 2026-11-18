@@ -16,7 +16,7 @@ import { fileURLToPath } from "node:url";
  *
  * Проверяется три инварианта:
  *   1. номера диагнозов в `FIXES.md` уникальны и идут подряд, без пропусков;
- *   2. каждая ссылка «баг N» из `CLAUDE.md` и `README.md` ведёт на
+ *   2. каждая ссылка «баг N» из `AGENTS.md` и `README.md` ведёт на
  *      существующий номер;
  *   3. оглавление покрывает все диагнозы и не содержит несуществующих.
  *
@@ -78,7 +78,7 @@ if (tocOnly.length > 0) {
 }
 
 // ── 3. Ссылки на диагнозы ────────────────────────────────────────────
-for (const file of ["CLAUDE.md", "README.md"]) {
+for (const file of ["AGENTS.md", "README.md"]) {
   const text = readFileSync(path.join(root, file), "utf8");
   const refs = [...text.matchAll(/баг[аи]? (\d+)/gi)].map((m) => Number(m[1]));
   const broken = [...new Set(refs.filter((n) => !seen.has(n)))];
@@ -100,4 +100,4 @@ if (findings.length > 0) {
 console.log("docs: порядок");
 console.log(`  - диагнозов в FIXES.md: ${numbers.length}, номера уникальны и идут подряд`);
 console.log(`  - оглавление покрывает все ${numbers.length}`);
-console.log("  - ссылки «баг N» из CLAUDE.md и README.md ведут на существующие номера");
+console.log("  - ссылки «баг N» из AGENTS.md и README.md ведут на существующие номера");

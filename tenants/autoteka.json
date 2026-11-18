@@ -1,0 +1,82 @@
+{
+  "tenant_id": "autoteka",
+  "display_name": "Автотека",
+  "archetype": "warranty_checkout",
+  "header": { "style": "logo_support" },
+  "brand": {
+    "primary": "#111111",
+    "on_primary": "#FFFFFF",
+    "secondary": { "fill": "#3BC776", "text": "#FFFFFF", "preserve_text": true },
+    "logo": { "kind": "text", "text": "Автотека" }
+  },
+  "surface": {
+    "background": "#FFFFFF",
+    "card": "#FFFFFF",
+    "form": "#F3F3F3",
+    "text_primary": "#111111",
+    "text_secondary": "#6F6F6F"
+  },
+  "radius": { "card": 20, "control": 12, "field": 10, "chip": 999 },
+  "density": {
+    "page_padding": 12,
+    "block_gap": 10,
+    "row_height": 44,
+    "control_height": 44,
+    "section_gap": 16
+  },
+  "typography": {
+    "family": "grotesk",
+    "body": 16,
+    "h1": 18,
+    "section_title": 18,
+    "caption": 14,
+    "label_weight": 500,
+    "title_weight": 700,
+    "price": 24,
+    "fonts": {
+      "body": {
+        "family": "Manrope",
+        "src": "/tenants/onlinetours/manrope-500.woff",
+        "weights": [
+          { "weight": 500, "src": "/tenants/onlinetours/manrope-500.woff" },
+          { "weight": 600, "src": "/tenants/onlinetours/manrope-700.woff" },
+          { "weight": 700, "src": "/tenants/onlinetours/manrope-700.woff" }
+        ]
+      }
+    }
+  },
+  "cta": { "placement": "inline", "label": "Оплатить через Ozon Банк", "font_size": 15, "font_weight": 500 },
+  "payment_list": {
+    "layout": "vertical_buttons",
+    "selection": "row_press",
+    "methods": [
+      { "id": "other", "label": "Оплатить другим способом", "logo": "none" },
+      { "id": "ozon", "label": "Ozon Банк", "logo": "none" }
+    ]
+  },
+  "ozon": { "label": "Ozon Банк", "position": 2 },
+  "content": {
+    "title": "Гарантия на автомобиль",
+    "warranty_demo": {
+      "fields": {
+        "make": "Lada",
+        "model": "Vesta",
+        "year": "2021",
+        "email": "ivan@example.test",
+        "name": "Иван Иванов"
+      },
+      "vin": "12345678912345678",
+      "phone": "9151234567"
+    },
+    "summary_detail": "Дефанс Страхование",
+    "plans": [
+      { "id": "month", "title": "Ежемесячно", "caption": "в месяц", "sum": 69900 },
+      { "id": "year", "title": "За год", "caption": "в год", "sum": 649000 }
+    ],
+    "totals": { "sum": 69900, "discount": 0, "currency": "RUB" },
+    "legal_note": "С правилами страхования, с КИД и Условиями страхования ознакомлен до заключения Договора страхования",
+    "payment_purpose": "Оплата автогарантии",
+    "paid_title": "Автогарантия оплачена",
+    "return_label": "Вернуться к Автотеке"
+  }
+}

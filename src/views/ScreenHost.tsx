@@ -32,7 +32,7 @@ import { OzonRailScreen } from "./OzonRailScreen";
 import { PaidConfirmationScreen } from "./PaidConfirmationScreen";
 import type { DemoStage } from "./demo-flow";
 import { stageVariants, transitionFor } from "./stage-motion";
-import type { ForcedState, PhoneGateSlot, ScreenProps } from "./screen-props";
+import type { ForcedState, PhoneGateSlot, ScreenProps, WarrantyDraft } from "./screen-props";
 
 /*
  * Экраны подрядчика грузятся ПО ТРЕБОВАНИЮ, а не все разом.
@@ -94,6 +94,8 @@ const CONTRACTOR_LOADERS: Record<
     import("./BookingPaymentScreen").then((m) => ({ default: m.BookingPaymentScreen })),
   order_tracker: () =>
     import("./OrderTrackerScreen").then((m) => ({ default: m.OrderTrackerScreen })),
+  warranty_checkout: () =>
+    import("./WarrantyCheckoutScreen").then((m) => ({ default: m.WarrantyCheckoutScreen })),
 };
 
 /*
@@ -168,6 +170,12 @@ export function ScreenHost({ theme, forcedState, showHandoff, initialStage }: Pr
   const [stage, setStage] = useState<DemoStage>(startStage);
   const [bankLoading, setBankLoading] = useState(false);
   const [amountOverride, setAmountOverride] = useState<number | null>(null);
+  const isWarrantyCheckout = tenant.archetype === "warranty_checkout";
+  const warrantyDemo = isWarrantyCheckout ? tenant.content.warranty_demo : null;
+  const [warrantyDraft, setWarrantyDraft] = useState<WarrantyDraft>(() => ({
+    fields: warrantyDemo?.fields ?? {},
+    accepted: true,
+  }));
   const [handoff, setHandoff] = useState(showHandoff);
 
   // ── Состояние проверки телефона ────────────────────────────────────
@@ -176,7 +184,7 @@ export function ScreenHost({ theme, forcedState, showHandoff, initialStage }: Pr
       ? "9991234567"
       : forcedState === "phone_error"
         ? notClientDigits
-        : "",
+        : (warrantyDemo?.phone ?? ""),
   );
   const [phoneError, setPhoneError] = useState<PhoneGateError>(
     forcedState === "phone_error" ? "not_client" : null,
@@ -326,7 +334,8 @@ export function ScreenHost({ theme, forcedState, showHandoff, initialStage }: Pr
     setPhoneError(null);
   }, []);
 
-  const phoneGateActive = phoneGate.enabled && selected === OZON_METHOD_ID;
+  const isOzonPayment = isWarrantyCheckout || selected === OZON_METHOD_ID;
+  const phoneGateActive = phoneGate.enabled && isOzonPayment;
 
   // ── Шаг 1: главная кнопка экрана подрядчика ────────────────────────
   const handleCta = useCallback(() => {
@@ -391,7 +400,7 @@ export function ScreenHost({ theme, forcedState, showHandoff, initialStage }: Pr
     }
 
     // Gate выключен, но выбран «Ozon Банк»: тот же терминальный статус и push.
-    if (selected === OZON_METHOD_ID) {
+    if (isOzonPayment) {
       setCtaState("sent");
       track("handoff_started", { ...base, method_id: OZON_METHOD_ID });
       later(() => setStage("push"), timings.push_delay_ms);
@@ -409,7 +418,7 @@ export function ScreenHost({ theme, forcedState, showHandoff, initialStage }: Pr
     phoneDigits,
     notClientDigits,
     phoneGate.check_ms,
-    selected,
+    isOzonPayment,
     timings.push_delay_ms,
     tenant.tenant_id,
     tenant.archetype,
@@ -486,8 +495,11 @@ export function ScreenHost({ theme, forcedState, showHandoff, initialStage }: Pr
     setBankLoading(false);
     setCtaState("default");
     setSelected(tenant.payment_list.default_selected);
-    // Проверка телефона сбрасывается полностью: цифры стираются.
-    setPhoneDigits("");
+    if (isWarrantyCheckout) {
+      setWarrantyDraft({ fields: warrantyDemo?.fields ?? {}, accepted: true });
+      setAmountOverride(null);
+    }
+    setPhoneDigits(warrantyDemo?.phone ?? "");
     setPhoneError(null);
     setPhoneChecking(false);
     setStage("contractor");
@@ -495,6 +507,8 @@ export function ScreenHost({ theme, forcedState, showHandoff, initialStage }: Pr
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     clearTimers,
+    isWarrantyCheckout,
+    warrantyDemo,
     tenant.payment_list.default_selected,
     tenant.tenant_id,
     tenant.archetype,
@@ -536,6 +550,10 @@ export function ScreenHost({ theme, forcedState, showHandoff, initialStage }: Pr
     tenant,
     selectedMethod: selected,
     onSelectAmount: setAmountOverride,
+    selectedAmount: amountOverride,
+    warrantyForm: isWarrantyCheckout
+      ? { draft: warrantyDraft, onChange: setWarrantyDraft }
+      : undefined,
     onSelectMethod: handleSelect,
     ctaState: phoneChecking ? ("loading" as ButtonState) : ctaState,
     ctaLoadingLabel,

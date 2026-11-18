@@ -12,8 +12,14 @@ interface Props {
   errorMessage?: string | null;
   inputMode?: "numeric" | "text";
   maxLength?: number;
+  leading?: ReactNode;
   trailing?: ReactNode;
-  type?: "text" | "password";
+  hideLabel?: boolean;
+  useControlHeight?: boolean;
+  type?: "text" | "password" | "email" | "tel";
+  autoComplete?: string;
+  pattern?: string;
+  required?: boolean;
   /**
    * Поверхность, на которой лежит поле.
    *
@@ -45,8 +51,14 @@ export function TextField({
   errorMessage = null,
   inputMode = "text",
   maxLength,
+  leading,
   trailing,
+  hideLabel = false,
+  useControlHeight = false,
   type = "text",
+  autoComplete,
+  pattern,
+  required,
   surface = "card",
   requiredMark = false,
 }: Props) {
@@ -57,6 +69,7 @@ export function TextField({
     <div className="flex w-full min-w-0 flex-col">
       <label
         htmlFor={name}
+        className={hideLabel ? "sr-only" : undefined}
         style={{
           fontSize: "14px",
           fontWeight: 500,
@@ -71,12 +84,20 @@ export function TextField({
       </label>
 
       <div className="relative w-full">
+        {leading && (
+          <span aria-hidden="true" className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2">
+            {leading}
+          </span>
+        )}
         <input
           id={name}
           name={name}
           data-testid={`field-${name}`}
           data-state={hasError ? "error" : "rest"}
           type={type}
+          autoComplete={autoComplete}
+          pattern={pattern}
+          required={required}
           inputMode={inputMode}
           maxLength={maxLength}
           value={value}
@@ -87,7 +108,7 @@ export function TextField({
           onBlur={onBlur}
           className="w-full"
           style={{
-            height: "var(--k-field-h)",
+            height: useControlHeight ? "var(--t-control-height)" : "var(--k-field-h)",
             borderRadius: "var(--t-radius-field)",
             background:
               surface === "form"
@@ -98,6 +119,7 @@ export function TextField({
             // страницу при фокусе. Тема с крупным телом сохраняет своё.
             fontSize: "max(var(--k-field-font), var(--t-font-body))",
             paddingInline: "12px",
+            paddingLeft: leading ? "40px" : "12px",
             paddingRight: trailing ? "calc(var(--k-eye-icon) + 24px)" : "12px",
             border: "none",
             outline: hasError

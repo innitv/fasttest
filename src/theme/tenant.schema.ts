@@ -331,6 +331,7 @@ export const tenantSchema = z.object({
      * `payment_sheet.presentation` = `amount_buttons`.
      */
     "order_tracker",
+    "warranty_checkout",
   ]),
 
   // Нативной оболочки (статус-бар, home indicator) в контракте больше нет:
@@ -428,6 +429,8 @@ export const tenantSchema = z.object({
       .object({
         fill: hex("brand.secondary.fill"),
         text: hex("brand.secondary.text"),
+        // Фиксирует измеренный цвет надписи для этой пары, сохраняя общий a11y_mode.
+        preserve_text: z.boolean().default(false),
         /**
          * Рамка вторичной КНОПКИ, когда донор красит её отдельно от заливки:
          * у НДФЛки обводка бледно-сиреневая, сильно светлее и текста, и
@@ -995,6 +998,17 @@ export const tenantSchema = z.object({
   // ── Контент экрана ──────────────────────────────────────────────────
   content: z.object({
     title: z.string().min(1),
+    warranty_demo: z.object({
+      fields: z.object({
+        make: z.string().min(1),
+        model: z.string().min(1),
+        year: z.string().regex(/^\d{4}$/),
+        email: z.email(),
+        name: z.string().min(1),
+      }),
+      vin: z.string().regex(/^[A-HJ-NPR-Z0-9]{17}$/),
+      phone: z.string().regex(/^\d{10}$/),
+    }).nullable().default(null),
     back_link: z.string().nullable().default(null),
     segments: z
       .object({

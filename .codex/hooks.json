@@ -1,0 +1,17 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "^apply_patch$",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node -e \"const cwd = require('node:child_process').execFileSync('git', ['rev-parse', '--show-toplevel'], { encoding: 'utf8' }).trim(); const file = require('node:path').join(cwd, '.codex/hooks/after-edit.mjs'); import(require('node:url').pathToFileURL(file).href)\"",
+            "timeout": 30,
+            "statusMessage": "Проверка затронутых файлов"
+          }
+        ]
+      }
+    ]
+  }
+}

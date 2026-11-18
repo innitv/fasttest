@@ -1,3 +1,4 @@
+import assert from "node:assert/strict";
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -1487,7 +1488,7 @@ for (const [name, query] of [
  *
  * Что гарнитура совпадает с донорской, машина проверить не может — эталон
  * живёт в интернете; это остаётся за процедурой замера
- * (`/ui-craft:reference-check` §3.4.3).
+ * (`.agents/skills/donor-capture/SKILL.md`).
  */
 {
   const appSource = readFileSync(path.resolve(projectRoot, "src/App.tsx"), "utf8");
@@ -1644,6 +1645,84 @@ for (const [name, query] of [
   }
 
   record("Лист шторки не наследует прозрачность затемнения", ok, rows.join(" | "));
+}
+
+// ── Чекаут Автотеки ──────────────────────────────────────────────────
+{
+  const id = "Автотека: порядок способов и сквозная сумма годового тарифа";
+  try {
+    await withPage(390, `${BASE}/autoteka`, async (page, errors) => {
+      const ozon = page.getByTestId("primary-cta");
+      const other = page.getByTestId("warranty-other-payment");
+      const make = page.getByLabel("Марка", { exact: true });
+      const vin = page.getByLabel("VIN", { exact: true });
+      const phone = page.getByLabel("Телефон (+7)");
+      const demoVin = "12345678912345678";
+      const customVin = "12345678912345679";
+      await ozon.waitFor({ timeout: 3000 });
+      assert.equal(await ozon.textContent(), "Оплатить через Ozon Банк");
+      assert.ok((await other.boundingBox()).y < (await ozon.boundingBox()).y);
+      assert.equal(await vin.inputValue(), demoVin);
+      assert.equal(await page.locator("form").evaluate((form) => form.checkValidity()), true);
+
+      await page.goto(`${BASE}/autoteka?VIN=${customVin}`);
+      await ozon.waitFor();
+      assert.equal(await vin.inputValue(), customVin);
+      const demoMake = await make.inputValue();
+      const demoPhone = await phone.inputValue();
+      await make.fill("Kia");
+      await phone.fill("0000000000");
+      await page.getByRole("button", { name: /За год/ }).click();
+      const annual = /6\s490\s₽/;
+      assert.match(await page.getByTestId("warranty-total").innerText(), annual);
+      const consent = page.getByRole("checkbox");
+      await consent.uncheck();
+      await ozon.click();
+      assert.equal(await consent.evaluate((input) => input.validity.valueMissing), true);
+      assert.equal(await ozon.getAttribute("data-state"), "default");
+      await consent.check();
+
+      await other.click();
+      await page.getByText("В демо доступна оплата через Ozon Банк.", { exact: true }).waitFor();
+      assert.equal(await page.getByTestId("push-banner").count(), 0);
+      await ozon.click();
+      await page.getByText("Не нашли этот номер в Ozon Банке", { exact: true }).waitFor();
+      await phone.fill("9161234567");
+      await ozon.click();
+      const push = page.getByTestId("push-banner");
+      await push.waitFor();
+      assert.equal(await ozon.textContent(), "Оплатить через Ozon Банк");
+      assert.equal(await ozon.isDisabled(), true);
+      assert.match(await push.innerText(), annual);
+      await push.click();
+      await page.getByTestId("bank-amount").waitFor();
+      assert.match(await page.getByTestId("bank-amount").innerText(), annual);
+
+      await page.getByTestId("bank-close-payment").click();
+      await ozon.waitFor();
+      assert.equal(await make.inputValue(), "Kia");
+      assert.match(await page.getByTestId("warranty-total").innerText(), annual);
+      await ozon.click();
+      await push.click();
+      await page.getByTestId("bank-pay-cta").click();
+      await page.getByTestId("bank-success-amount").waitFor();
+      assert.match(await page.getByTestId("bank-success-amount").innerText(), annual);
+      await page.getByTestId("bank-return-cta").click();
+      await page.getByTestId("paid-amount").waitFor();
+      assert.match(await page.getByTestId("paid-amount").innerText(), annual);
+      await page.getByTestId("paid-restart-cta").click();
+      await ozon.waitFor();
+      assert.match(await page.getByTestId("warranty-total").innerText(), /699\s₽/);
+      assert.equal(await make.inputValue(), demoMake);
+      assert.equal(await phone.inputValue(), demoPhone);
+      assert.equal(await vin.inputValue(), customVin);
+      assert.equal(await page.locator("form").evaluate((form) => form.checkValidity()), true);
+      assert.deepEqual(errors, []);
+    });
+    record(id, true, "Проверены согласие, альтернативный способ, push, отмена и подтверждение на 6 490 ₽.");
+  } catch (error) {
+    record(id, false, String(error));
+  }
 }
 
 record(

@@ -44,6 +44,7 @@ const PATH_ROUTES: Record<string, { tenant: string; archetype: TenantConfig["arc
   "/a3pay": { tenant: "a3pay", archetype: "subscription_card" },
   "/onlinetours": { tenant: "onlinetours", archetype: "booking_payment" },
   "/ndflka": { tenant: "ndflka", archetype: "order_tracker" },
+  "/autoteka": { tenant: "autoteka", archetype: "warranty_checkout" },
 };
 
 /**
